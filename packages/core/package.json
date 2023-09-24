@@ -1,0 +1,61 @@
+{
+  "name": "@streamerson/core",
+  "version": "0.0.1",
+  "source": "index.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "repository": "https://github.com/oliver-io/streamerson-core.git",
+  "author": "oliver-io <oliver.l.carrillo@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc && yalc publish --private",
+    "release": "yarn version && yarn build && (cd dist && yarn publish --access public)",
+    "test": "jest"
+  },
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/core/**/*.ts"]
+      }
+    }
+  },
+  "dependencies": {
+    "ioredis": "^5.0.4",
+    "pino": "^7.11.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@jupiterone/typescript-tools": "^19.2.0",
+    "@streamerson/test-utils": "^0.0.1",
+    "@types/node": "^20.6.4",
+    "@types/uuid": "^8.3.4",
+    "@typescript-eslint/eslint-plugin": ">=6.0.0",
+    "@typescript-eslint/parser": ">=6.0.0",
+    "doctoc": "^2.2.1",
+    "eslint": ">=8.0.0",
+    "eslint-config-xo": "^0.43.1",
+    "eslint-config-xo-typescript": "^1.0.1",
+    "lerna": "^7.3.0",
+    "pino-pretty": "^7.6.1",
+    "prettier": "^3.0.3",
+    "tsx": "^3.12.10",
+    "typescript": ">=4.7"
+  },
+  "prettier": "@jupiterone/typescript-tools/config/prettier",
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ],
+      "@babel/preset-typescript"
+    ]
+  }
+}

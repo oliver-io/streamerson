@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`we get an error event when the requested ID is not heard within a custom timeout of (1000ms) 1`] = `"Request timed out after 1 seconds"`;
+
+exports[`we get an error event when the requested ID is not heard within default timeout (3000ms) 1`] = `"Request timed out after 3 seconds"`;

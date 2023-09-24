@@ -1,0 +1,64 @@
+{
+  "root": true,
+  "plugins": [
+    "@nx"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx"
+      ],
+      "rules": {
+        "camelcase": "off",
+        "no-await-in-loop": "warn",
+        "@typescript-eslint/naming-convention": "warn",
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": [
+                  "*"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "*.ts",
+        "*.tsx"
+      ],
+      "extends": [
+        "plugin:@nx/typescript"
+      ],
+      "rules": {
+        "camelcase": "off",
+        "no-await-in-loop": "warn",
+        "@typescript-eslint/naming-convention": "warn"
+      }
+    },
+    {
+      "files": [
+        "*.js",
+        "*.jsx"
+      ],
+      "extends": [
+        "plugin:@nx/javascript"
+      ],
+      "rules": {
+        "camelcase": "off",
+        "no-await-in-loop": "warn",
+        "@typescript-eslint/naming-convention": "warn"
+      }
+    }
+  ]
+}

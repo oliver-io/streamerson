@@ -1,0 +1,29 @@
+{
+  "extends": "@jupiterone/typescript-tools/config/typescript",
+  "compileOnSave": false,
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@streamerson/core": ["packages/core/src/index.ts"],
+      "@streamerson/gateway-fastify": ["packages/gateway-fastify/src/index.ts"],
+      "@streamerson/gateway-wss": ["packages/gateway-wss/src/index.ts"],
+      "@streamerson/state-machine": ["packages/state-machine/src/index.ts"],
+      "@streamerson/test-utils": ["packages/test-utils/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

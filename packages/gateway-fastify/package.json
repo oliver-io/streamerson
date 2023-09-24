@@ -1,0 +1,63 @@
+{
+  "name": "@streamerson/gateway-fastify",
+  "version": "0.0.1",
+  "source": "index.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "repository": "https://github.com/oliver-io/streamerson-gateway-fastify.git",
+  "author": "oliver-io <oliver.l.carrillo@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc && yalc publish --private",
+    "pretest": "yarn build",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@streamerson/core": "^0.0.1",
+    "fastify": "^4.23.2",
+    "fastify-plugin": "^4.5.1",
+    "ioredis": "^5.0.4",
+    "pino": "^7.11.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@jupiterone/typescript-tools": "^19.2.0",
+    "@types/node": "^20.6.4",
+    "@types/uuid": "^8.3.4",
+    "@typescript-eslint/eslint-plugin": ">=6.0.0",
+    "@typescript-eslint/parser": ">=6.0.0",
+    "doctoc": "^2.2.1",
+    "eslint": ">=8.0.0",
+    "eslint-config-xo": "^0.43.1",
+    "eslint-config-xo-typescript": "^1.0.1",
+    "lerna": "^7.3.0",
+    "pino-pretty": "^7.6.1",
+    "prettier": "^3.0.3",
+    "typescript": ">=4.7"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true,
+      "es2021": true
+    },
+    "extends": "xo",
+    "overrides": [
+      {
+        "extends": [
+          "xo-typescript"
+        ],
+        "files": [
+          "*.ts",
+          "*.tsx"
+        ]
+      }
+    ],
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "rules": {}
+  },
+  "prettier": "@jupiterone/typescript-tools/config/prettier"
+}

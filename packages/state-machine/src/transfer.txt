@@ -1,0 +1,11 @@
+ok so in general, the transfer mechanism (p-->[A]-->[B]) looks like:
+
+1) send a message to the target of the state transfer
+    1A) pend all incoming messages from p-->A(B) until transfer resolves
+    1B) set local state for p::shard to something like pending(transfer_message_id);
+
+2) let all messages flow normally thru the platform from p-->[A], which should pend
+
+3) when the server in front of (p) hears that p::shard === [B], let messages flow naturally
+
+4) ???
