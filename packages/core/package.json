@@ -1,26 +1,18 @@
 {
   "name": "@streamerson/core",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "source": "index.ts",
   "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "types": "dist/src/types.d.ts",
   "repository": "https://github.com/oliver-io/streamerson-core.git",
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "MIT",
   "private": false,
   "scripts": {
     "build": "tsc && yalc publish --private",
-    "release": "yarn version && yarn build && (cd dist && yarn publish --access public)",
+    "bundle": "cd ../../ && yarn bundle @streamerson/core",
+    "release": "yarn version && yarn bundle && (cd dist && yarn publish --access public)",
     "test": "jest"
-  },
-  "targets": {
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/core/**/*.ts"]
-      }
-    }
   },
   "dependencies": {
     "ioredis": "^5.0.4",
