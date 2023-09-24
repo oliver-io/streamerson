@@ -275,7 +275,7 @@ export class StreamingDataSource
 				this.options.logger.info({payload}, '\r\n\r\nRESP Payload\r\n\r\n');
 				await this.writeToStream(
 					options.stream,
-					options.responseChannel ?? null,
+					options.responseChannel,
 					MessageType.RESPONSE,
 					messageId,
 					JSON.stringify(payload),
@@ -289,7 +289,7 @@ export class StreamingDataSource
 
 	async get(key: string, shard?: string) {
 		try {
-			return await this.client.get(shardDecorator({key, shard}));
+			return await this.client.get(shardDecorator({key, shard})) ?? undefined;
 		} catch (err) {
 			this.options.logger.error(err);
 			throw new Error(`Failed attempt to call GET [key=${key},shard=${shard}]`);

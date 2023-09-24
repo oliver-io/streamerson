@@ -1,4 +1,4 @@
-import { MappedStreamEvent, NullablePrimitive, StateObjectTypes } from "../types"
+import { MappedStreamEvent, NullablePrimitive, StateObjectTypes } from "@streamerson/core"
 
 export type StateTransformer = {
     incr: (target: string) => Promise<number | null>,

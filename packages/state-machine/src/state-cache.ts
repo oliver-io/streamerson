@@ -1,7 +1,7 @@
 import { ApplicationState } from "./types";
-import { CacheableDataSource } from "../datasources/cacheable";
+import { CacheableDataSource } from "./datasources/cacheable";
 import Pino, { Logger } from 'pino';
-import { KeyOptions } from "../datasources/types";
+import {KeyOptions} from "@streamerson/core";
 
 const moduleLogger = Pino({
     base: {

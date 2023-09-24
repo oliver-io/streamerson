@@ -1,14 +1,16 @@
-import { Transform, } from "stream";
-import { EventEmitter } from 'events';
-import { ChannelTupleArray, IncomingChannel, MappedStreamEvent, MessageType, NullablePrimitive, OutgoingChannel, StreamMeta } from "../types";
+import {Transform,} from "stream";
+import {EventEmitter} from 'events';
 import Pino from 'pino';
-import { ApplicationState, StateConfiguration, StateTransformer, StateTransformerMap } from "./types";
-import { StateCache } from "./state-cache";
-import { StreamingDataSource } from "../datasources/streamable";
-import { KeyOptions } from "../datasources/types";
-import { StreamAwaiter } from "../streams/stream-awaiter";
-import { buildStreamConfiguration, shardDecorator } from "../web/utils";
-import { v4 as uuid } from 'uuid';
+import {ApplicationState, StateConfiguration, StateTransformer, StateTransformerMap} from "./types";
+import {StateCache} from "./state-cache";
+import {v4 as uuid} from 'uuid';
+import {
+    buildStreamConfiguration, ChannelTupleArray, IncomingChannel,
+    KeyOptions, MappedStreamEvent, MessageType, NullablePrimitive, OutgoingChannel,
+    shardDecorator,
+    streamAwaiter,
+    StreamingDataSource, StreamMeta
+} from "@streamerson/core";
 
 const moduleLogger = Pino({
     base: {
@@ -35,7 +37,7 @@ export class StreamStateMachine<
     outgoingStreamName: string;
     incomingChannel: StreamingDataSource;
     outgoingChannel?: StreamingDataSource;
-    transferChannel: ReturnType<typeof StreamAwaiter>
+    transferChannel: ReturnType<typeof streamAwaiter>
     streamEvents: Record<string, { handle: EventHandler<AState> }>
     public logger: Pino.Logger;
     public stateTransformers: StateTransformerMap<AState>;
@@ -97,7 +99,7 @@ export class StreamStateMachine<
             ...options,
             logger: this.logger
         });
-        this.transferChannel = StreamAwaiter({
+        this.transferChannel = streamAwaiter({
             readChannel: new StreamingDataSource(options.redisConfiguration ? {
                 ...options.redisConfiguration,
                 logger: this.logger
@@ -226,7 +228,7 @@ export class StreamStateMachine<
                         stateType: stateTarget,
                         stateData: await this.stateCache.get(stateTarget, this.cacheComposite(cacheKey ?? propertyTarget))
                     }
-                    return !!(await this.transferChannel.dispatch(JSON.stringify(stateToTransfer), MessageType.TRANSFER, shardTarget, 'transfer'));
+                    return !!(await this.transferChannel.dispatch(JSON.stringify(stateToTransfer), 'TRANSFER' as MessageType.TRANSFER, shardTarget, 'transfer'));
                 } else {
                     throw new Error(`State ${stateTarget as string}::${cacheKey} is not locally held`);
                 }
@@ -234,8 +236,8 @@ export class StreamStateMachine<
             broadcast: async (toStream, payload, sourceId) => {
                 await this.outgoingChannel?.writeToStream(
                     toStream,
-                    null,
-                    MessageType.BROADCAST,
+                    undefined,
+                    'BROADCAST' as MessageType.BROADCAST,
                     uuid(),
                     JSON.stringify(payload),
                     sourceId

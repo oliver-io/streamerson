@@ -4,14 +4,14 @@ import {v4 as uuid} from 'uuid';
 import {type MappedStreamEvent, type MessageType, type StreamConfiguration} from '../types';
 import {shardDecorator} from '../utils/keys';
 
-type StreamAwaiterOptions = Omit<StreamConfiguration, 'outgoingStream'> & {
+type streamAwaiterOptions = Omit<StreamConfiguration, 'outgoingStream'> & {
 	logger?: Logger;
 	outgoingStream?: string;
 	timeout?: number;
 };
 
 export const streamAwaiter = <T extends MappedStreamEvent>(
-	options: StreamAwaiterOptions,
+	options: streamAwaiterOptions,
 ) => {
 	const stateTracker = new DeferralTracker(options);
 	const {outgoingStream, incomingStream, writeChannel, readChannel} = options;

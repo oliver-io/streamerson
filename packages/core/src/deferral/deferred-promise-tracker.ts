@@ -72,7 +72,7 @@ export class DeferralTracker extends EventEmitter {
 					self: Promise.resolve(event),
 					resolve: noOpFunction,
 					reject: noOpFunction,
-					timeout: null,
+					timeout: undefined,
 				};
 
 				// -- Avoid unawaited object accumulation:
@@ -117,7 +117,7 @@ export class DeferralTracker extends EventEmitter {
 				self: Promise.reject(event),
 				resolve: noOpFunction,
 				reject: noOpFunction,
-				timeout: null,
+				timeout: undefined,
 			};
 
 			// -- Still avoid unawaited object accumulation:
