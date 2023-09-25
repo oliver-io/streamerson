@@ -238,7 +238,7 @@ export class StreamStateMachine<
                     toStream,
                     undefined,
                     'BROADCAST' as MessageType.BROADCAST,
-                    uuid(),
+                   ids.guuid(),
                     JSON.stringify(payload),
                     sourceId
                 );

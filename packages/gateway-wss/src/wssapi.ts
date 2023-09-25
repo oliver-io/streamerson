@@ -46,7 +46,7 @@ export class WebSocketServer {
             const userMessage: MappedStreamEvent = {
                 payload: JSON.parse(messageText),
                 messageDestination: '',
-                messageId: uuid(),
+                messageId:ids.guuid(),
                 messageType: 'SOCKET' as MessageType.SOCKET,
                 messageProtocol: 'json',
                 messageSourceId: token

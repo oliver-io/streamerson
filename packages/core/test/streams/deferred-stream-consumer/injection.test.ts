@@ -1,11 +1,11 @@
 import {mockLogger} from '@streamerson/test-utils';
 import * as uuid from 'uuid';
-import {streamAwaiter, StreamingDataSource} from '../../../src';
+import {ids, streamAwaiter, StreamingDataSource} from '../../../src';
 import {MessageType} from '../../../src/types';
 import {describe, mock, test} from 'node:test';
 import * as assert from 'node:assert';
 
-const uuidSpy = mock.method(uuid, 'v4');
+const uuidSpy = mock.method(ids, 'guuid');
 
 const mockReadChannel = new StreamingDataSource({
 	port: 1024,
@@ -20,8 +20,9 @@ const mockWriteChannel = new StreamingDataSource({
 });
 
 void describe('when interceding as the stream directly', async () => {
-	await test('we can read off an injected response', async () => {
+	void test('we can read off an injected response', async () => {
 		const awaiter = streamAwaiter({
+			logger: mockLogger,
 			readChannel: mockReadChannel,
 			writeChannel: mockWriteChannel,
 			incomingStream: 'TEST_STREAM_INCOMING',
@@ -43,7 +44,7 @@ void describe('when interceding as the stream directly', async () => {
 		// );
 
 		const testMessageId = 'abc-123';
-		uuidSpy.mock.mockImplementation(() => testMessageId);
+		uuidSpy.mock.mockImplementationOnce(() => testMessageId);
 		const $dispatched = awaiter.dispatch('wat', MessageType.LOGIN);
 		const testEventResponse = {
 			messageId: testMessageId,
@@ -53,5 +54,6 @@ void describe('when interceding as the stream directly', async () => {
 		};
 		awaiter.stateTracker.emit('response', testEventResponse);
 		assert.equal(await $dispatched, testEventResponse.payload);
+		awaiter.stateTracker.cancelAll();
 	});
 });

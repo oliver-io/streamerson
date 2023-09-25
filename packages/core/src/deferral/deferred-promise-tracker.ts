@@ -72,13 +72,10 @@ export class DeferralTracker extends EventEmitter {
 					self: Promise.resolve(event),
 					resolve: noOpFunction,
 					reject: noOpFunction,
-					timeout: undefined,
+					timeout: setTimeout(() => {
+							delete this.promises[messageId];
+						}, this.timeout * 2),
 				};
-
-				// -- Avoid unawaited object accumulation:
-				setTimeout(() => {
-					delete this.promises[messageId];
-				}, this.timeout * 2);
 			}
 		} catch (err) {
 			this.logger.info('Error occurred in response event: ', err);
@@ -91,15 +88,25 @@ export class DeferralTracker extends EventEmitter {
 		}
 	}
 
+	cancelAll(message?: string) {
+		for (const id in this.promises) {
+			this.cancel(id, message);
+		}
+	}
+
 	cancel(id: string, message?: string) {
 		if (this.promises[id]) {
 			if (this.promises[id].timeout) {
-				clearTimeout(this.promises?.[id]?.timeout);
+				clearTimeout(this.promises[id].timeout);
+			} else {
+				console.log('CANNOT FIND TIMEOUT TO CLEAR');
 			}
 
 			this.promises[id].reject(
 				new Error(`CANCELLED${message ? `: ${message}` : ''}`),
 			);
+
+			this.delete(id);
 		}
 	}
 
@@ -117,13 +124,10 @@ export class DeferralTracker extends EventEmitter {
 				self: Promise.reject(event),
 				resolve: noOpFunction,
 				reject: noOpFunction,
-				timeout: undefined,
+				timeout: setTimeout(() => {
+					delete this.promises[messageId];
+				}, this.timeout * 2),
 			};
-
-			// -- Still avoid unawaited object accumulation:
-			setTimeout(() => {
-				delete this.promises[messageId];
-			}, this.timeout * 2);
 		}
 	}
 

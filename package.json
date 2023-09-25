@@ -5,9 +5,11 @@
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "LAMC",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "nx exec -- nx build",
-    "test": "nx exec -- node --test"
+    "test": "tsx --no-warnings ./tools/run-tests.ts",
+    "bundle": "./tools/bundle-publish.sh"
   },
   "workspaces": [
     "packages/*"
@@ -45,5 +47,8 @@
       ],
       "@babel/preset-typescript"
     ]
+  },
+  "dependencies": {
+    "glob": "^10.3.7"
   }
 }

@@ -1,8 +1,7 @@
 import {type Logger} from 'pino';
 import {DeferralTracker} from '..';
-import {v4 as uuid} from 'uuid';
 import {type MappedStreamEvent, type MessageType, type StreamConfiguration} from '../types';
-import {shardDecorator} from '../utils/keys';
+import {shardDecorator, ids } from '../utils';
 
 type streamAwaiterOptions = Omit<StreamConfiguration, 'outgoingStream'> & {
 	logger?: Logger;
@@ -32,7 +31,7 @@ export const streamAwaiter = <T extends MappedStreamEvent>(
 				);
 			}
 
-			const id = uuid();
+			const id = ids.guuid();
 			let $expectedResponse = stateTracker.promise<T>(id);
 			await writeChannel.writeToStream(
 				target,

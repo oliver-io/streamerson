@@ -1,12 +1,12 @@
 import {mockLogger} from '@streamerson/test-utils';
 import {MessageType} from '../../../src/types';
 import {Readable} from 'stream';
-import * as uuid from 'uuid';
 import {streamAwaiter, StreamingDataSource} from '../../../src';
 import {describe, mock, test} from 'node:test';
 import * as assert from 'node:assert';
+import {ids} from '../../../src/utils/ids';
 
-const uuidSpy = mock.method(uuid, 'v4');
+const uuidSpy = mock.method(ids, 'guuid');
 
 const mockReadChannel = new StreamingDataSource({
 	port: 1024,
@@ -21,8 +21,9 @@ const mockWriteChannel = new StreamingDataSource({
 });
 
 void describe('when interceding as the stream indirectly', async () => {
-	await test('we can read off a streamed response', async () => {
+	void test('we can read off a streamed response', async () => {
 		const awaiter = streamAwaiter({
+			logger: mockLogger,
 			readChannel: mockReadChannel,
 			writeChannel: mockWriteChannel,
 			incomingStream: 'TEST_STREAM_INCOMING',
@@ -46,8 +47,9 @@ void describe('when interceding as the stream indirectly', async () => {
 
 		const $dispatched = awaiter.dispatch('wat', MessageType.LOGIN);
 		void awaiter.readResponseStream();
-		assert.equal(await $dispatched, {
+		assert.deepEqual(await $dispatched, {
 			hello: 'world!',
 		});
+		awaiter.stateTracker.cancelAll();
 	});
 });
