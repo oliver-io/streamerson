@@ -20,7 +20,7 @@ Some quick notes:
 
 - Install the core SDK in your package of choice:
 ```bash
-yarn install @streamerson/core
+yarn add @streamerson/core
 ```
 - Import some stuff, get streamin'.  The following example will connect to Redis and begin listening for events with a type `hello` on a stream `Topic`, responding in kind with some JSON:
 ```typescript
