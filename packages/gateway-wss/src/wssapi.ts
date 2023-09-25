@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { App, HttpRequest, WebSocket } from 'uWebSockets.js';
 import { MappedStreamEvent, MessageType } from '@streamerson/core';
 export { WebSocket };
-// import { StreamStateMachine } from '../state';
+// import { StreamConsumer } from '../state';
 const moduleLogger = Pino({
     base: {
         module: 'wss_api'
@@ -13,7 +13,7 @@ const moduleLogger = Pino({
     },
 });
 
-// const streamStateMachine = new StreamStateMachine<{
+// const streamStateMachine = new StreamConsumer<{
 //     playerBindings: Record<string, string>
 // }>({
 //     logger: moduleLogger,

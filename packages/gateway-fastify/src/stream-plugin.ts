@@ -3,7 +3,7 @@ import {
     streamAwaiter,
     buildStreamConfiguration,
     MessageType,
-    StreamOptions,
+    StreamOptions, StreamMessageFlowModes, Topic,
 } from '@streamerson/core';
 import Pino from 'pino';
 import fp from 'fastify-plugin';
@@ -33,25 +33,52 @@ type StreamersonRouteOptions = {
 
 export function CreateGatewayPlugin(options: {
     logger?: Pino.Logger;
-    defaultMeta: StreamOptions,
+    streamOptions?: Partial<StreamOptions>;
+    topic: Topic;
     routes: StreamersonRouteOptions | StreamersonRouteOptions[]
 }) {
+
+    const defaultStreamOptions = {
+        meta: options.topic?.meta() ?? {
+            mode: 'ORDERED' as StreamMessageFlowModes.ORDERED,
+            namespace: 'default',
+            sharded: false
+        },
+        redisConfiguration: {
+            host: 'localhost',
+            port: 6379,
+        }
+    }
+
+    const streamOptions = Object.assign(
+        {... defaultStreamOptions},
+        {... options.streamOptions ?? {}}
+    );
+
     const streamStateTrackers: ReturnType<typeof streamAwaiter>[] = [];
-    const {defaultMeta, routes} = options;
+    const {routes} = options;
     return fp(async (fastify) => {
         fastify.decorateRequest('sourceId', '');
         for (const route of Array.isArray(routes) ? routes : [routes]) {
-            const defaultedRoute = {...defaultMeta, ...route};
+            if (!route) {
+                continue;
+            }
+            const defaultedRoute = {...streamOptions, ...route};
             const configuration = buildStreamConfiguration(defaultedRoute, {
                 logger:
                     options.logger ??
                     (fastify.log as unknown as typeof options.logger) ??
                     moduleLogger,
             });
+
             await Promise.all([
                 configuration.readChannel.connect(),
                 configuration.writeChannel.connect(),
             ]);
+
+            fastify.log.info(`Stream connected for ${configuration.incomingStream}`)
+            fastify.log.info(`Stream connected for ${configuration.outgoingStream}`)
+
             const streamStateTracker = streamAwaiter(configuration);
             const trackerIndex = streamStateTrackers.push(streamStateTracker) - 1;
             fastify.route({

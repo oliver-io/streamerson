@@ -8,57 +8,9 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "tsc && yalc publish --private",
-    "release": "yarn version && yarn build && (cd dist && yarn publish --access public)",
-    "test": "jest"
+    "build": "tsc && yalc publish --private"
   },
   "devDependencies": {
     "pino": "^8.15.1"
-  },
-  "targets": {
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/tst/**/*.ts"]
-      }
-    }
-  },
-  "eslintConfig": {
-    "env": {
-      "browser": true,
-      "es2021": true
-    },
-    "extends": "xo",
-    "overrides": [
-      {
-        "extends": [
-          "xo-typescript"
-        ],
-        "files": [
-          "*.ts",
-          "*.tsx"
-        ]
-      }
-    ],
-    "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    },
-    "rules": {}
-  },
-  "prettier": "@jupiterone/typescript-tools/config/prettier",
-  "babel": {
-    "presets": [
-      [
-        "@babel/preset-env",
-        {
-          "targets": {
-            "node": "current"
-          }
-        }
-      ],
-      "@babel/preset-typescript"
-    ]
   }
 }

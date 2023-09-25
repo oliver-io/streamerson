@@ -3,40 +3,36 @@ import {
 	type StreamersonLogger,
 	type StreamOptions,
 } from '../types';
-import {StreamingDataSource} from '../datasource';
-import {keyGenerator} from './keys';
+import {StreamingDataSource} from '../';
+import {Topic} from "./topics";
 
 export function buildStreamConfiguration(
-	conf: StreamOptions,
-	options: {logger: StreamersonLogger} = {logger: console},
+	topic: Topic,
+	options: {logger: StreamersonLogger} & Partial<StreamOptions> = {logger: console},
 ): StreamConfiguration {
-	const {namespace} = conf.meta;
-	const outgoingStream = `${keyGenerator({
-		namespace,
-		key: conf.streamKey,
-	})}_OUTGOING`;
-	const incomingStream = `${keyGenerator({
-		namespace,
-		key: conf.streamKey,
-	})}_INCOMING`;
+	const {namespace, sharded, mode} = topic.meta();
+	const incomingStreamName = topic.consumerKey();
+	const outgoingStreamName = topic.producerKey();
+	const readChannel = options.channels?.readChannel ?? new StreamingDataSource({
+		logger: options.logger,
+		controllable: true,
+		host: 'localhost',
+		port: 6379,
+		...options?.redisConfiguration ?? {}
+	});
+
+	const writeChannel = options.channels?.readChannel ?? new StreamingDataSource({
+		logger: options.logger,
+		controllable: true,
+		host: 'localhost',
+		port: 6379,
+		...options?.redisConfiguration ?? {}
+	});
 
 	return {
-		...conf,
-		readChannel:
-      conf.channels?.readChannel
-      ?? new StreamingDataSource({
-      	...conf.redisConfiguration,
-      	logger: options.logger,
-      	// TODO: figure out these options so that the default is not true
-      	controllable: true,
-      }),
-		writeChannel:
-      conf.channels?.writeChannel
-      ?? new StreamingDataSource({
-      	...conf.redisConfiguration,
-      	logger: options.logger,
-      }),
-		incomingStream,
-		outgoingStream,
+		incomingStream: incomingStreamName,
+		outgoingStream: outgoingStreamName,
+		readChannel,
+		writeChannel,
 	};
 }

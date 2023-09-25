@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ES2022",
+    "target": "ES2022",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "files": [],
+  "include": [ "crud-app" ],
+  "references": [
+    {
+      "path": "../core/tsconfig.lib.json"
+    },
+    {
+      "path": "../gateway-fastify/tsconfig.lib.json"
+    },
+    {
+      "path": "../consumer/tsconfig.lib.json"
+    }
+  ]
+}

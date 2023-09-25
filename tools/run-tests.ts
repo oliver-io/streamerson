@@ -1,7 +1,4 @@
-import fs from 'fs';
-import path from 'path';
 import { glob } from 'glob';
-import { execSync } from 'child_process';
 import {getPackageMetadata} from "./get-package-metadata";
 import { describe } from 'node:test';
 const [_, __, target, filter] = process.argv;

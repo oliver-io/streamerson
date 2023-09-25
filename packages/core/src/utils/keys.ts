@@ -13,3 +13,11 @@ export function shardDecorator(options: {
 }) {
 	return options.shard ? `${options.key}#${options.shard}` : options.key;
 }
+
+export function consumerProducerDecorator(options: {
+	key: BareStreamKey;
+	direction: 'INCOMING' | 'OUTGOING',
+	consumerOrProducer: 'CONSUMER' | 'PRODUCER'
+}) {
+	return `${options.key}::${options.consumerOrProducer}_${options.direction}`;
+}

@@ -7,7 +7,6 @@
     "rootDir": ".",
     "outDir": "out-tsc",
     "inlineSourceMap": true,
-    "declaration": false,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -23,6 +22,7 @@
       "@streamerson/gateway-fastify": ["packages/gateway-fastify/src/index.ts"],
       "@streamerson/gateway-wss": ["packages/gateway-wss/src/index.ts"],
       "@streamerson/state-machine": ["packages/state-machine/src/index.ts"],
+      "@streamerson/consumer": ["packages/consumer/src/index.ts"],
       "@streamerson/test-utils": ["packages/test-utils/index.ts"]
     }
   },

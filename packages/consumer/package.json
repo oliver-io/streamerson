@@ -1,5 +1,5 @@
 {
-  "name": "@streamerson/state-machine",
+  "name": "@streamerson/consumer",
   "version": "0.0.1",
   "source": "index.ts",
   "main": "dist/src/index.js",
@@ -19,8 +19,7 @@
     "ioredis": "^5.0.4",
     "lru-cache": "^7.8.1",
     "pino": "^7.11.0",
-    "uuid": "^8.3.2",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.31.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/node": "^20.6.4",

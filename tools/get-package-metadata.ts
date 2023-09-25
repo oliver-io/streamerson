@@ -7,7 +7,6 @@ export function getPackageMetadata(target: string) {
     }
 
     try {
-        // const nxJson = '{"root": "packages/core" }'
         const nxJson = execSync(`nx show project ${target} --json`).toString();
         const nxJsonParsed = JSON.parse(nxJson);
         const projectRootPath = nxJsonParsed.root as string;
