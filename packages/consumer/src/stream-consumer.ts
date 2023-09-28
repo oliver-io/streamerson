@@ -19,14 +19,6 @@ const moduleLogger = Pino({
     },
 });
 
-/*
-
-    type Events = 'some' | 'event'
-
-    const x = new StreamConsumer<[ 'some', handler ]>(options);
-
- */
-
 type Handler = (e: MappedStreamEvent) => MappedStreamEvent;
 
 type HandlerLogicFunction = (e: MappedStreamEvent)=> Record<string, NonNullablePrimitive>;
@@ -38,40 +30,44 @@ function handler(h: HandlerLogicFunction):Handler {
         }
     }
 }
+export type EventMapRecord = Record<string, HandlerLogicFunction >;
+
+export type StreamConsumerOptions<EventMap extends EventMapRecord> = {
+    logger?: Pino.Logger,
+    redisConfiguration?: {
+        port: number,
+        host: string
+    }
+    topic: Topic,
+    shard?: string;
+    bidirectional?: boolean;
+    eventMap: EventMap;
+}
 
 export class StreamConsumer<
-    EventMap extends Record<string, HandlerLogicFunction >
+    EventMap extends EventMapRecord
 > extends EventEmitter {
     topic: Topic;
     incomingChannel: StreamingDataSource;
-    outgoingChannel?: StreamingDataSource;
     incomingStream: IncomingChannel;
-    outgoingStream: OutgoingChannel;
+    outgoingChannel?: StreamingDataSource;
+    outgoingStream?: OutgoingChannel;
     streamEvents: Partial<Record<keyof EventMap, (e: MappedStreamEvent)=> MappedStreamEvent>>;
+    bidirectional?: boolean;
     public logger: Pino.Logger;
-    constructor(public options: {
-        logger?: Pino.Logger,
-        redisConfiguration?: {
-            port: number,
-            host: string
-        }
-        topic: Topic,
-        shard?: string;
-        eventMap: EventMap;
-    }) {
+    constructor(public options: StreamConsumerOptions<EventMap>) {
         super();
         this.streamEvents = {};
-        const consumerStream = options.topic.consumerKey(options.shard);
-        const producerStream = options.topic.producerKey(options.shard);
-        this.logger = options.logger ?? moduleLogger.child({
-            shard: options.shard,
-            meta: options.topic.meta(),
+        const consumerStream = this.options.topic.consumerKey(this.options.shard);
+        const producerStream = this.options.topic.producerKey(this.options.shard);
+        this.bidirectional = options.bidirectional ?? true;
+        this.topic = options.topic ?? this.options.topic;
+        this.logger = options.logger ?? this.options.logger ?? moduleLogger.child({
+            shard: this.options.shard,
+            meta: this.options.topic.meta(),
             streamName: consumerStream,
             destination: producerStream,
         });
-
-        this.topic = options.topic;
-
         this.incomingChannel = new StreamingDataSource({
             logger: this.logger,
             controllable: true,
@@ -81,38 +77,57 @@ export class StreamConsumer<
 
         this.incomingStream = this.incomingChannel.getReadStream({
             stream: consumerStream,
-            shard: options.shard
+            shard: this.options.shard
         });
+        this.bindStreamEvents(this.topic);
+    }
 
-        this.outgoingChannel = new StreamingDataSource({
+    bindStreamEvents(topic: Topic) {
+        const consumerStream = topic.consumerKey(this.options.shard);
+        const producerStream = topic.producerKey(this.options.shard);
+        this.outgoingChannel = this.outgoingChannel ?? (this.bidirectional ? new StreamingDataSource({
             logger: this.logger,
             controllable: true,
             host: '',
             port: 1234
-        });
+        }) : undefined);
 
-        this.outgoingStream = this.outgoingChannel.getWriteStream({
+        this.outgoingStream = this.outgoingStream ?? ((this.bidirectional && this.outgoingChannel) ? this.outgoingChannel.getWriteStream({
             stream: producerStream,
-            shard: options.shard
-        });
+            shard: this.options.shard
+        }) : undefined);
 
         // create `on${streamName || label} event bindings:
         for (const [channel, label] of [
             [this.incomingStream, consumerStream],
             [this.outgoingStream, producerStream]
         ] as ChannelTupleArray) {
-            channel.on('error', (error: Error) => {
-                this._optionallyRouteMessage(error, `${label}Error`, 'error', 'error');
-            }).on('end', () => {
-                this._optionallyRouteMessage('incoming stream ending', `${label}End`, 'end', 'info');
-            }).on('close', () => {
-                this._optionallyRouteMessage('incoming stream closed', `${label}Close`, 'close', 'warn');
-            });
+            if (channel) {
+                if (!channel.listenerCount('error')) {
+                    channel.on('error', (error: Error) => {
+                        this._optionallyRouteMessage(error, `${label}Error`, 'error', 'error');
+                    })
+                }
+
+                if (!channel.listenerCount('end')) {
+                    channel.on('end', () => {
+                        this._optionallyRouteMessage('incoming stream ending', `${label}End`, 'end', 'info');
+                    })
+                }
+
+                if (!channel.listenerCount('close')) {
+                    channel.on('close', () => {
+                        this._optionallyRouteMessage('incoming stream closed', `${label}Close`, 'close', 'warn');
+                    })
+                }
+            }
         }
     }
 
     setOutgoingChannel(channel: StreamingDataSource | null) {
+        this.bidirectional = true;
         this.outgoingChannel = channel ?? undefined;
+        this.bindStreamEvents(this.topic);
     }
 
     registerStreamEvent(
@@ -212,7 +227,7 @@ export class StreamConsumer<
             objectMode: true
         }));
 
-        if (this.outgoingChannel) {
+        if (this.outgoingStream) {
             incomingPipe.pipe(this.outgoingStream);
         }
     }
