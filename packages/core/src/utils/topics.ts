@@ -1,5 +1,6 @@
-import {StreamMessageFlowModes, StreamMeta} from "../types";
+import {StreamMessageFlowModes, StreamMeta, StreamOptions} from "../types";
 import {consumerProducerDecorator, keyGenerator, shardDecorator} from "./keys";
+import {StreamingDataSource} from "../datasource/streamable";
 
 export class Topic {
     topic: string;
@@ -55,5 +56,37 @@ export class Topic {
             ... this.options,
             topic: `${this.topic}(${topic})`
         })
+    }
+}
+
+export class ConnectedTopic extends Topic {
+    _channel: StreamingDataSource;
+    connected: boolean;
+    _$connected?: Promise<any>;
+    constructor(
+        options: ConstructorParameters<typeof Topic>[0],
+        public channelOption?: StreamingDataSource | ConstructorParameters<typeof StreamingDataSource>[0]
+    ) {
+        super(options);
+        this._channel = channelOption instanceof StreamingDataSource ?
+            channelOption :
+            new StreamingDataSource(channelOption);
+
+        this.connected = false;
+        this._$connected = this.connect();
+    }
+
+    async connect() {
+        // TODO: handle some kind of disconnection subscription here:
+        await this._$connected;
+        this.connected = true;
+    }
+
+    get channel() {
+        if (!this.connected) {
+                throw new Error("Channel not connected; call ConnectableTopic.connect() first");
+        }
+
+        return this._channel;
     }
 }

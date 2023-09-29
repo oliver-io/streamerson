@@ -1,7 +1,7 @@
 import {type Logger} from 'pino';
 import {type Readable, type Writable} from 'stream';
 import {type Redis as RedisClient} from 'ioredis';
-import {type StreamingDataSource} from './datasource';
+import {type StreamingDataSource} from './datasource/streamable';
 
 // For clarity in signatures:
 export type MessageId = string; // UUID e.g. 'f8b8f8b8-f8b8-f8b8-f8b8-f8b8f8b8f8b8'
@@ -127,13 +127,20 @@ export type KeyOptions = {
 	shard?: string;
 };
 
+export type MaybeConsumerGroupInstanceConfig = {
+	consumerGroupInstanceConfig?: {
+	groupId: string,
+		groupMemberId: string;
+	}
+};
+
 export type BlockingStreamBatchMapOptions = {
 	stream?: string;
 	shard?: string;
 	last?: string | Record<string, string>;
 	requestedBatchSize?: number;
 	blockingTimeout?: number;
-};
+} & MaybeConsumerGroupInstanceConfig;
 
 export type BlockingStreamBatchResponse = {
 	cursor: string | Record<string, string>;

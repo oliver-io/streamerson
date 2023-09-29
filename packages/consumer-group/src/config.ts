@@ -1,4 +1,5 @@
 type ConsumerGroupOptions = {
+    name: string;
     min: number;
     max?: number;
     processingTimeout?: number;
@@ -21,6 +22,7 @@ export function createConsumerGroupConfig(options: ConsumerGroupOptions) {
     validateOptions(options);
 
     const {
+        name,
         min,
         max = options.min,
         processingTimeout = 0,
@@ -28,6 +30,7 @@ export function createConsumerGroupConfig(options: ConsumerGroupOptions) {
     } = options;
 
     return {
+        name,
         min,
         max,
         processingTimeout,

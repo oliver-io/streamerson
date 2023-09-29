@@ -41,6 +41,10 @@ export type StreamConsumerOptions<EventMap extends EventMapRecord> = {
     topic: Topic,
     shard?: string;
     bidirectional?: boolean;
+    consumerGroupInstanceConfig?: {
+        groupId: string,
+        groupMemberId: string;
+    };
     eventMap: EventMap;
 }
 
@@ -77,7 +81,8 @@ export class StreamConsumer<
 
         this.incomingStream = this.incomingChannel.getReadStream({
             stream: consumerStream,
-            shard: this.options.shard
+            shard: this.options.shard,
+            consumerGroupInstanceConfig: this.options.consumerGroupInstanceConfig
         });
         this.bindStreamEvents(this.topic);
     }
@@ -190,7 +195,12 @@ export class StreamConsumer<
         this.outgoingChannel ? this.outgoingChannel.disconnect() : null;
     }
 
-    async connectAndListen() {
+    async connectAndListen(options?: {
+        consumerGroupInstanceConfig: {
+            groupId: string,
+            groupMemberId: string
+        }
+    }) {
         await Promise.all([
             this.incomingChannel.connect(),
             this.outgoingChannel ? this.outgoingChannel.connect() : Promise.resolve()

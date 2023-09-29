@@ -3,6 +3,7 @@ import {
 	type BlockingStreamBatchMapOptions,
 	type KeyOptions,
 	type MappedStreamEvent,
+	MaybeConsumerGroupInstanceConfig,
 	type MessageId,
 	MessageType,
 	type StreamableDataSource,
@@ -10,7 +11,7 @@ import {
 	type StreamId,
 	type StreamResponseArray,
 } from '../types';
-import {HOURS_TO_MS} from '../utils';
+import {HOURS_TO_MS, Topic} from '../utils';
 import {RedisDataSource} from './base/remote';
 import {EventEmitter} from 'events';
 import {shardDecorator} from '../utils/keys';
@@ -31,6 +32,8 @@ enum KeyEvents {
 	REMOVE_STREAM = 'removeStream',
 	UPDATE = 'update',
 }
+
+const DEFAULT_BLOCKING_TIMEOUT = HOURS_TO_MS(0.5);
 
 export class StreamingDataSource
 	extends RedisDataSource
@@ -129,6 +132,78 @@ export class StreamingDataSource
 		return eventMap;
 	}
 
+	//XGROUP CREATE key group <id | $> [MKSTREAM]
+	async createConsumerGroup(config: {
+		stream: string,
+		groupId: string,
+		cursor?: string
+	}) {
+		return await new Promise((resolve, reject)=> {
+			try {
+				this.client.xgroup("CREATE", config.stream, config.groupId, config.cursor as "$", resolve)
+			} catch(err) {
+				reject(err);
+			}
+		});
+	}
+
+	// This needs to be executed if we want to do consumer group reads from a stream without data in it already
+	// consider doing some `INFO` operations on the stream?
+	// we might want to throw errors if we try to read from a stream without data that hasn't called this fn
+	async createGroupMember(config: {
+		stream: string,
+		groupId: string,
+		groupMemberId: string,
+		cursor?: string
+	}) {
+		return await new Promise((resolve, reject)=> {
+			try {
+				this.client.xgroup("CREATECONSUMER", config.stream, config.groupId, config.groupMemberId, resolve)
+			} catch(err) {
+				reject(err);
+			}
+		});
+	}
+
+	async readAsSingle(stream: string, cursor: string, timeout: number) {
+		return (await this.client.call(
+			'XREAD',
+			'BLOCK',
+			timeout,
+			// "COUNT", 10,
+			'STREAMS',
+			stream,
+			cursor,
+		) ?? []) as Array<[
+			StreamId,
+			Array<[_id: string, messaage: StreamResponseArray]>,
+		]>;
+	}
+
+	async readAsGroup(
+		stream: string,
+		cursor: string,
+		groupName: string,
+		groupMemberId: string,
+		timeout: number
+	) {
+		return (await this.client.call(
+			'XREADGROUP',
+			'GROUP',
+			groupName,
+			groupMemberId,
+			'BLOCK',
+			timeout,
+			// "COUNT", 10,
+			'STREAMS',
+			stream,
+			cursor,
+		) ?? []) as Array<[
+			StreamId,
+			Array<[_id: string, messaage: StreamResponseArray]>,
+		]>;
+	}
+
 	async blockingStreamBatchMap(options: BlockingStreamBatchMapOptions) {
 		const {logger} = this.options;
 		try {
@@ -142,18 +217,20 @@ export class StreamingDataSource
 					`(Re)initiating Redis stream ${stream} read from key ${cursor}`,
 				);
 				const events: MappedStreamEvent[] = [];
-				const streamEvents = ((await this.client.call(
-					'XREAD',
-					'BLOCK',
-					options.blockingTimeout ?? HOURS_TO_MS(0.5),
-					// "COUNT", 10,
-					'STREAMS',
-					stream,
-					cursor,
-				)) ?? []) as Array<[
-					StreamId,
-					Array<[_id: string, messaage: StreamResponseArray]>,
-				]>;
+				const streamEvents = await (options.consumerGroupInstanceConfig ?
+					this.readAsGroup(
+						stream,
+						cursor,
+						options.consumerGroupInstanceConfig.groupId,
+						options.consumerGroupInstanceConfig.groupMemberId,
+						options.blockingTimeout ?? DEFAULT_BLOCKING_TIMEOUT
+					) :
+					this.readAsSingle(
+						stream,
+						cursor,
+						options.blockingTimeout ?? DEFAULT_BLOCKING_TIMEOUT
+					)
+				);
 
 				for (const [_streamTitle, entries] of streamEvents ?? []) {
 					for (const rawEvent of entries) {
@@ -249,7 +326,7 @@ export class StreamingDataSource
 		last?: string;
 		requestedBatchSize?: number;
 		blockingTimeout?: number;
-	}) {
+	} & MaybeConsumerGroupInstanceConfig) {
 		this.addStreamId(options.stream);
 		return Readable.from(this.iterateStream(options), {
 			objectMode: true,
@@ -296,6 +373,15 @@ export class StreamingDataSource
 		}
 	}
 
+	async incr(key: string, shard?: string) {
+		try {
+			return await this.client.incr(shardDecorator({key, shard})) ?? undefined;
+		} catch (err) {
+			this.options.logger.error(err);
+			throw new Error(`Failed attempt to call INCR [key=${key},shard=${shard}]`);
+		}
+	}
+
 	async set(options: KeyOptions, value: string) {
 		try {
 			if (!value) {
@@ -312,12 +398,15 @@ export class StreamingDataSource
 	}
 
 	async markProcessedByGroup(
-		stream: string,
-		messageId: string,
+		topic: Topic,
 		groupId: string,
-		shard?: string,
+		messageId: string,
+		shard?: string
 	) {
-		throw new Error('Unimplemented');
+		const ack = this.client.xack(topic.consumerKey(shard), groupId, messageId)
+		if (!ack) {
+			throw new Error(`Failed to ack message ${messageId} for group ${groupId}`)
+		}
 	}
 
 	private async * iterateStream(options: {

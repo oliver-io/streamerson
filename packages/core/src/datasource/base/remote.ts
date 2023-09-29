@@ -20,7 +20,8 @@ export class RedisDataSource implements ConnectableDataSource {
 				},
 			}),
 		},
-	) {}
+	) {
+	}
 
 	async debugPing() {
 		return this.client.ping();
