@@ -2,7 +2,7 @@ import {ConsumerGroupConfig} from "./config";
 import {ConnectedTopic, Topic} from "@streamerson/core";
 import {ConsumerGroupMember} from "./member";
 
-class ConsumerGroup {
+export class ConsumerGroup {
     constructor(
         public config: ConsumerGroupConfig,
         public connectedTopic: ConnectedTopic

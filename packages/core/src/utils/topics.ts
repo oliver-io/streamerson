@@ -2,15 +2,17 @@ import {StreamMessageFlowModes, StreamMeta, StreamOptions} from "../types";
 import {consumerProducerDecorator, keyGenerator, shardDecorator} from "./keys";
 import {StreamingDataSource} from "../datasource/streamable";
 
+type TopicOptions = {
+    namespace: string,
+    topic?: string,
+    mode?: StreamMessageFlowModes,
+};
+
 export class Topic {
     topic: string;
     mode: StreamMessageFlowModes;
     namespace: string;
-    constructor(public options: {
-        namespace: string,
-        topic?: string,
-        mode?: StreamMessageFlowModes,
-    }) {
+    constructor(public options: TopicOptions) {
         this.namespace = options.namespace;
         this.topic = options.topic ?? 'DEFAULT';
         this.mode = options.mode ?? StreamMessageFlowModes.ORDERED;
@@ -62,10 +64,10 @@ export class Topic {
 export class ConnectedTopic extends Topic {
     _channel: StreamingDataSource;
     connected: boolean;
-    _$connected?: Promise<any>;
+    private readonly _$connected?: Promise<void>;
     constructor(
-        options: ConstructorParameters<typeof Topic>[0],
-        public channelOption?: StreamingDataSource | ConstructorParameters<typeof StreamingDataSource>[0]
+        public override options: TopicOptions,
+        private channelOption?: StreamingDataSource | ConstructorParameters<typeof StreamingDataSource>[0]
     ) {
         super(options);
         this._channel = channelOption instanceof StreamingDataSource ?
@@ -88,5 +90,11 @@ export class ConnectedTopic extends Topic {
         }
 
         return this._channel;
+    }
+
+    async clone() {
+        const topic = new ConnectedTopic(this.options, this.channelOption);
+        await topic.connect();
+        return topic;
     }
 }

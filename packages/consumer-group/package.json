@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc && yalc publish --private",
     "pretest": "yarn build",
-    "test": "node --test"
+    "test": "cd ../../ && yarn test @streamerson/consumer-group"
   },
   "dependencies": {
     "@streamerson/core": "^0.0.1",
