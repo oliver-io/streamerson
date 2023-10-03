@@ -74,9 +74,7 @@ export class StreamConsumer<
         });
         this.incomingChannel = new StreamingDataSource({
             logger: this.logger,
-            controllable: true,
-            host: '',
-            port: 1234
+            controllable: true
         });
 
         this.incomingStream = this.incomingChannel.getReadStream({
@@ -92,9 +90,7 @@ export class StreamConsumer<
         const producerStream = topic.producerKey(this.options.shard);
         this.outgoingChannel = this.outgoingChannel ?? (this.bidirectional ? new StreamingDataSource({
             logger: this.logger,
-            controllable: true,
-            host: '',
-            port: 1234
+            controllable: true
         }) : undefined);
 
         this.outgoingStream = this.outgoingStream ?? ((this.bidirectional && this.outgoingChannel) ? this.outgoingChannel.getWriteStream({
@@ -180,9 +176,9 @@ export class StreamConsumer<
         return await this.streamEvents[(streamMessage.messageType as keyof EventMap)]!(
             {
                 ...streamMessage,
-                payload: 
-                    typeof streamMessage.payload === 'object' ? 
-                        streamMessage.payload : 
+                payload:
+                    typeof streamMessage.payload === 'object' ?
+                        streamMessage.payload :
                         JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
             }
         );
