@@ -43,6 +43,7 @@ test('a consumer group can be read from by a single consumer', async () =>{
 
     await topic.connect();
 
+    // TODO: clean up all this configuration bloat
     const consumerGroup = new ConsumerGroup(config, topic);
     const instanceConfig = {
         groupId: config.name,
