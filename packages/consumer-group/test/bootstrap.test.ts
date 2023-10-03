@@ -22,4 +22,5 @@ test('a consumer group can be created', async () =>{
 
     const consumerGroup = new ConsumerGroup(config, topic);
     await consumerGroup.create(topic);
-})
+    await topic.disconnect();
+});

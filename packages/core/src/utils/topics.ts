@@ -75,13 +75,17 @@ export class ConnectedTopic extends Topic {
             new StreamingDataSource(channelOption);
 
         this.connected = false;
-        this._$connected = this.connect();
+        this._$connected = this._channel.connect().then();
     }
 
     async connect() {
         // TODO: handle some kind of disconnection subscription here:
         await this._$connected;
         this.connected = true;
+    }
+
+    async disconnect() {
+        await this._channel.disconnect();
     }
 
     get channel() {
