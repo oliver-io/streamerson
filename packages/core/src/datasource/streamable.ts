@@ -140,7 +140,7 @@ export class StreamingDataSource
 	}) {
 		return await new Promise((resolve, reject)=> {
 			try {
-				this.client.xgroup("CREATE", config.stream, config.groupId, config.cursor as "$", resolve)
+				this.client.xgroup("CREATE", config.stream, config.groupId, (config.cursor ?? "$") as "$", resolve)
 			} catch(err) {
 				reject(err);
 			}
@@ -220,7 +220,7 @@ export class StreamingDataSource
 				const streamEvents = await (options.consumerGroupInstanceConfig ?
 					this.readAsGroup(
 						stream,
-						cursor,
+						cursor ? '>' : '',
 						options.consumerGroupInstanceConfig.groupId,
 						options.consumerGroupInstanceConfig.groupMemberId,
 						options.blockingTimeout ?? DEFAULT_BLOCKING_TIMEOUT

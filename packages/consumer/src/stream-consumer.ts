@@ -98,6 +98,10 @@ export class StreamConsumer<
             shard: this.options.shard
         }) : undefined);
 
+        for (const event in this.options.eventMap) {
+            this.registerStreamEvent(event, this.options.eventMap[event]);
+        }
+
         // create `on${streamName || label} event bindings:
         for (const [channel, label] of [
             [this.incomingStream, consumerStream],
