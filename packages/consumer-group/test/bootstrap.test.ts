@@ -57,7 +57,6 @@ test('a consumer group can be read from by a single consumer', async () =>{
     });
 
     await groupMember.connectAndListen();
-    await groupMember.disconnect();
 });
 
 
