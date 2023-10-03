@@ -23,4 +23,13 @@ export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsume
         }
         return result;
     }
+
+    override async connectAndListen(options: {
+        consumerGroupInstanceConfig: {
+            groupId: string;
+            groupMemberId: string
+        }
+    }): Promise<void> {
+        return super.connectAndListen(options);
+    }
 }
