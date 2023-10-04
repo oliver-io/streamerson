@@ -1,4 +1,4 @@
-type ConsumerGroupOptions = {
+export type ConsumerGroupOptions = {
     name: string;
     min: number;
     max?: number;

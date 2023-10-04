@@ -127,11 +127,13 @@ export type KeyOptions = {
 	shard?: string;
 };
 
-export type MaybeConsumerGroupInstanceConfig = {
-	consumerGroupInstanceConfig?: {
+export type ConsumerGroupInstanceConfig = {
 	groupId: string,
-		groupMemberId: string;
-	}
+	groupMemberId: string;
+};
+
+export type MaybeConsumerGroupInstanceConfig = {
+	consumerGroupInstanceConfig?: ConsumerGroupInstanceConfig
 };
 
 export type BlockingStreamBatchMapOptions = {

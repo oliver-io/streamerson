@@ -1,11 +1,19 @@
-import {ConsumerGroupConfig} from "./config";
-import {MappedStreamEvent, Topic} from "@streamerson/core";
+import {ConsumerGroupInstanceConfig, MappedStreamEvent} from "@streamerson/core";
 import {EventMapRecord, StreamConsumer, StreamConsumerOptions} from "@streamerson/consumer"
+import {ConsumerGroupTopic} from "./group";
+
 export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsumer<E> {
+    instanceConfig: ConsumerGroupInstanceConfig
     constructor(
-        public override options: StreamConsumerOptions<E>,
-    ) {
-        super(options);
+        public override options: StreamConsumerOptions<E> & {
+            topic: ConsumerGroupTopic,
+            groupMemberId: string
+        }) {
+        super({
+            ...options,
+            consumerGroupInstanceConfig: options.topic.instanceConfig(options.groupMemberId)
+        });
+        this.instanceConfig = options.topic.instanceConfig(options.groupMemberId);
     }
 
     override async process(streamMessage: MappedStreamEvent) {
@@ -24,12 +32,7 @@ export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsume
         return result;
     }
 
-    override async connectAndListen(options: {
-        consumerGroupInstanceConfig: {
-            groupId: string;
-            groupMemberId: string
-        }
-    }): Promise<void> {
-        return super.connectAndListen(options);
+    override async connectAndListen(): Promise<void> {
+        return super.connectAndListen({ consumerGroupInstanceConfig: this.instanceConfig });
     }
 }

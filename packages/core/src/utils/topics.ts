@@ -2,7 +2,7 @@ import {StreamMessageFlowModes, StreamMeta, StreamOptions} from "../types";
 import {consumerProducerDecorator, keyGenerator, shardDecorator} from "./keys";
 import {StreamingDataSource} from "../datasource/streamable";
 
-type TopicOptions = {
+export type TopicOptions = {
     namespace: string,
     topic?: string,
     mode?: StreamMessageFlowModes,
