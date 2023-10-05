@@ -2,6 +2,18 @@
 
 > An API framework powered by distributed stream processing
 
+# Monorepo Packages:
+
+- `@streamerson/core` - a collection of core low-level implementations and utilities
+- `@streamerson/consumer` - an event consumer/producer for Redis streams
+- `@streamerson/consumer-group` - kafkaesqe groups of consumer/producers with only-once delivery
+- `@streamerson/gateway-fastify` - a Fastify plugin shifting RESTful traffic to stream consumers
+- `@streamerson/gateway-wss` - a Websocket server shifting WSS traffic to stream consumers
+- `@streamerson/state-machine` - :warning: **WIP/Unfinished:** :warning: a distributed state(less)-machine made of a
+  consumer group with a single writer and many readers operating on a shared, recoverable in-memory state. The idea is
+  that it is easy to model state machines and transitions (and serve information about the current state) by aggregating
+  a stream into a single application-layer that can recover & shard its state in Redis.  One could imagine this as a **Log-Structured Merge Tree for Application State**.
+
 # High Level Goals
 
 This project is my attempt to implement a pattern I probably didn't invent, but
@@ -44,10 +56,12 @@ these streams without worrying about the complexity.
 
 # Usage
 
-Installation and such instructions are soon coming.  I'm in the middle of a refactor to this project at the moment and this README is likely to shift around.
+Installation and such instructions are soon coming. I'm in the middle of a refactor to this project at the moment and
+this README is likely to shift around.
 
 ## License
 
-This project is licensed with the LAMC (Love All My Cats) license.  It is to be taken very seriously, but permits pretty much unrestricted usage of this code.
+This project is licensed with the LAMC (Love All My Cats) license. It is to be taken very seriously, but permits pretty
+much unrestricted usage of this code.
 
 If you use Streamerson, or are inspired by it, please drop me a star, comment, issue, PR, email, or well-wish.

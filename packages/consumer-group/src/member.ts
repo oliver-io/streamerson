@@ -2,14 +2,17 @@ import {ConsumerGroupInstanceConfig, MappedStreamEvent, StreamingDataSource} fro
 import {EventMapRecord, StreamConsumer, StreamConsumerOptions} from "@streamerson/consumer"
 import {ConsumerGroupTopic} from "./group";
 
+type ConsumerGroupMemberOptions<E extends EventMapRecord> = StreamConsumerOptions<E> & {
+    topic: ConsumerGroupTopic,
+    groupMemberId: string
+}
+
 export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsumer<E> {
     instanceConfig: ConsumerGroupInstanceConfig
     _channel: StreamingDataSource;
     constructor(
-        public override options: StreamConsumerOptions<E> & {
-            topic: ConsumerGroupTopic,
-            groupMemberId: string
-        }) {
+        public override options: ConsumerGroupMemberOptions<E>
+    ) {
         super({
             ...options,
             consumerGroupInstanceConfig: options.topic.instanceConfig(options.groupMemberId)
@@ -36,5 +39,12 @@ export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsume
 
     override async connectAndListen(): Promise<void> {
         return super.connectAndListen({ consumerGroupInstanceConfig: this.instanceConfig });
+    }
+
+    clone(options?: Partial<ConsumerGroupMemberOptions<E>>) {
+        return new ConsumerGroupMember({
+            ...this.options,
+            ...options
+        });
     }
 }

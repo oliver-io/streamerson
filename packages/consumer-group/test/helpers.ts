@@ -43,3 +43,9 @@ export async function spyForConsumerGroupMessage(
     await groupMember._channel.writeToStream(...message);
     return hasBeenCalled;
 }
+
+export async function waitFor(n: number) {
+    return new Promise((resolve, reject) => {
+        setTimeout(resolve, n);
+    })
+}

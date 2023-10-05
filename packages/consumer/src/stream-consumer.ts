@@ -19,14 +19,14 @@ const moduleLogger = Pino({
     },
 });
 
-type Handler = (e: MappedStreamEvent) => MappedStreamEvent;
+type Handler = (e: MappedStreamEvent) => Promise<MappedStreamEvent>;
 
-type HandlerLogicFunction = (e: MappedStreamEvent)=> Record<string, NonNullablePrimitive>;
+type HandlerLogicFunction = (e: MappedStreamEvent) => Record<string, NonNullablePrimitive> | Promise<Record<string, NonNullablePrimitive>>;
 function handler(h: HandlerLogicFunction):Handler {
-    return function(e: MappedStreamEvent) {
+    return async function(e: MappedStreamEvent) {
         return {
             ...e,
-            payload: h(e)
+            payload: await h(e)
         }
     }
 }
@@ -56,7 +56,7 @@ export class StreamConsumer<
     incomingStream: IncomingChannel;
     outgoingChannel?: StreamingDataSource;
     outgoingStream?: OutgoingChannel;
-    streamEvents: Partial<Record<keyof EventMap, (e: MappedStreamEvent)=> MappedStreamEvent>>;
+    streamEvents: Partial<Record<keyof EventMap, (e: MappedStreamEvent)=> MappedStreamEvent | Promise<MappedStreamEvent>>>;
     bidirectional?: boolean;
     public logger: Pino.Logger;
     constructor(public options: StreamConsumerOptions<EventMap>) {
@@ -90,7 +90,7 @@ export class StreamConsumer<
         const producerStream = topic.producerKey(this.options.shard);
         this.outgoingChannel = this.outgoingChannel ?? (this.bidirectional ? new StreamingDataSource({
             logger: this.logger,
-            controllable: true
+            controllable: true,
         }) : undefined);
 
         this.outgoingStream = this.outgoingStream ?? ((this.bidirectional && this.outgoingChannel) ? this.outgoingChannel.getWriteStream({
