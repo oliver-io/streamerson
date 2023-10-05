@@ -37,13 +37,12 @@ await consumerGroup.create();
 
 const consumerGroupMember = new ConsumerGroupMember({
     topic: consumerGroup,
-    groupMemberId: 'consumer-1',
-    eventMap: {
-        'my-event': (data) => {
-            console.log('An event with type "my-event" was received:')
-            console.log(data);
-        }
-    }
+    groupMemberId: 'consumer-1'
+});
+
+consumerGroupMember.registerStreamEvent('my-event', (data) => {
+    console.log('An event with type "my-event" was received:')
+    console.log(data);
 });
 
 await consumerGroupMember.connectAndListen();
