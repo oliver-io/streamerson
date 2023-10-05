@@ -1,9 +1,10 @@
-import {ConsumerGroupInstanceConfig, MappedStreamEvent} from "@streamerson/core";
+import {ConsumerGroupInstanceConfig, MappedStreamEvent, StreamingDataSource} from "@streamerson/core";
 import {EventMapRecord, StreamConsumer, StreamConsumerOptions} from "@streamerson/consumer"
 import {ConsumerGroupTopic} from "./group";
 
 export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsumer<E> {
     instanceConfig: ConsumerGroupInstanceConfig
+    _channel: StreamingDataSource;
     constructor(
         public override options: StreamConsumerOptions<E> & {
             topic: ConsumerGroupTopic,
@@ -14,6 +15,7 @@ export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsume
             consumerGroupInstanceConfig: options.topic.instanceConfig(options.groupMemberId)
         });
         this.instanceConfig = options.topic.instanceConfig(options.groupMemberId);
+        this._channel = this.options.topic._channel;
     }
 
     override async process(streamMessage: MappedStreamEvent) {

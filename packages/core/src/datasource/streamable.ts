@@ -220,6 +220,8 @@ export class StreamingDataSource
 				const streamEvents = await (options.consumerGroupInstanceConfig ?
 					this.readAsGroup(
 						stream,
+						// TODO: in a failure recovery case, this needs to be the relevant ID,
+						// but it needs to be handled differently from the single stream cursor
 						cursor ? '>' : '',
 						options.consumerGroupInstanceConfig.groupId,
 						options.consumerGroupInstanceConfig.groupMemberId,
