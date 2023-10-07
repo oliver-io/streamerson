@@ -10,5 +10,5 @@ for await (const event of readChannel.getReadStream({
 })) {
     readChannel.logger.info(event, 'Received event!')
     // Do something with my streamed event?
-    // We could even `.pipe()` this event to a Writeable.
+    // We could even `.pipe()` this event to a Writable.
 }

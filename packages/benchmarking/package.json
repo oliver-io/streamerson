@@ -1,22 +1,20 @@
 {
-  "name": "@streamerson/examples",
+  "name": "@streamerson/benchmarking",
   "version": "0.0.1",
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
-    "start:crud-app": "docker compose up -d && tsx --watch ./crud-app/api | pino-pretty",
-    "build": "tsc && yalc publish --private",
+    "start:api:prod": "node ./src/reference/gateway",
+    "start:api:dev": "tsx ./src/reference/gateway",
+    "build:ref:api": "tsc",
     "pretest": "yarn build",
     "test": "node --test"
   },
   "dependencies": {
     "@streamerson/core": "^0.0.1",
-    "@streamerson/consumer": "^0.0.1",
-    "@streamerson/consumer-group": "^0.0.1",
     "@streamerson/gateway-fastify": "^0.0.1",
-    "@streamerson/gateway-wss": "^0.0.1",
     "fastify": "^4.23.2"
   },
   "devDependencies": {

@@ -64,7 +64,7 @@ export function CreateGatewayPlugin(options: {
                 continue;
             }
             const defaultedRoute = {...streamOptions, ...route};
-            const configuration = buildStreamConfiguration(defaultedRoute, {
+            const configuration = buildStreamConfiguration(options.topic, {
                 logger:
                     options.logger ??
                     (fastify.log as unknown as typeof options.logger) ??

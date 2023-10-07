@@ -13,7 +13,7 @@ await Promise.all([
     channels.write.connect()
 ]);
 
-const [readableStream, writeableStream] = [
+const [readableStream, writableStream] = [
     channels.read.getReadStream({
         stream: streamTopic.consumerKey()
     }),
@@ -49,4 +49,4 @@ const transform = new Transform({
     }
 });
 
-readableStream.pipe(transform).pipe(writeableStream);
+readableStream.pipe(transform).pipe(writableStream);

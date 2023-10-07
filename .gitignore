@@ -6,3 +6,7 @@
 .vscode
 .idea
 **/*/out-tsc
+.env
+**/*/.env
+**/*/.terraform*
+**/terraform.tfstate*

@@ -12,8 +12,8 @@ Everything here is built for internal usage in the rest of the `@streamerson` pa
 
 The idea for the exported code of this package is essentially to achieve the following:
 - wrap Redis clients behind interfaces
-- wrap reading/writing logic behind real Streams (Read/Writeables)
-- provide a set of un-opinionated tools for manipulating these Read/Writeables
+- wrap reading/writing logic behind real Streams (Read/Writables)
+- provide a set of un-opinionated tools for manipulating these Read/Writables
 - instrument some basic utilities and helper functions to distribute to the rest of the monorepo
 
 # Table of Contents
@@ -74,7 +74,7 @@ for await (const event of readChannel.getReadStream({
 })) {
     readChannel.logger.info(event, 'Received event!')
     // Do something with my streamed event?
-    // We could even `.pipe()` this event to a Writeable.
+    // We could even `.pipe()` this event to a Writable.
 }
 ```
 <!-- END-CODE: ../examples/core-modules/readable-stream/readable-stream.example.ts -->
@@ -98,7 +98,7 @@ for await (const event of readChannel.getReadStream({
 - an extension of the RedisDataSource, which implements streaming protocols:
     - **writeToStream({ ... })** _(write to a stream using the data-source)_
     - **getReadStream({ ... })** _(get a Readable for a stream)_
-    - **getWriteStream({ ... })** _(get a Writeable for a stream)_
+    - **getWriteStream({ ... })** _(get a Writable for a stream)_
     - **iterateStream({ ... })** _(get an Iterable that reads from a stream)_
     - **set()** _(set a key, for orchestration purposes)_
     - **get()** _(get a key, for orchestration purposes)_

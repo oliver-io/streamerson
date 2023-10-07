@@ -1,13 +1,11 @@
 {
   "name": "@streamerson/core",
   "version": "0.0.4",
-  "source": "src/index.ts",
-  "main": "dist/src/index.js",
-  "types": "dist/src/types.d.ts",
   "repository": "https://github.com/oliver-io/streamerson.git",
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "MIT",
   "private": false,
+  "type": "module",
   "scripts": {
     "build": "tsc && yalc publish --private",
     "bundle": "cd ../../ && yarn bundle @streamerson/core",

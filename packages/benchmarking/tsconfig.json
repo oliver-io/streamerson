@@ -9,14 +9,25 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "composite": true
+    "noFallthroughCasesInSwitch": true
   },
   "files": [],
-  "include": ["./src/**/*.ts"],
+  "include": [ "src/**/*.ts", "src/**/package.json"],
   "references": [
     {
       "path": "../core/tsconfig.lib.json"
+    },
+    {
+      "path": "../gateway-fastify/tsconfig.lib.json"
+    },
+    {
+      "path": "../gateway-wss/tsconfig.lib.json"
+    },
+    {
+      "path": "../consumer/tsconfig.lib.json"
+    },
+    {
+      "path": "../consumer-group/tsconfig.lib.json"
     }
   ]
 }

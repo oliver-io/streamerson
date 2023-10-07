@@ -4,16 +4,18 @@
     "rootDir": ".",
     "outDir": "dist",
     "declaration": true,
-    "module": "commonjs",
+    "module": "ES2022",
+    "target": "ES2022",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "composite": true
   },
   "files": [],
-  "include": ["src"],
+  "include": ["src/**/*.ts"],
   "references": [
     {
         "path": "../test-utils/tsconfig.lib.json"

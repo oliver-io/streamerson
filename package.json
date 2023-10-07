@@ -9,7 +9,10 @@
     "build": "nx exec -- nx build",
     "test": "tsx --no-warnings ./tools/run-tests.ts",
     "bundle": "./tools/bundle-publish.sh",
-    "docgen": "tsx ./tools/embed"
+    "docgen": "tsx ./tools/embed-all",
+    "start:redis": "docker compose up -d",
+    "stop:redis": "docker compose down -d",
+    "restart:redis": "docker compose restart"
   },
   "workspaces": [
     "packages/*",

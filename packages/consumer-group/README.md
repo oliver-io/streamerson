@@ -1,6 +1,6 @@
 # @streamerson/consumer-group
 
-> Redis stream "consumer groups" as bidi Typescript Read/Writeables
+> Redis stream "consumer groups" as bidi Typescript Read/Writables
 
 Part of a larger monorepo, this package provides a Typescript implementation for reading from Redis Streams-- as a member of a consumer group.  This package provides an interface for constructing objects that can be treated as streams / EventEmitters, but are under-the-hood statelessly reading (in a distributed way) from a Redis stream with guaranteed once-only delivery (except in failures / retries).
 

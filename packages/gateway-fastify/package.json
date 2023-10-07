@@ -2,12 +2,11 @@
   "name": "@streamerson/gateway-fastify",
   "version": "0.0.1",
   "source": "index.ts",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
   "repository": "https://github.com/oliver-io/streamerson-gateway-fastify.git",
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "MIT",
   "private": false,
+  "type": "module",
   "scripts": {
     "build": "tsc && yalc publish --private",
     "pretest": "yarn build",
