@@ -1,11 +1,12 @@
 import Redis from 'ioredis';
 import pino from 'pino';
-import {type DataSourceOptions, type ConnectableDataSource} from '../../types';
+import {type DataSourceOptions, type ConnectableDataSource, StreamersonLogger} from '../../types';
 
 export class RedisDataSource implements ConnectableDataSource {
 	public _client: Redis | undefined = undefined;
 	public _control: Redis | undefined = undefined;
 	private clientId: number | undefined;
+	public logger: StreamersonLogger;
 	constructor(
 		public options: DataSourceOptions = {
 			port: 6379,
@@ -21,6 +22,7 @@ export class RedisDataSource implements ConnectableDataSource {
 			}),
 		},
 	) {
+		this.logger = options.logger
 	}
 
 	async debugPing() {

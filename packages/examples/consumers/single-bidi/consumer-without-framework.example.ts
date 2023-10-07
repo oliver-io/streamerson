@@ -1,6 +1,7 @@
-import {MappedStreamEvent, MessageType, StreamingDataSource} from '@streamerson/core';
+import {MappedStreamEvent, StreamingDataSource, Topic} from '@streamerson/core';
 import {Transform} from 'stream';
-import {Events, streamTopic} from "./config";
+
+const streamTopic = new Topic('my-stream-topic');
 
 const channels = {
     read: new StreamingDataSource(),
@@ -23,23 +24,27 @@ const [readableStream, writeableStream] = [
 
 const transform = new Transform({
     objectMode: true,
-    transform: (e: MappedStreamEvent): MappedStreamEvent => {
-        switch(e.messageType as unknown as Events) {
-            case Events.HELLO_EVENT:
-                return {
+    transform: function (e: MappedStreamEvent, _, cb) {
+        switch(e.messageType as string) {
+            case 'hello':
+                this.push(({
                     ...e,
                     payload: {
                         hello: 'world!  I just saw a message: \r\n\r\n' + JSON.stringify(e.payload, null, 2)
                     }
-                };
+                } as MappedStreamEvent));
+                cb();
+                break;
             default:
-                return {
+                this.push(({
                     ...e,
                     payload: {
                         error: 'Unknown message type',
                         statusCode: 400
                     }
-                }
+                } as MappedStreamEvent));
+                cb();
+                break;
         }
     }
 });

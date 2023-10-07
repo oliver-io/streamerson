@@ -1,11 +1,11 @@
-import { StreamConsumer } from '@streamerson/consumer';
-import {Events, streamTopic} from './config';
+import {StreamConsumer} from '@streamerson/consumer';
+import {Events, streamTopic} from "./api";
 
 const consumer = new StreamConsumer({
     eventMap: {
         [Events.HELLO_EVENT]: (e) => {
             return {
-                hello: 'world'
+                world: 'I am a stream processor'
             };
         }
     },

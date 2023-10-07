@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import {getPackageMetadata} from "./get-package-metadata";
 const [_, __, target] = process.argv;
 

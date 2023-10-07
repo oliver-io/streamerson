@@ -1,18 +1,35 @@
-# streamerson
+# @streamerson
 
 > An API framework powered by distributed stream processing
 
+:warning: **This project is in active development and is not yet trustable to be stable or work.  If you're interested in using it, hit me with a watch or star, and perhaps prod me toward publishing a 1.0.0 version.** :warning:
+
+This is the root of the Streamerson monorepo, which is a collection meant to be assembled into various use cases for event-oriented streaming architectures (or just any Redis stream use-case).  The packages of interest are as follows:
+
+
 # Monorepo Packages:
 
-- `@streamerson/core` - a collection of core low-level implementations and utilities
-- `@streamerson/consumer` - an event consumer/producer for Redis streams
-- `@streamerson/consumer-group` - kafkaesqe groups of consumer/producers with only-once delivery
-- `@streamerson/gateway-fastify` - a Fastify plugin shifting RESTful traffic to stream consumers
-- `@streamerson/gateway-wss` - a Websocket server shifting WSS traffic to stream consumers
-- `@streamerson/state-machine` - :warning: **WIP/Unfinished:** :warning: a distributed state(less)-machine made of a
-  consumer group with a single writer and many readers operating on a shared, recoverable in-memory state. The idea is
+- `@streamerson/core` - [a collection of core low-level implementations and utilities](./packages/core/README.md)
+- `@streamerson/consumer` - [an event consumer/producer for Redis streams](./packages/consumer/README.md)
+- `@streamerson/consumer-group` - [kafkaesqe groups of consumer/producers with only-once delivery](./packages/consumer-group/README.md)
+- `@streamerson/gateway-fastify` - [a Fastify plugin shifting RESTful traffic to stream consumers](./packages/gateway-fastify/README.md)
+- `@streamerson/gateway-wss` - [a Websocket server shifting WSS traffic to stream consumers](./packages/gateway-wss/README.md)
+- `@streamerson/state-machine` - :warning: **WIP/Unfinished:** :warning: [a distributed state(less)-machine made of a
+  consumer group with a single writer](./packages/state-machine) and many readers operating on a shared, recoverable in-memory state. The idea is
   that it is easy to model state machines and transitions (and serve information about the current state) by aggregating
   a stream into a single application-layer that can recover & shard its state in Redis.  One could imagine this as a **Log-Structured Merge Tree for Application State**.
+
+
+## Table of Contents:
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [High Level Goals](#high-level-goals)
+- [High Level Architecture](#high-level-architecture)
+- [Usage](#usage)
+  - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # High Level Goals
 

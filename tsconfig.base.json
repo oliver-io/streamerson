@@ -23,6 +23,8 @@
       "@streamerson/gateway-wss": ["packages/gateway-wss/src/index.ts"],
       "@streamerson/state-machine": ["packages/state-machine/src/index.ts"],
       "@streamerson/consumer": ["packages/consumer/src/index.ts"],
+      "@streamerson/consumer-group": ["packages/consumer-group/src/index.ts"],
+      "@streamerson/examples": ["packages/examples"],
       "@streamerson/test-utils": ["packages/test-utils/index.ts"]
     }
   },

@@ -5,7 +5,13 @@
 Part of a larger monorepo, this package provides a Typescript implementation for reading from Redis Streams-- as a member of a consumer group.  This package provides an interface for constructing objects that can be treated as streams / EventEmitters, but are under-the-hood statelessly reading (in a distributed way) from a Redis stream with guaranteed once-only delivery (except in failures / retries).
 
 # Table of Contents
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [Installation](#installation)
+- [Example](#example)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Installation
 
@@ -17,6 +23,8 @@ The following example will create a consumer group against a given stream in Red
 
 This example binds an event handler to `"my-event"`, which means that if the consumer gets a message from the stream with a matching `type: "my-event"` field, it will run the arbitrary logic from its handler.  In this example, we just log out some info upon receiving these events:
 
+<!-- BEGIN-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
+[**consumer-group-readable.ts**](../examples/consumers/groups/consumer-group-readable.ts)
 ```typescript
 import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer-group';
 
@@ -47,5 +55,6 @@ consumerGroupMember.registerStreamEvent('my-event', (data) => {
 
 await consumerGroupMember.connectAndListen();
 ```
+<!-- END-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
 
 Note that the `groupMemberId` field (here set to `"consumer-1"`) indicates which member of the group is connected.  We could create more of these with different IDs, and they would each be guaranteed to receive *different* messages from Redis.  That guarantee comes not from this package, but from the implementation of Redis streams themselves; this code just wraps around the actual client layer, delivering an interface for working with streams in an event-oriented way.  Under the hood, these types extend the `EventEmitter` class and are thus able to be read, piped, and *etc.* as per normal streams.

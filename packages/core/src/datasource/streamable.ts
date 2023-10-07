@@ -35,6 +35,14 @@ enum KeyEvents {
 
 const DEFAULT_BLOCKING_TIMEOUT = HOURS_TO_MS(0.5);
 
+export type GetReadStreamOptions = {
+	stream: string;
+	shard?: string;
+	last?: string;
+	requestedBatchSize?: number;
+	blockingTimeout?: number;
+} & MaybeConsumerGroupInstanceConfig
+
 export class StreamingDataSource
 	extends RedisDataSource
 	implements StreamableDataSource {
@@ -322,20 +330,14 @@ export class StreamingDataSource
 		}
 	}
 
-	getReadStream(options: {
-		stream: string;
-		shard?: string;
-		last?: string;
-		requestedBatchSize?: number;
-		blockingTimeout?: number;
-	} & MaybeConsumerGroupInstanceConfig) {
-		this.addStreamId(options.stream);
+	getReadStream(options: { topic: Topic, shard?: string } | GetReadStreamOptions) {
+		this.addStreamId('topic' in options ? options.topic.consumerKey(options.shard) : options.stream);
 		return Readable.from(this.iterateStream(options), {
 			objectMode: true,
 		}) as Readable & {readableObjectMode: true};
 	}
 
-	getWriteStream(options: {
+	getWriteStream(options: { topic: Topic, shard?: string } | {
 		stream: string;
 		responseChannel?: string;
 		shard?: string;
@@ -350,11 +352,14 @@ export class StreamingDataSource
 					return;
 				}
 
+				const incomingStreamName = 'topic' in options ? options.topic.consumerKey(options.shard) : options.stream;
+				const outgoingStreamName = 'topic' in options ? options.topic.producerKey(options.shard) : options.responseChannel;
+
 				const {messageId, payload} = chunk;
 				this.options.logger.info({payload}, '\r\n\r\nRESP Payload\r\n\r\n');
 				await this.writeToStream(
-					options.stream,
-					options.responseChannel,
+					incomingStreamName,
+					outgoingStreamName,
 					MessageType.RESPONSE,
 					messageId,
 					JSON.stringify(payload),

@@ -17,17 +17,23 @@ The idea for the exported code of this package is essentially to achieve the fol
 - instrument some basic utilities and helper functions to distribute to the rest of the monorepo
 
 # Table of Contents
- - [Notes](#notes)
- - [Installation](#installation)
-   - [Example](#example)
- - [API](#api)
-   - [RedisDataSource](#redisdatasource)
-   - [StreamingDataSource](#streamingdatasource)
-   - [Promise Tracker](#promise-tracker)
-   - [Stream Awaiter](#stream-awaiter)
-   - [Utilities](#utils)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-### Notes
+
+- [Notes](#notes)
+- [Installation](#installation)
+- [Example](#example)
+- [API](#api)
+  - [RedisDataSource](#redisdatasource)
+  - [StreamingDataSource](#streamingdatasource)
+  - [Promise Tracker](#promise-tracker)
+  - [Stream Awaiter](#stream-awaiter)
+  - [Utils](#utils)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Notes
 
 Some quick notes:
 
@@ -41,7 +47,7 @@ Some quick notes:
   memory management, potential for hanging promises, etc. This is a fairly crunchy project and I've just been getting to
   these things as I have time.
 
-# Installation
+## Installation
 
 - Install the core SDK in your package of choice:
 
@@ -52,11 +58,13 @@ yarn add @streamerson/core
 - Import some stuff, get streamin'. The following example will connect to Redis and begin listening for events with a
   type `hello` on a stream `Topic`, responding in kind with some JSON:
 
-#### Example
+## Example
+<!-- BEGIN-CODE: ../examples/core-modules/readable-stream/readable-stream.example.ts -->
+[**readable-stream.example.ts**](../examples/core-modules/readable-stream/readable-stream.example.ts)
 ```typescript
 import {StreamingDataSource, Topic} from '@streamerson/core';
 
-const readChannel = new StreamingDataSource(/* optional options */);
+export const readChannel = new StreamingDataSource(/* optional options */);
 
 await readChannel.connect();
 
@@ -69,12 +77,13 @@ for await (const event of readChannel.getReadStream({
     // We could even `.pipe()` this event to a Writeable.
 }
 ```
+<!-- END-CODE: ../examples/core-modules/readable-stream/readable-stream.example.ts -->
 
 - And you're ... streaming with gas? Of course, this is relying on default connection settings and the existence of a
   Redis server. In this monorepo, there are tools for starting a Redis Docker image, and there are connection options
   built into the parameters of all the functions for connecting to a non-defaulted Redis instance.
 
-# API
+## API
 
 ### RedisDataSource
 

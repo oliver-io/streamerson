@@ -12,10 +12,16 @@ export class Topic {
     topic: string;
     mode: StreamMessageFlowModes;
     namespace: string;
-    constructor(public options: TopicOptions) {
-        this.namespace = options.namespace;
-        this.topic = options.topic ?? 'DEFAULT';
-        this.mode = options.mode ?? StreamMessageFlowModes.ORDERED;
+    constructor(public options: TopicOptions | string) {
+        if (typeof options === 'string') {
+            this.namespace = options;
+            this.topic = 'DEFAULT';
+            this.mode = StreamMessageFlowModes.ORDERED;
+        } else {
+            this.namespace = options.namespace;
+            this.topic = options.topic ?? 'DEFAULT';
+            this.mode = options.mode ?? StreamMessageFlowModes.ORDERED;
+        }
     }
     meta(shard?: string): StreamMeta {
         return {
@@ -54,10 +60,10 @@ export class Topic {
     }
 
     subtopic(topic: string) {
-        return new Topic({
+        return new Topic(typeof this.options === 'string' ? `${this.topic}(${topic})` : {
             ... this.options,
             topic: `${this.topic}(${topic})`
-        })
+        });
     }
 }
 

@@ -4,7 +4,7 @@ import Pino from 'pino';
 import {
     ChannelTupleArray,
     IncomingChannel,
-    MappedStreamEvent, NonNullablePrimitive,
+    MappedStreamEvent, NonNullablePrimitive, NullablePrimitive,
     OutgoingChannel,
     StreamingDataSource,
     Topic
@@ -19,20 +19,36 @@ const moduleLogger = Pino({
     },
 });
 
-type Handler = (e: MappedStreamEvent) => Promise<MappedStreamEvent>;
+type PayloadVariety = Record<string, NullablePrimitive>;
 
-type HandlerLogicFunction = (e: MappedStreamEvent) => Record<string, NonNullablePrimitive> | Promise<Record<string, NonNullablePrimitive>>;
-function handler(h: HandlerLogicFunction):Handler {
-    return async function(e: MappedStreamEvent) {
-        return {
+type StreamHandlerEvent<
+    T extends PayloadVariety
+> = Omit<MappedStreamEvent, 'payload'> & { payload: T };
+
+type HandlerLogicFunction<
+    T extends PayloadVariety,
+    R extends PayloadVariety
+> = (e: StreamHandlerEvent<T>) => Promise<R> | R;
+
+type Handler<
+    R extends PayloadVariety
+> = (e: MappedStreamEvent) => StreamHandlerEvent<R> | Promise<StreamHandlerEvent<R>>;
+
+function handler<
+    T extends PayloadVariety = any,
+    R extends PayloadVariety = any
+>(h: HandlerLogicFunction<T, R>):Handler<R> {
+    return async function(e) {
+        return ({
             ...e,
-            payload: await h(e)
-        }
+            payload: await h(e as any)
+        })
     }
 }
-export type EventMapRecord = Record<string, HandlerLogicFunction >;
 
-export type StreamConsumerOptions<EventMap extends EventMapRecord> = {
+export type EventMapRecord<T extends PayloadVariety, R extends PayloadVariety> = Record<string, HandlerLogicFunction<T, R>>;
+
+export type StreamConsumerOptions<EventMap extends EventMapRecord<Record<string, NullablePrimitive>, any>> = {
     logger?: Pino.Logger,
     redisConfiguration?: {
         port: number,
@@ -45,11 +61,11 @@ export type StreamConsumerOptions<EventMap extends EventMapRecord> = {
         groupId: string,
         groupMemberId: string;
     };
-    eventMap: EventMap;
+    eventMap?: EventMap;
 }
 
 export class StreamConsumer<
-    EventMap extends EventMapRecord
+    EventMap extends EventMapRecord<any, any>
 > extends EventEmitter {
     topic: Topic;
     incomingChannel: StreamingDataSource;
@@ -135,11 +151,14 @@ export class StreamConsumer<
         this.bindStreamEvents(this.topic);
     }
 
-    registerStreamEvent(
+    registerStreamEvent<
+        T extends PayloadVariety = Record<string, NonNullablePrimitive>,
+        R extends PayloadVariety = Record<string, NonNullablePrimitive>
+    >(
         typeKey: keyof EventMap,
-        handle: EventMap[keyof EventMap]
+        handle: HandlerLogicFunction<T, R>
     ) {
-        this.streamEvents[typeKey] = handler(handle);
+        this.streamEvents[typeKey] = handler<T>(handle) as typeof this.streamEvents[keyof EventMap];
     }
 
     deregisterStreamEvent(typeKey: keyof EventMap) {

@@ -11,7 +11,7 @@
     "noFallthroughCasesInSwitch": true
   },
   "files": [],
-  "include": [ "crud-app" ],
+  "include": [ "./*/**.ts" ],
   "references": [
     {
       "path": "../core/tsconfig.lib.json"
@@ -20,7 +20,13 @@
       "path": "../gateway-fastify/tsconfig.lib.json"
     },
     {
+      "path": "../gateway-wss/tsconfig.lib.json"
+    },
+    {
       "path": "../consumer/tsconfig.lib.json"
+    },
+    {
+      "path": "../consumer-group/tsconfig.lib.json"
     }
   ]
 }
