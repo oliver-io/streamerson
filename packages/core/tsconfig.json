@@ -12,7 +12,8 @@
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "files": [],
   "include": ["src/**/*.ts"],

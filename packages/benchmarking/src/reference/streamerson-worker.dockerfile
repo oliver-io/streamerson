@@ -3,4 +3,4 @@ WORKDIR ../../dist
 RUN npm install
 COPY . .
 EXPOSE 4200
-CMD [ "npm", "start:worker:prod" ]
+CMD [ "npm", "start:worker" ]

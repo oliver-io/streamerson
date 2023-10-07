@@ -1,25 +1,16 @@
 {
-  "name": "@streamerson/benchmarking",
+  "name": "@streamerson/benchmarking-gateway-simple",
   "version": "0.0.1",
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "MIT",
-  "private": false,
-  "type": "module",
+  "private": true,
   "scripts": {
-    "start:api:prod": "node ./src/reference/gateway",
-    "start:api:dev": "tsx ./src/reference/gateway",
-    "build:ref:api": "tsc",
-    "pretest": "yarn build",
-    "test": "node --test"
+    "start:gateway": "node ./src/reference/gateway",
+    "start:worker": "node ./src/reference/worker"
   },
   "dependencies": {
     "@streamerson/core": "^0.0.1",
     "@streamerson/gateway-fastify": "^0.0.1",
     "fastify": "^4.23.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20.6.4",
-    "@types/uuid": "^8.3.4",
-    "pino-pretty": "^7.6.1"
   }
 }

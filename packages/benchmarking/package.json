@@ -6,16 +6,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start:api:prod": "node ./src/reference/gateway",
-    "start:api:dev": "tsx ./src/reference/gateway",
-    "build:ref:api": "tsc",
+    "start:api": "node ./src/reference/gateway",
+    "start:worker": "node ./src/reference/worker",
+    "build": "tsc && cp .env ./dist",
+    "prebundle": "rm -rf dist && yarn build",
+    "bundle": "cd dist/src/reference && yarn --production",
     "pretest": "yarn build",
     "test": "node --test"
   },
   "dependencies": {
     "@streamerson/core": "^0.0.1",
     "@streamerson/gateway-fastify": "^0.0.1",
-    "fastify": "^4.23.2"
+    "fastify": "^4.23.2",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
     "@types/node": "^20.6.4",
