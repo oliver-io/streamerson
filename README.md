@@ -54,6 +54,24 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 A thousand-foot view of what this package is attempting to enable:
 
 <!-- BEGIN-CODE: ./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts -->
+[**consumer-with-framework.example.ts**](./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts)
+```typescript
+import { Topic } from '@streamerson/core';
+import { StreamConsumer } from '@streamerson/consumer';
+
+const consumer = new StreamConsumer({
+    topic: new Topic('my-stream-topic'),
+    bidirectional: true
+});
+
+consumer.registerStreamEvent<{ name: string }>('hello', async  (e) => {
+   return {
+       howdy: `there, ${e.payload.name}`
+   }
+});
+
+await consumer.connectAndListen();
+```
 <!-- END-CODE: ./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts -->
 
 For more examples, please check the dedicated monorepo entry [`@streamerson/examples`](./packages/examples/README.md) for more documentation.  There are examples of the lower-level modules there, as well as:

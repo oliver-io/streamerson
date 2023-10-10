@@ -69,6 +69,8 @@ export async function addEmbeddings(options: AddContentArgs) {
         }
     }
 
+    fs.writeFileSync(options.absoluteFilePath, readme);
+
     return {
         path,
         embedded: i
