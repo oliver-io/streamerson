@@ -191,7 +191,7 @@ The `@streamerson` pattern is using Redis for traffic that would be normally con
 
 ## License
 
-This project is licensed with the LAMC (Love All My Cats) license. It is to be taken very seriously, but permits pretty
+This project is licensed with the [LAMC (Love All My Cats)](./LICENSE.md) license. It is to be taken very seriously, but permits pretty
 much unrestricted usage of this code.
 
 If you use Streamerson, or are inspired by it, please drop me a star, comment, issue, PR, email, or well-wish.
