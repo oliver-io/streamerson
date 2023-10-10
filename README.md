@@ -27,9 +27,13 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
+- [Installation](#installation)
+- [Example:](#example)
   - [Foreword on Monorepo Packages](#foreword-on-monorepo-packages)
 - [High Level Goals](#high-level-goals)
 - [High Level Architecture](#high-level-architecture)
+- [Why Streams?](#why-streams)
 - [Message Flow](#message-flow)
 - [Stream Message Protocol](#stream-message-protocol)
 - [Stream Message Payloads](#stream-message-payloads)
