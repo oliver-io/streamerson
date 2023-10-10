@@ -13,15 +13,9 @@ const supportedFileExtensions = [
     ".md",
 ];
 
-function* getAllCodeFiles(dir?: string): Generator<string> {
-    const codeFiles = fs.readdirSync(`./${dir ? '/' + dir : ''}`, {withFileTypes: true});
-    for (const file of codeFiles) {
-        if (file.isDirectory() && !directoryDenyList.includes(file.name)) {
-            yield* getAllCodeFiles(file.name)
-        } else if (file.isFile() && supportedFileExtensions.includes(path.extname(file.name))) {
-            yield `${dir}/${file.name}`
-        }
-    }
+async function getAllCodeFiles(dir?: string) {
+    const codeFiles:Array<string> = (await glob(dir ?? `packages/**/*.ts`, { ignore: '**/node_modules/**/*' }));
+    return codeFiles;
 }
 
 type AddContentArgs = {
@@ -96,9 +90,28 @@ export async function addTableOfContents(options: AddContentArgs) {
     });
 }
 
-export async function findAllReadMes() {
+export async function generateCodeDocs(options: AddContentArgs):Promise<void> {
+    return new Promise((resolve)=>{
+        let buf = '';
+        const destPath = options.relativeFilePath.replace(/\\/g, '/') + '/../_API.md';
+        const inputPath = options.relativeFilePath.replace(/\\/g, '/');
+        const command = `tsdoc --src=${inputPath} --dest=${destPath}`;
+        console.log(command)
+        const child = exec(command);
+        if (child.stdout) {
+            child.stdout.on('data', (d)=>{
+                buf += d;
+            });
+        }
+        child.on('exit', (code)=>{
+            resolve();
+        });
+    });
+}
+
+export async function findAllMarkdown() {
     try {
-        const testFiles:Array<string> = (await glob(`**/README.md`, { ignore: '**/node_modules/**/*' }));
+        const testFiles:Array<string> = (await glob([`**/*.md`, '!LICENSE.md'], { ignore: '**/node_modules/**/*' }));
         return testFiles;
     } catch(err) {
         console.error(err);
@@ -135,7 +148,26 @@ async function enrichFile(target: string) {
 }
 
 async function cli() {
-    const files = await findAllReadMes();
+    const codeFiles = await getAllCodeFiles();
+    console.log(await Promise.all(((await Promise.all(codeFiles.map(async (codePath)=>{
+        try {
+            const codeText = (await fs.promises.readFile(codePath)).toString();
+            if(codeText.includes('@param')) {
+                return codePath;
+            } else {
+                return false;
+            }
+        } catch(err) {
+            return false;
+        }
+    }))).filter(f=>!!f)).map(async eligibleFile=>{
+        await generateCodeDocs({
+            absoluteFilePath: eligibleFile! as string,
+            relativeFilePath: path.relative(process.cwd(), eligibleFile! as string)
+        });
+    })));
+
+    const files = await findAllMarkdown();
     const result = await Promise.all(files.map(enrichFile));
     if (commandLineArgs.summary) {
         let doctoc = 0;

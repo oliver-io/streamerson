@@ -2,6 +2,22 @@
 
 You might have come here because I linked you to this document, or because you've followed it from my rambling documentation.  The purpose of the following diatribe is to answer a question that might naturally occur to you when presented with [the architecture](../README.md#high-level-architecture) I have suggested elsewhere.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [The Question](#the-question)
+- [The HTTP(s) Dream](#the-https-dream)
+- [The HTTP(s) Nightmare](#the-https-nightmare)
+- [Why Bad Dreams?](#why-bad-dreams)
+  - [**_Is that even possible?_**](#_is-that-even-possible_)
+- [Yes](#yes)
+- [Ok, so why are you talking about Redis a lot?](#ok-so-why-are-you-talking-about-redis-a-lot)
+- [Realtime & The "Overhead" Discussion](#realtime--the-overhead-discussion)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # The Question
 
 It might go something like this:

@@ -3,15 +3,15 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [An Argument / Parable](#an-argument--parable)
-    - [The Premise](#the-premise)
-    - [The Dilemma](#the-dilemma)
-        - [The `posts` Service](#the-posts-service)
-            - [A problem arises](#a-problem-arises)
-            - [A Typical Solution](#a-typical-solution)
-            - [A Poison Pill?](#a-poison-pill)
-        - [Streamerson Style](#streamerson-style)
-            - [Enter Streamerson, Stage Left](#enter-streamerson-stage-left)
-        - [Implicit Efficiency Gains](#implicit-efficiency-gains)
+  - [The Premise](#the-premise)
+  - [The Dilemma](#the-dilemma)
+    - [The `posts` Service](#the-posts-service)
+      - [A problem arises](#a-problem-arises)
+      - [A Typical Solution](#a-typical-solution)
+      - [A Poison Pill?](#a-poison-pill)
+    - [Streamerson Style](#streamerson-style)
+      - [Enter Streamerson, Stage Left](#enter-streamerson-stage-left)
+    - [Implicit Efficiency Gains](#implicit-efficiency-gains)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

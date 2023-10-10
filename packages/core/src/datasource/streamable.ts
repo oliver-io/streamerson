@@ -43,14 +43,31 @@ export type GetReadStreamOptions = {
 	blockingTimeout?: number;
 } & MaybeConsumerGroupInstanceConfig
 
+/**
+ * A remote source capable of retrieving stream records from a Redis instance.
+ *
+ * @constructor options: DataSourceOptions
+ *
+ * @beta
+ */
 export class StreamingDataSource
+
 	extends RedisDataSource
 	implements StreamableDataSource {
 	streamIdMap: Record<StreamId, number> = {};
 	keyEvents: EventEmitter = new EventEmitter();
 	responseType: MessageType = MessageType.RESPONSE;
 
-	async writeToStream(
+	/**
+	  @param outgoingStream: The stream ID to target in Redis
+	  @param incomingStream: Maybe, a stream ID to reply to
+	  @param messageType: The type of the event
+	  @param messageId: The ID of the message
+	  @param message: The message payload
+	  @param sourceId: The ID of the source
+	  @param shard: Maube, the shard to target
+	 */
+	public async writeToStream(
 		outgoingStream: StreamId,
 		incomingStream: StreamId | undefined,
 		messageType: MessageType,

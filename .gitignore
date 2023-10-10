@@ -10,3 +10,4 @@
 **/*/.env
 **/*/.terraform*
 **/terraform.tfstate*
+**/_API.md

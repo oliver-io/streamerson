@@ -21,15 +21,16 @@ The idea for the exported code of this package is essentially to achieve the fol
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [Notes](#notes)
-- [Installation](#installation)
-- [Example](#example)
-- [API](#api)
-  - [RedisDataSource](#redisdatasource)
-  - [StreamingDataSource](#streamingdatasource)
-  - [Promise Tracker](#promise-tracker)
-  - [Stream Awaiter](#stream-awaiter)
-  - [Utils](#utils)
+  - [Notes](#notes)
+  - [Installation](#installation)
+  - [Example](#example)
+  - [API](#api)
+    - [RedisDataSource](#redisdatasource)
+    - [StreamingDataSource](#streamingdatasource)
+    - [Promise Tracker](#promise-tracker)
+    - [Stream Awaiter](#stream-awaiter)
+    - [Utils](#utils)
+- [API Reference](#api-reference)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -134,3 +135,5 @@ for await (const event of readChannel.getReadStream({
     - **HOURS_TO_MS()** _(converts hours to milliseconds)_
   - topic
     - **new Topic({ /\* options \*/ })** _(creates a Topic, which should probably be a first-class citizen of the core package but for now resides here)_
+
+# API Reference
