@@ -74,7 +74,7 @@ await consumer.connectAndListen();
 ```
 <!-- END-CODE: ./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts -->
 
-For more examples, please check the dedicated monorepo entry [`@streamerson/examples`](./packages/examples/README.md) for more documentation.  There are examples of the lower-level modules there, as well as:
+For more examples, please check the dedicated monorepo entry [`@streamerson/examples`](./packages/examples/README.md).  There are examples of the lower-level modules there, as well as:
 - [A Hello World App](./packages/examples/app-hello-world/README.md)
 - [A Typical CRUD App](./packages/examples/app-basic-crud/README.md)
 - [A Websocket<->Stream Adapter](./packages/examples/app-websockets/README.md)
