@@ -42,18 +42,18 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 ## Foreword on Monorepo Packages
 
 - [The core SDK `@streamerson/core`](./packages/core/README.md) contains utilities to wrap a Redis client with a layer that is capable of accessing Redis streams in a couple Node-idiomatic ways, such as:
-  - :check: Promise batch retrieval of **typed** stream messages
-  - :check: Async Iterators for Redis streams
-  - :check: EventEmitters for Redis Streams
-  - :check: Escape hatches for using your own Redis client
+  - :heavy_check_mark: Promise batch retrieval of **typed** stream messages
+  - :heavy_check_mark: Async Iterators for Redis streams
+  - :heavy_check_mark: EventEmitters for Redis Streams
+  - :heavy_check_mark: Escape hatches for using your own Redis client
   - [More Documentation Available](./packages/core/README.md#api)
 - [The Consumer/Producer API `@streamerson/consumer`](./packages/consumer/README.md) is a set of utilities to abstract the raw streams from the `@streamerson/core` module and consume them as event-handling structures not much unlike a webserver.
-  - :check: Supports a declarative way to consume `@streamerson` streams and bind events to message types
-  - :check: Supports bidirectional streaming patterns for consumer/producers to write to other stream(s) given an input from the first
-  - :check: Provides extensible pattern for modeling consumer flows
+  - :heavy_check_mark: Supports a declarative way to consume `@streamerson` streams and bind events to message types
+  - :heavy_check_mark: Supports bidirectional streaming patterns for consumer/producers to write to other stream(s) given an input from the first
+  - :heavy_check_mark: Provides extensible pattern for modeling consumer flows
 - [The Consumer Group API `@streamerson/consumer-group`](./packages/consumer-group/README.md) extends the `@streamerson/consumer` API to provide consumer-group functionality, which allows a set of consumers to operate atomically on a single stream with messages promised to be delivered to a single of the multi-consumers.  This pattern (implemented in Redis but consumed by these modules) allows for parallelizing the workers on a stream without duplicating the messages received between any listeners.
-  - :check: Implements the Redis Consumer Group API for horizontal scaling of a single stream
-  - :check: Allows for recovery on crash of a given consumer within a group
+  - :heavy_check_mark: Implements the Redis Consumer Group API for horizontal scaling of a single stream
+  - :heavy_check_mark: Allows for recovery on crash of a given consumer within a group
 
 If you are interested in the components of the monorepo I encourage you to look at the individual package `README.md` files (I've provided [links above](#monorepo-package-links), or you can just peruse the repository `/packages` directory, though some of those are strictly internal).
 
