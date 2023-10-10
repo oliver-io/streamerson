@@ -4,7 +4,9 @@
 
 :warning: **This project is in active development and is not yet trustable to be stable or work.  If you're interested in using it, hit me with a watch or star, and perhaps prod me toward publishing a 1.0.0 version.** :warning:
 
-This is the root of the Streamerson monorepo, which is a collection meant to be assembled into various use cases for event-oriented streaming architectures (or just any Redis stream use-case).  The packages of interest are as follows:
+Welcome.  I hope you're a fan of Redis Streams, Event-Oriented Architecture, or just people recommending you books about the Observer Model.  If not, turn back, because here there be dragons.
+
+This monorepo is a collection of tools and instrumentation to make Redis streams fun & easy to confuse yourself with.  Enjoy!
 
 
 # Monorepo Package Links:
