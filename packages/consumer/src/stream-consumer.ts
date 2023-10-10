@@ -4,8 +4,8 @@ import Pino from 'pino';
 import {
     ChannelTupleArray,
     IncomingChannel,
-    MappedStreamEvent, NonNullablePrimitive, NullablePrimitive,
-    OutgoingChannel,
+    MappedStreamEvent, MessageId, MessageType, NonNullablePrimitive, NullablePrimitive,
+    OutgoingChannel, StreamId,
     StreamingDataSource,
     Topic
 } from "@streamerson/core";
@@ -256,6 +256,32 @@ export class StreamConsumer<
         if (this.outgoingStream) {
             incomingPipe.pipe(this.outgoingStream);
         }
+    }
+/*
+		outgoingStream: StreamId,
+		incomingStream: StreamId | undefined,
+		messageType: MessageType,
+		messageId: MessageId,
+		message: string,
+		sourceId: string,
+		shard?: string,
+ */
+    async produceMessage(options: {
+        messageId: string,
+        messageType: string,
+        message: Record<string, NullablePrimitive>,
+        sourceId: string,
+        shard?: string
+    }) {
+        await this.outgoingChannel?.writeToStream(
+            this.options.topic.producerKey(),
+            undefined,
+            options.messageId as MessageType,
+            options.messageType,
+            JSON.stringify(options.message),
+            this.options.topic.consumerKey(),
+            options.shard
+        );
     }
 
     private _optionallyRouteMessage(event: any, primaryEvent: string, fallbackEvent: string, logClass: 'error' | 'info' | 'warn') {

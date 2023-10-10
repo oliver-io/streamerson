@@ -20,6 +20,7 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
   consumer group with a single writer and many readers operating on a shared, recoverable in-memory state. The idea is
   that it is easy to model state machines and transitions (and serve information about the current state) by aggregating
   a stream into a single application-layer that can recover & shard its state in Redis.  One could imagine this as a **Log-Structured Merge Tree for Application State**.
+- [`@streamerson/examples`](./packages/examples/README.md): :star: examples :star: of the above in action
 
 
 ## Table of Contents:
@@ -39,6 +40,24 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+# Installation
+
+- yarn: `yarn add @streamerson/core @streamerson/consumer`
+- npm: `npm install @streamerson/core @streamerson/consumer`
+
+# Example:
+
+A thousand-foot view of what this package is attempting to enable:
+
+<!-- BEGIN-CODE: ./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts -->
+<!-- END-CODE: ./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts -->
+
+For more examples, please check the dedicated monorepo entry [`@streamerson/examples`](./packages/examples/README.md) for more documentation.  There are examples of the lower-level modules there, as well as:
+- [A Hello World App](./packages/examples/app-hello-world/README.md)
+- [A Typical CRUD App](./packages/examples/app-basic-crud/README.md)
+- [A Websocket<->Stream Adapter](./packages/examples/app-websockets/README.md)
+- & more, with more to come
+
 ## Foreword on Monorepo Packages
 
 - [The core SDK `@streamerson/core`](./packages/core/README.md) contains utilities to wrap a Redis client with a layer that is capable of accessing Redis streams in a couple Node-idiomatic ways, such as:
@@ -54,6 +73,7 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 - [The Consumer Group API `@streamerson/consumer-group`](./packages/consumer-group/README.md) extends the `@streamerson/consumer` API to provide consumer-group functionality, which allows a set of consumers to operate atomically on a single stream with messages promised to be delivered to a single of the multi-consumers.  This pattern (implemented in Redis but consumed by these modules) allows for parallelizing the workers on a stream without duplicating the messages received between any listeners.
   - :heavy_check_mark: Implements the Redis Consumer Group API for horizontal scaling of a single stream
   - :heavy_check_mark: Allows for recovery on crash of a given consumer within a group
+- [Examples `@streamerson/examples`](./packages/examples/README.md) for examples of the code, and the underlying modules, in action.
 
 If you are interested in the components of the monorepo I encourage you to look at the individual package `README.md` files (I've provided [links above](#monorepo-package-links), or you can just peruse the repository `/packages` directory, though some of those are strictly internal).
 
@@ -106,6 +126,10 @@ Of course, in reality, the diagram for the system architecture might leave out q
 ![diagram.png](docs%2Fstreamerson-api-flow%2Fdiagram.png)
 
 But again, this package is meant to hide that complexity behind a few nice Typescript interfaces and conventions.
+
+# Why Streams?
+
+My argument is that it's advantageous to terminate all HTTPs at the user-boundary, and use Redis Streams as the communication channel for the interior services.  This pattern (sans Redis) isn't to my knowledge new (you'll see the GRPC folks doing similar things), but I've [documented my thoughts on this particular question here](./docs/WHY_STREAMS.md).
 
 # Message Flow
 

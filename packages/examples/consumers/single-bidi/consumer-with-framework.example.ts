@@ -3,15 +3,13 @@ import { StreamConsumer } from '@streamerson/consumer';
 
 const consumer = new StreamConsumer({
     topic: new Topic('my-stream-topic'),
-    bidirectional: true,
-    // The response from this handler will be written to the topic's `producer` stream:
-    eventMap: {
-        ['hello']: (e) => {
-            return {
-                world: 'I am a stream processor'
-            };
-        }
-    }
+    bidirectional: true
+});
+
+consumer.registerStreamEvent<{ name: string }>('hello', async  (e) => {
+   return {
+       howdy: `there, ${e.payload.name}`
+   }
 });
 
 await consumer.connectAndListen();
