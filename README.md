@@ -64,7 +64,7 @@ const consumer = new StreamConsumer({
     bidirectional: true
 });
 
-consumer.registerStreamEvent<{ name: string }>('hello', async  (e) => {
+consumer.registerStreamEvent<{ name: string }>('hello', async (e) => {
    return {
        howdy: `there, ${e.payload.name}`
    }
