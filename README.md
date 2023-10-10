@@ -24,7 +24,7 @@ This is the root of the Streamerson monorepo, which is a collection meant to be 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-  - [Foreword](#foreword)
+  - [Foreword on Monorepo Packages](#foreword-on-monorepo-packages)
 - [High Level Goals](#high-level-goals)
 - [High Level Architecture](#high-level-architecture)
 - [Message Flow](#message-flow)
@@ -37,10 +37,7 @@ This is the root of the Streamerson monorepo, which is a collection meant to be 
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## Foreword
-
-If you are here to look at Redis Stream utilities in general, some of the above monorepo package links might be of more interest than this document.  From here, the content is mostly relative to an opinionated framework for APIs that I am suggesting and/or building these utilities to support.  However, I've published the lower-level components in their own consumable packages built individually from members of the monorepo.
-
+## Foreword on Monorepo Packages
 
 - [The core SDK `@streamerson/core`](./packages/core/README.md) contains utilities to wrap a Redis client with a layer that is capable of accessing Redis streams in a couple Node-idiomatic ways, such as:
   - :check: Promise batch retrieval of **typed** stream messages
