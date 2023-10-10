@@ -61,7 +61,7 @@ If you are interested in _**why**_ I've made these things, read on.
 
 # High Level Goals
 
-This project is my attempt to implement a pattern I probably didn't invent, but
+If you aren't interested in reading about my harebrained API framework concept, then you might be here to poke around the [monorepo packages](#foreword-on-monorepo-packages) (which are pretty much framework-agnostic).   The motivations for this project were my attempt to implement a pattern I probably didn't invent, but
 will here claim. It is an API pattern/framework meant to simplify many of the
 problems I see in modern microservice architecture. Roughly, it is meant to
 achieve the following:
