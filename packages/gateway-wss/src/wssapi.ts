@@ -6,10 +6,7 @@ export { WebSocket };
 // import { StreamConsumer } from '../state';
 const moduleLogger = Pino({
     base: {
-        module: 'wss_api'
-    },
-    transport: {
-        target: 'pino-pretty'
+        module: 'stremerson_gateway_wss'
     },
 });
 

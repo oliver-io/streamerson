@@ -1,16 +1,24 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
-import { green, yellow } from 'colors';
-
+import {exec} from 'child_process';
+import {green, yellow} from 'colors';
+import {glob} from 'glob';
+import minimist from 'minimist';
+const commandLineArgs = minimist(process.argv.slice(2));
 const directoryDenyList = [".yalc", "node_modules", "deps"]
+
+const supportedFileExtensions = [
+    ".ts",
+    ".js",
+    ".md",
+];
 
 function* getAllCodeFiles(dir?: string): Generator<string> {
     const codeFiles = fs.readdirSync(`./${dir ? '/' + dir : ''}`, {withFileTypes: true});
     for (const file of codeFiles) {
         if (file.isDirectory() && !directoryDenyList.includes(file.name)) {
             yield* getAllCodeFiles(file.name)
-        } else if (file.isFile() && (path.extname(file.name) === ".ts")) {
+        } else if (file.isFile() && supportedFileExtensions.includes(path.extname(file.name))) {
             yield `${dir}/${file.name}`
         }
     }
@@ -21,8 +29,21 @@ type AddContentArgs = {
     absoluteFilePath: string
 };
 
-function addContent(options: AddContentArgs) {
-    let readme = fs.readFileSync(options.absoluteFilePath).toString();
+export function tagWithType(content: string, file: string) {
+    const type = path.extname(file).replace('.', '');
+    if (!supportedFileExtensions.includes(`.${type}`)) {
+        throw new Error(`Unsupported file type ${type}`)
+    }
+    switch(type) {
+        case 'ts':
+            return '```typescript\n' + content + '\n```';
+        default:
+            return `\n${content}\n`;
+    }
+}
+
+export async function addEmbeddings(options: AddContentArgs) {
+    let readme = (await fs.promises.readFile(options.absoluteFilePath)).toString();
     const beginTags = readme.match(/<!-- BEGIN-CODE:(\s+)(.*)(\s)+-->/g);
     const endTags = readme.match(/<!-- END-CODE:(\s+)(.*)(\s)+-->/g);
     let i=0, j=0;
@@ -38,39 +59,98 @@ function addContent(options: AddContentArgs) {
             const filePath = path.resolve(`${options.absoluteFilePath}/..`, fileReference);
             const beginEmbedIndex = readme.indexOf(beginTag);
             const endEmbedIndex = readme.indexOf(endTag);
-            const newContent = fs.readFileSync(filePath).toString();
+            const newContent = (await fs.promises.readFile(filePath)).toString();
             const embeddedHref = `[**${
                 fileReference.substring(fileReference.lastIndexOf('/')+1, fileReference.length)
             }**](${fileReference})`;
             const firstHalf = readme.substring(0, beginEmbedIndex + beginTag.length);
             const secondHalf = readme.substring(endEmbedIndex, readme.length);
-            readme = `${firstHalf}\n${embeddedHref}\n${'```typescript\n' + newContent + '\n```'}\n${secondHalf}`;
+            readme = `${firstHalf}\n${embeddedHref}\n${tagWithType(newContent, filePath)}\n${secondHalf}`;
         }
     }
 
-    fs.writeFileSync(options.absoluteFilePath, readme);
-    const log = `Embedding ${i ? 'successful for ' + i + ' blocks' : 'skipped'} for ${options.absoluteFilePath}`;
-    console.log(i ? green(log) : yellow(log));
+    return {
+        path,
+        embedded: i
+    }
 }
 
+export async function addTableOfContents(options: AddContentArgs) {
+    return new Promise((resolve)=>{
+        let buf = '';
+        const child = exec(`doctoc ${options.absoluteFilePath} --github`);
+        if (child.stdout) {
+            child.stdout.on('data', (d)=>{
+                buf += d;
+            });
+        }
+        child.on('exit', (code)=>{
+            const output = buf.toString().trim();
+            resolve(
+                output.includes('Everything is OK') &&
+                output.includes('will be updated')
+            );
+        });
+    });
+}
+
+export async function findAllReadMes() {
+    try {
+        const testFiles:Array<string> = (await glob(`**/README.md`, { ignore: '**/node_modules/**/*' }));
+        return testFiles;
+    } catch(err) {
+        console.error(err);
+        throw new Error("Cannot find readme locations");
+    }
+}
+
+async function enrichFile(target: string) {
+    const pathArgs = {
+        relativeFilePath: path.relative(process.cwd(), target),
+        absoluteFilePath: path.resolve(target)
+    };
+    const [addEmbeds, addTOC] = await Promise.all([
+        addEmbeddings(pathArgs),
+        addTableOfContents(pathArgs)
+    ]);
+
+
+    if ((commandLineArgs.verbose || commandLineArgs.v) || !commandLineArgs.summary) {
+        if ((addEmbeds.embedded || addTOC) || (commandLineArgs.verbose || commandLineArgs.v)) {
+            console.group(pathArgs.absoluteFilePath);
+            console.log(`${addEmbeds.embedded ? green('✓') : yellow('X')} ${
+                addEmbeds.embedded ? 'Added ' + addEmbeds.embedded + ' Embeddings' : 'No Embeddings Added'
+            };`);
+            console.log(`${addTOC ? green('✓') : yellow('X')} DocToc Generated);`);
+            console.groupEnd();
+        }
+    }
+
+    return {
+        embeddings: addEmbeds.embedded,
+        doctoc: addTOC ? 1 : 0
+    }
+}
 
 async function cli() {
-    const [_, __, file] = process.argv;
-    if (!file) {
-        console.log('Usage: tsx embed.ts <path> <file> [contentPath]')
-        process.exit(1);
-    }
+    const files = await findAllReadMes();
+    const result = await Promise.all(files.map(enrichFile));
+    if (commandLineArgs.summary) {
+        let doctoc = 0;
+        let embed = 0;
+        for (const item of result) {
+            doctoc+=item.doctoc;
+            embed+=item.embeddings;
+        }
 
-    const absoluteFilePath = path.resolve(process.cwd(), file);
-    await fs.promises.stat(absoluteFilePath);
-    addContent({
-        relativeFilePath: file,
-        absoluteFilePath,
-    });
-    const doctocResult = execSync(`doctoc ${absoluteFilePath} --github`).toString();
-    if (doctocResult.includes('Everything is OK')) {
-        console.log(green('Doctoc successful'));
+        console.log(((doctoc + embed) ? green('✓ ') : yellow('x ')) + `Added ${
+            doctoc ? green(doctoc.toString()) : yellow('0')
+        } DocTocs and ${
+            embed ? green(embed.toString()) : yellow('0')
+        } Embeddings`);
     }
 }
 
-cli().catch(console.error);
+if (commandLineArgs.write || commandLineArgs.w) {
+    cli().catch(console.error);
+}

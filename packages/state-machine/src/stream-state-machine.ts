@@ -14,10 +14,7 @@ import {
 
 const moduleLogger = Pino({
     base: {
-        module: 'web_api'
-    },
-    transport: {
-        target: 'pino-pretty'
+        module: 'streamerson_state_machine'
     },
 });
 

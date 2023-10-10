@@ -9,7 +9,7 @@
     "build": "nx exec -- nx build",
     "test": "tsx --no-warnings ./tools/run-tests.ts",
     "bundle": "./tools/bundle-publish.sh",
-    "docgen": "tsx ./tools/embed-all",
+    "docgen": "tsx ./tools/embed -write --summary",
     "start:redis": "docker compose up -d",
     "stop:redis": "docker compose down -d",
     "restart:redis": "docker compose restart"
@@ -53,8 +53,10 @@
     ]
   },
   "dependencies": {
+    "@types/minimist": "^1.2.3",
     "colors": "^1.4.0",
     "dotenv": "^16.3.1",
-    "glob": "^10.3.7"
+    "glob": "^10.3.7",
+    "minimist": "^1.2.8"
   }
 }

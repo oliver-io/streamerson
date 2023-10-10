@@ -15,10 +15,7 @@ export class RedisDataSource implements ConnectableDataSource {
 			logger: pino({
 				base: {
 					module: 'streamerson_sdk_datasource',
-				},
-				transport: {
-					target: 'pino-pretty',
-				},
+				}
 			}),
 		},
 	) {

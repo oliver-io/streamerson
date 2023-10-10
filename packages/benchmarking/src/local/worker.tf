@@ -6,6 +6,9 @@ resource "docker_image" "streamerson-worker" {
         context = "../reference"
         dockerfile = "streamerson-worker.dockerfile"
         tag     = ["streamerson-worker:develop"]
+        triggers = {
+            dir_sha1 = sha1(join("", [for f in fileset(path.module, "*") : filesha1(f)]))
+        }
     }
 }
 

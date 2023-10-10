@@ -6,6 +6,9 @@ resource "docker_image" "streamerson-gateway" {
         dockerfile = "streamerson-gateway.dockerfile"
         tag     = ["streamerson-gateway:develop"]
     }
+    triggers = {
+        dir_sha1 = sha1(join("", [for f in fileset(path.module, "*") : filesha1(f)]))
+    }
 }
 
 resource "docker_container" "streamerson-gateway" {

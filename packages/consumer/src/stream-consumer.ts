@@ -12,10 +12,7 @@ import {
 
 const moduleLogger = Pino({
     base: {
-        module: 'web_api'
-    },
-    transport: {
-        target: 'pino-pretty'
+        module: 'stream_consumer'
     },
 });
 
