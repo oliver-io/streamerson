@@ -4,7 +4,7 @@ You might have come here because I linked you to this document, or because you'v
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+**Table of Conten ts**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [The Question](#the-question)
 - [The HTTP(s) Dream](#the-https-dream)

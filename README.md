@@ -8,6 +8,7 @@ Welcome.  I hope you're a fan of Redis Streams, Event-Oriented Architecture, or 
 
 This monorepo is a collection of tools and instrumentation to make Redis streams fun & easy to confuse yourself with.  Enjoy!
 
+![the streamerson guy](./docs/mr_streamerson.png)
 
 # Monorepo Package Links:
 
