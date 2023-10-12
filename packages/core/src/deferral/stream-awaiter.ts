@@ -1,7 +1,8 @@
 import {type Logger} from 'pino';
 import {DeferralTracker} from '..';
 import {type MappedStreamEvent, type MessageType, type StreamConfiguration} from '../types';
-import {shardDecorator, ids } from '../utils';
+import {ids } from '../utils/ids';
+import {shardDecorator} from '../utils/keys';
 
 type streamAwaiterOptions = Omit<StreamConfiguration, 'outgoingStream'> & {
 	logger?: Logger;

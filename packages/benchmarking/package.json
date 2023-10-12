@@ -1,9 +1,10 @@
 {
   "name": "@streamerson/benchmarking",
   "version": "0.0.1",
+  "module": "CommonJS",
   "dependencies": {
-    "@streamerson/core": "^0.0.1",
-    "@streamerson/gateway-fastify": "^0.0.1",
+    "@streamerson/core": "^0.0.16",
+    "@streamerson/gateway-fastify": "^0.0.3",
     "dotenv": "^16.3.1",
     "fastify": "^4.24.0",
     "tslib": "^2.3.0"
@@ -12,6 +13,5 @@
     "@types/node": "^20.6.4",
     "@types/uuid": "^8.3.4",
     "pino-pretty": "^7.6.1"
-  },
-  "type": "commonjs"
+  }
 }

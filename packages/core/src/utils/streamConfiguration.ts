@@ -3,8 +3,8 @@ import {
 	type StreamersonLogger,
 	type StreamOptions,
 } from '../types';
-import {StreamingDataSource} from '../';
-import {Topic} from "./topics";
+import {StreamingDataSource} from '../datasource/streamable';
+import {Topic} from "./topic";
 
 export function buildStreamConfiguration(
 	topic: Topic,

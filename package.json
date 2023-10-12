@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "license": "LAMC",
   "scripts": {
-    "build": "nx exec -- nx build",
-    "test": "tsx --no-warnings ./tools/run-tests.ts",
-    "bundle": "./tools/bundle-publish.sh",
-    "docgen": "tsx ./tools/embed -write --summary",
+    "build": "nx run-many -t build --all --exclude=state-machine",
+    "test": "nx run-many -t test --all --exclude=state-machine",
+    "docgen": "tsx ./tools/embed -w --summary",
     "start:redis": "docker compose up -d",
     "stop:redis": "docker compose down -d",
-    "restart:redis": "docker compose restart"
+    "restart:redis": "docker compose restart",
+    "release:core": "cd packages/core && yarn version && cd ../../ && yarn build && cd ./dist/packages/core && yarn release"
   },
   "private": true,
   "dependencies": {},
