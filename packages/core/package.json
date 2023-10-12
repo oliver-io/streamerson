@@ -1,6 +1,6 @@
 {
   "name": "@streamerson/core",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "repository": "https://github.com/oliver-io/streamerson.git",
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "LAMC",
@@ -13,7 +13,6 @@
     "tslib": "^2.3.0",
     "uuid": "^8.3.2"
   },
-  "type": "module",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
   "devDependencies": {
