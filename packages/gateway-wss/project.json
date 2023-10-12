@@ -1,0 +1,33 @@
+{
+  "name": "gateway-wss",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/gateway-wss/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/gateway-wss",
+        "main": "packages/gateway-wss/src/index.ts",
+        "tsConfig": "packages/gateway-wss/tsconfig.lib.json",
+        "assets": ["packages/gateway-wss/*.md"]
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs gateway-wss {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/gateway-wss/**/*.ts",
+          "packages/gateway-wss/package.json"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

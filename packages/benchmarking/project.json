@@ -1,0 +1,29 @@
+{
+  "name": "benchmarking",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/benchmarking/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/benchmarking",
+        "main": "packages/benchmarking/src/index.ts",
+        "tsConfig": "packages/benchmarking/tsconfig.lib.json",
+        "assets": ["packages/benchmarking/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/benchmarking/**/*.ts",
+          "packages/benchmarking/package.json"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

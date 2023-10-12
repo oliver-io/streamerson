@@ -1,39 +1,60 @@
-# @streamerson/consumer
+# @streamerson/consumer-group
 
-> A Typescript stream consumer/producer for Redis & the [@streamerson](../../README.md) framework
+> Redis stream "consumer groups" as bidi Typescript Read/Writables
 
-This module exposes some high-level Typescript classes for reading from Redis streams as Readable Streams (in Node.JS).  The exported classes are essentially utility wrappers around the lower-level objects supplied by [@streamerson/core](../core/README.md).  Direct usage of those low-level modules is possible but not encouraged, as these are (meant to be) a stable, configurable & clean interface over low-level and rather gross underlying components.
+Part of a larger monorepo, this package provides a Typescript implementation for reading from Redis Streams-- as a member of a consumer group.  This package provides an interface for constructing objects that can be treated as streams / EventEmitters, but are under-the-hood statelessly reading (in a distributed way) from a Redis stream with guaranteed once-only delivery (except in failures / retries).
 
+# Table of Contents
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Usage](#usage)
-  - [See Also: Streamerson](#see-also-streamerson)
+- [Installation](#installation)
+- [Example](#example)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Usage
+## Installation
 
-- `yarn add @streamerson/consumer`
+- `yarn install @streamerson/consumer-group`
 
-<!-- BEGIN-CODE: ../examples/consumers/single-uni/consumer-with-framework.example.ts -->
-[**consumer-with-framework.example.ts**](../examples/consumers/single-uni/consumer-with-framework.example.ts)
+## Example
+
+The following example will create a consumer group against a given stream in Redis (a serverside operation which starts to track message delivery & acknowledgement for each member).
+
+This example binds an event handler to `"my-event"`, which means that if the consumer gets a message from the stream with a matching `type: "my-event"` field, it will run the arbitrary logic from its handler.  In this example, we just log out some info upon receiving these events:
+
+<!-- BEGIN-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
+[**consumer-group-readable.ts**](../examples/consumers/groups/consumer-group-readable.ts)
 ```typescript
-import { Topic } from '@streamerson/core';
-import { StreamConsumer } from '@streamerson/consumer';
+import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer-group';
 
-const consumer = new StreamConsumer({
-    topic: new Topic('my-stream-topic'),
-    bidirectional: false,
-    eventMap: {
-        ['hello']: (e) => {
-            console.log('I just got an event!')
-        }
-    }
+const consumerGroup = new ConsumerGroupTopic({
+    topic: 'my-stream-topic',
+    namespace: 'examples',
+    mode: 'ORDERED'
+}, {
+    name: 'some-consumer-group',
+    min: 1,
+    max: 1,
+    processingTimeout: 0,
+    idleTimeout: 0
 });
 
-await consumer.connectAndListen();
-```
-<!-- END-CODE: ../examples/consumers/singlel-uni/consumer-with-framework.example.ts -->
+await consumerGroup.connect();
+await consumerGroup.create();
 
-## See Also: [Streamerson](https://github.com/oliver-io/streamerson)
+const consumerGroupMember = new ConsumerGroupMember({
+    topic: consumerGroup,
+    groupMemberId: 'consumer-1'
+});
+
+consumerGroupMember.registerStreamEvent('my-event', (data) => {
+    console.log('An event with type "my-event" was received:')
+    console.log(data);
+});
+
+await consumerGroupMember.connectAndListen();
+```
+<!-- END-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
+
+Note that the `groupMemberId` field (here set to `"consumer-1"`) indicates which member of the group is connected.  We could create more of these with different IDs, and they would each be guaranteed to receive *different* messages from Redis.  That guarantee comes not from this package, but from the implementation of Redis streams themselves; this code just wraps around the actual client layer, delivering an interface for working with streams in an event-oriented way.  Under the hood, these types extend the `EventEmitter` class and are thus able to be read, piped, and *etc.* as per normal streams.

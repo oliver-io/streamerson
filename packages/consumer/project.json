@@ -1,0 +1,33 @@
+{
+  "name": "consumer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/consumer/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/consumer",
+        "main": "packages/consumer/src/index.ts",
+        "tsConfig": "packages/consumer/tsconfig.lib.json",
+        "assets": ["packages/consumer/*.md"]
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs consumer {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/consumer/**/*.ts",
+          "packages/consumer/package.json"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

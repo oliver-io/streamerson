@@ -151,8 +151,8 @@ export type BlockingStreamBatchResponse = {
 
 export type DataSourceOptions = {
 	getConnection?: () => RedisClient;
-	port: number;
-	host: string;
+	port?: number;
+	host?: string;
 	logger: Logger;
 	controllable?: boolean;
 };

@@ -1,16 +1,10 @@
 {
   "name": "@streamerson/test-utils",
   "version": "0.0.1",
-  "source": "index.ts",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "author": "oliver-io <oliver.l.carrillo@gmail.com>",
-  "license": "MIT",
-  "private": true,
-  "scripts": {
-    "build": "tsc && yalc publish --private"
+  "dependencies": {
+    "tslib": "^2.3.0"
   },
-  "devDependencies": {
-    "pino": "^8.15.1"
-  }
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts"
 }

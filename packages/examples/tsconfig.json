@@ -1,8 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "ES2022",
-    "target": "ES2022",
+    "module": "commonjs",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
@@ -11,22 +10,10 @@
     "noFallthroughCasesInSwitch": true
   },
   "files": [],
-  "include": [ "./**/*.ts" ],
+  "include": [],
   "references": [
     {
-      "path": "../core/tsconfig.lib.json"
-    },
-    {
-      "path": "../gateway-fastify/tsconfig.lib.json"
-    },
-    {
-      "path": "../gateway-wss/tsconfig.lib.json"
-    },
-    {
-      "path": "../consumer/tsconfig.lib.json"
-    },
-    {
-      "path": "../consumer-group/tsconfig.lib.json"
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

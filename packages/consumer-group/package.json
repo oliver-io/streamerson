@@ -1,18 +1,8 @@
 {
   "name": "@streamerson/consumer-group",
   "version": "0.0.1",
-  "source": "index.ts",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "author": "oliver-io <oliver.l.carrillo@gmail.com>",
-  "license": "MIT",
-  "private": false,
-  "scripts": {
-    "build": "tsc && yalc publish --private",
-    "pretest": "yarn build",
-    "test": "cd ../../ && yarn test @streamerson/consumer-group"
-  },
   "dependencies": {
+    "tslib": "^2.3.0",
     "@streamerson/core": "^0.0.1",
     "@streamerson/consumer": "^0.0.1",
     "ioredis": "^5.0.4",
@@ -21,5 +11,8 @@
   "devDependencies": {
     "@types/node": "^20.6.4",
     "pino-pretty": "^7.6.1"
-  }
+  },
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts"
 }

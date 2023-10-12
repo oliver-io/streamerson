@@ -1,0 +1,33 @@
+{
+  "name": "state-machine",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/state-machine/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/state-machine",
+        "main": "packages/state-machine/src/index.ts",
+        "tsConfig": "packages/state-machine/tsconfig.lib.json",
+        "assets": ["packages/state-machine/*.md"]
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs state-machine {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/state-machine/**/*.ts",
+          "packages/state-machine/package.json"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

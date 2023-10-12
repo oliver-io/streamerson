@@ -1,0 +1,29 @@
+{
+  "name": "examples",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/examples/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/examples",
+        "main": "packages/examples/src/index.ts",
+        "tsConfig": "packages/examples/tsconfig.lib.json",
+        "assets": ["packages/examples/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/examples/**/*.ts",
+          "packages/examples/package.json"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

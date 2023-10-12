@@ -1,19 +1,8 @@
 {
   "name": "@streamerson/gateway-wss",
   "version": "0.0.1",
-  "source": "index.ts",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
-  "repository": "https://github.com/oliver-io/streamerson-gateway-wss.git",
-  "author": "oliver-io <oliver.l.carrillo@gmail.com>",
-  "license": "MIT",
-  "private": false,
-  "scripts": {
-    "build": "tsc && yalc publish --private",
-    "pretest": "yarn build",
-    "test": "node --test"
-  },
   "dependencies": {
+    "tslib": "^2.3.0",
     "@streamerson/core": "^0.0.1",
     "fastify": "^4.23.2",
     "fastify-plugin": "^4.5.1",
@@ -28,28 +17,7 @@
     "@types/uuid": "^8.3.4",
     "pino-pretty": "^7.6.1"
   },
-  "eslintConfig": {
-    "env": {
-      "browser": true,
-      "es2021": true
-    },
-    "extends": "xo",
-    "overrides": [
-      {
-        "extends": [
-          "xo-typescript"
-        ],
-        "files": [
-          "*.ts",
-          "*.tsx"
-        ]
-      }
-    ],
-    "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module"
-    },
-    "rules": {}
-  },
-  "prettier": "@jupiterone/typescript-tools/config/prettier"
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts"
 }

@@ -2,12 +2,12 @@ import {ConsumerGroupInstanceConfig, MappedStreamEvent, StreamingDataSource} fro
 import {EventMapRecord, StreamConsumer, StreamConsumerOptions} from "@streamerson/consumer"
 import {ConsumerGroupTopic} from "./group";
 
-type ConsumerGroupMemberOptions<E extends EventMapRecord> = StreamConsumerOptions<E> & {
+type ConsumerGroupMemberOptions<E extends EventMapRecord<any, any>> = StreamConsumerOptions<E> & {
     topic: ConsumerGroupTopic,
     groupMemberId: string
 }
 
-export class ConsumerGroupMember<E extends EventMapRecord> extends StreamConsumer<E> {
+export class ConsumerGroupMember<E extends EventMapRecord<any, any>> extends StreamConsumer<E> {
     instanceConfig: ConsumerGroupInstanceConfig
     _channel: StreamingDataSource;
     constructor(

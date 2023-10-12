@@ -1,5 +1,5 @@
 import { Logger } from 'pino';
-import {mock } from 'node:test';
+const { mock } = require('node:test');
 const getMock = ((obj: any)=>obj as ReturnType<typeof mock.fn>)
 
 export const mockLogger = {

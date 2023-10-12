@@ -1,12 +1,9 @@
 {
-  "extends": "@jupiterone/typescript-tools/config/typescript",
   "compileOnSave": false,
   "compilerOptions": {
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "rootDir": ".",
-    "outDir": "out-tsc",
-    "inlineSourceMap": true,
+    "sourceMap": true,
+    "declaration": false,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -18,14 +15,15 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@streamerson/benchmarking": ["packages/benchmarking/src/index.ts"],
+      "@streamerson/consumer": ["packages/consumer/src/index.ts"],
+      "@streamerson/consumer-group": ["packages/consumer-group/src/index.ts"],
       "@streamerson/core": ["packages/core/src/index.ts"],
+      "@streamerson/examples": ["packages/examples/src/index.ts"],
       "@streamerson/gateway-fastify": ["packages/gateway-fastify/src/index.ts"],
       "@streamerson/gateway-wss": ["packages/gateway-wss/src/index.ts"],
       "@streamerson/state-machine": ["packages/state-machine/src/index.ts"],
-      "@streamerson/consumer": ["packages/consumer/src/index.ts"],
-      "@streamerson/consumer-group": ["packages/consumer-group/src/index.ts"],
-      "@streamerson/examples": ["packages/examples"],
-      "@streamerson/test-utils": ["packages/test-utils/index.ts"]
+      "@streamerson/test-utils": ["packages/test-utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

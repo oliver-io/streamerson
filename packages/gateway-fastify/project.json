@@ -1,0 +1,33 @@
+{
+  "name": "gateway-fastify",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/gateway-fastify/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/gateway-fastify",
+        "main": "packages/gateway-fastify/src/index.ts",
+        "tsConfig": "packages/gateway-fastify/tsconfig.lib.json",
+        "assets": ["packages/gateway-fastify/*.md"]
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs gateway-fastify {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/gateway-fastify/**/*.ts",
+          "packages/gateway-fastify/package.json"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

@@ -2,6 +2,9 @@ import Redis from 'ioredis';
 import pino from 'pino';
 import {type DataSourceOptions, type ConnectableDataSource, StreamersonLogger} from '../../types';
 
+const DEFAULT_PORT = 6379;
+const DEFAULT_HOST = 'localhost';
+
 export class RedisDataSource implements ConnectableDataSource {
 	public _client: Redis | undefined = undefined;
 	public _control: Redis | undefined = undefined;
@@ -75,11 +78,11 @@ export class RedisDataSource implements ConnectableDataSource {
 				this._control = this.options.getConnection();
 			}
 		} else {
-			this._client = new Redis(this.options.port, this.options.host, {
+			this._client = new Redis(this.options.port ?? DEFAULT_PORT, this.options.host ?? DEFAULT_HOST, {
 				retryStrategy: undefined,
 			});
 			if (this.options.controllable) {
-				this._control = new Redis(this.options.port, this.options.host, {
+				this._control = new Redis(this.options.port ?? DEFAULT_PORT, this.options.host ?? DEFAULT_HOST, {
 					retryStrategy: undefined,
 				});
 			}
