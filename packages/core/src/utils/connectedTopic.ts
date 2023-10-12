@@ -1,4 +1,4 @@
-import {StreamingDataSource, Topic, TopicOptions} from "@streamerson/core";
+import {StreamingDataSource, Topic, TopicOptions} from "..";
 
 export class ConnectedTopic extends Topic {
   _channel: StreamingDataSource;

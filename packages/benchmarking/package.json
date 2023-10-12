@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "module": "CommonJS",
   "dependencies": {
-    "@streamerson/core": "0.0.17",
+    "@streamerson/core": "0.0.19",
     "dotenv": "^16.3.1",
     "fastify": "^4.24.0",
     "tslib": "^2.3.0"

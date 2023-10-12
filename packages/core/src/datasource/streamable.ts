@@ -78,7 +78,7 @@ export class StreamingDataSource
     shard?: string,
   ) {
     try {
-      console.time('Dispatch writeToStream to Redis');
+      // console.time('Dispatch writeToStream to Redis');
       const result = this.client.xadd(
         shardDecorator({key: outgoingStream, shard}),
         '*',
@@ -91,7 +91,7 @@ export class StreamingDataSource
         'UnoccupiedField',
         message, // Payload
       );
-      console.timeEnd('Dispatch writeToStream to Redis');
+      // console.timeEnd('Dispatch writeToStream to Redis');
       return await result;
     } catch (err) {
       this.logger.error(err);
