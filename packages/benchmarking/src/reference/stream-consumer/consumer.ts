@@ -3,20 +3,20 @@ import { config } from './config';
 
 const MSG_COUNT = 100000;
 export async function run() {
-  const a = new StreamingDataSource({
+  const dataSource = new StreamingDataSource({
     host: config.redisHost,
     port: config.redisPort,
   });
-  await a.connect();
+  await dataSource.connect();
   const began = Date.now();
 
-  a.logger.info({
+  dataSource.logger.info({
     start: began
   }, `Connected... writing ${MSG_COUNT} messages to the stream`);
 
   for (let i = 0; i < MSG_COUNT; i++) {
     let str = 'message' + i;
-    await a.writeToStream(
+    await dataSource.writeToStream(
       'test',
       undefined,
       'test' as any,
@@ -27,15 +27,15 @@ export async function run() {
   }
 
   const finishedWrites = Date.now();
-  a.logger.info({
+  dataSource.logger.info({
     elapsed: finishedWrites - began
   }, `Wrote ${MSG_COUNT} messages to the stream`);
   const startedReads = new Date().getTime();
-  a.logger.info({
+  dataSource.logger.info({
     start: startedReads
   }, 'Reading from stream...');
 
-  const eventBatch = await a.readAsSingle('test', '0', 1000);
+  const eventBatch = await dataSource.readAsSingle('test', '0', 1000);
   const end = (new Date()).getTime();
   let events = [];
   for (const [_streamTitle, entries] of eventBatch ?? []) {
@@ -44,7 +44,7 @@ export async function run() {
     }
   }
 
-  a.logger.info({
+  dataSource.logger.info({
     total: `${end - began} ms`,
     write: `${finishedWrites - began} ms`,
     read: `${end - finishedWrites} ms`,
