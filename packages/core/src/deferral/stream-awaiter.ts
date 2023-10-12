@@ -33,7 +33,7 @@ export const streamAwaiter = <T extends MappedStreamEvent>(
 			}
 
 			const id = ids.guuid();
-			let $expectedResponse = stateTracker.promise<T>(id);
+			let $expectedResponse = (stateTracker.promise<T>(id) as ReturnType<typeof stateTracker.promise<T>> | null);
 			await writeChannel.writeToStream(
 				target,
 				incomingStream,
@@ -45,10 +45,9 @@ export const streamAwaiter = <T extends MappedStreamEvent>(
 			);
 			const deferredResponse = await $expectedResponse;
 			// Todo: consider using a weakmap here to avoid memory leaks, but for now:
-			// @ts-expect-error:: explicitly tell the gc to get rid of our interior promise
 			$expectedResponse = null;
 			stateTracker.delete(id);
-			return deferredResponse.payload;
+			return deferredResponse!.payload;
 		},
 		async readResponseStream(shard?: string) {
 			for await (const event of readChannel.getReadStream({

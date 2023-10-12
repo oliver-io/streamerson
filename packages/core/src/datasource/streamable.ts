@@ -463,15 +463,15 @@ export class StreamingDataSource
         }
       }
 
-      const raced = await Promise.race<{
-        cursor?: string | Record<string, string>;
-        events: MappedStreamEvent[];
-      }>([
+      const raced = (await Promise.race([
         this.blockingStreamBatchMap(args),
         new Promise(r => {
           this.keyEvents.once(KeyEvents.UPDATE, r);
         }),
-      ]);
+      ])) as {
+        cursor?: string | Record<string, string>;
+        events: MappedStreamEvent[];
+      };
 
       if (!raced.cursor) {
         this.logger.info(

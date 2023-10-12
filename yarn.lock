@@ -1690,16 +1690,6 @@
     pino "^7.11.0"
     uuid "^8.3.2"
 
-"@streamerson/core@^0.0.16":
-  version "0.0.16"
-  resolved "https://registry.yarnpkg.com/@streamerson/core/-/core-0.0.16.tgz#a0a0c37905326298b7887744942cea18ed2ef548"
-  integrity sha512-ylxomiF5YnzG1ZDD5bJ0gNy61KdSChJdj4AHLIF9NnXpqFa2TPCsBRi7mWhtAjuhW8061EIDi4qo5/m0MYN8qQ==
-  dependencies:
-    ioredis "^5.0.4"
-    pino "^7.11.0"
-    tslib "^2.3.0"
-    uuid "^8.3.2"
-
 "@textlint/ast-node-types@^12.6.1":
   version "12.6.1"
   resolved "https://registry.yarnpkg.com/@textlint/ast-node-types/-/ast-node-types-12.6.1.tgz#35ecefe74e701d7f632c083d4fda89cab1b89012"
