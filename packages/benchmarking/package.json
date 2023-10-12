@@ -4,7 +4,6 @@
   "module": "CommonJS",
   "dependencies": {
     "@streamerson/core": "^0.0.16",
-    "@streamerson/gateway-fastify": "^0.0.3",
     "dotenv": "^16.3.1",
     "fastify": "^4.24.0",
     "tslib": "^2.3.0"

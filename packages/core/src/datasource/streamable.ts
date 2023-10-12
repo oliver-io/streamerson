@@ -94,7 +94,7 @@ export class StreamingDataSource
       console.timeEnd('Dispatch writeToStream to Redis');
       return await result;
     } catch (err) {
-      this.options.logger.error(err);
+      this.logger.error(err);
       throw new Error(
         `Failed attempt to call XADD [key=${outgoingStream},response=${incomingStream}, shard=${shard}, message=${message}]`,
       );
@@ -124,7 +124,7 @@ export class StreamingDataSource
     _streamTitle: string,
   ) {
     const [_id, properties] = rawEvent;
-    this.options.logger.info('DESERIALIZING: ', rawEvent);
+    this.logger.info('DESERIALIZING: ', rawEvent);
     const eventMap: MappedStreamEvent = {
       streamId: _streamTitle,
       streamMessageId: _id,
@@ -150,8 +150,8 @@ export class StreamingDataSource
       : (properties[MessageHeaderIndex.PAYLOAD] as string);
 
     if (!eventMap.messageId) {
-      this.options.logger.error('MAP', eventMap);
-      this.options.logger.error('PROPS', properties);
+      this.logger.error('MAP', eventMap);
+      this.logger.error('PROPS', properties);
       throw new Error('No Message ID in Message');
     }
 
@@ -231,7 +231,7 @@ export class StreamingDataSource
   }
 
   async blockingStreamBatchMap(options: BlockingStreamBatchMapOptions) {
-    const {logger} = this.options;
+    const logger = this.logger;
     try {
       if (options.stream && typeof options.last === 'string') {
         let cursor = options.last ?? '$';
@@ -364,7 +364,7 @@ export class StreamingDataSource
       objectMode: true,
       write: async (chunk: MappedStreamEvent, _, callback) => {
         if (!chunk.messageId || !chunk.payload) {
-          this.options.logger.warn(
+          this.logger.warn(
             `Dropping message with no messageId or payload: ${chunk}`,
           );
           return;
@@ -374,7 +374,7 @@ export class StreamingDataSource
         const outgoingStreamName = 'topic' in options ? options.topic.producerKey(options.shard) : options.responseChannel;
 
         const {messageId, payload} = chunk;
-        this.options.logger.info({payload}, '\r\n\r\nRESP Payload\r\n\r\n');
+        this.logger.info({payload}, '\r\n\r\nRESP Payload\r\n\r\n');
         await this.writeToStream(
           incomingStreamName,
           outgoingStreamName,
@@ -393,7 +393,7 @@ export class StreamingDataSource
     try {
       return await this.client.get(shardDecorator({key, shard})) ?? undefined;
     } catch (err) {
-      this.options.logger.error(err);
+      this.logger.error(err);
       throw new Error(`Failed attempt to call GET [key=${key},shard=${shard}]`);
     }
   }
@@ -402,7 +402,7 @@ export class StreamingDataSource
     try {
       return await this.client.incr(shardDecorator({key, shard})) ?? undefined;
     } catch (err) {
-      this.options.logger.error(err);
+      this.logger.error(err);
       throw new Error(`Failed attempt to call INCR [key=${key},shard=${shard}]`);
     }
   }
@@ -415,7 +415,7 @@ export class StreamingDataSource
 
       return (await this.client.set(shardDecorator(options), value)) === 'OK';
     } catch (err) {
-      this.options.logger.error(err);
+      this.logger.error(err);
       throw new Error(
         `Failed attempt to call SET [key=${options.key}, shard=${options.shard}, value=${value}]`,
       );
@@ -448,7 +448,7 @@ export class StreamingDataSource
     };
 
     const refreshStreams = () => {
-      this.options.logger.info({options, args}, 'Refreshing streams');
+      this.logger.info({options, args}, 'Refreshing streams');
       hasNewStreams = true;
     };
 
@@ -474,7 +474,7 @@ export class StreamingDataSource
       ]);
 
       if (!raced.cursor) {
-        this.options.logger.info(
+        this.logger.info(
           'Aborted early from stream, terminating pending connections',
         );
         await this.abort();

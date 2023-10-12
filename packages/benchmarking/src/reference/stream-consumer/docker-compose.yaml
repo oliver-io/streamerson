@@ -1,0 +1,18 @@
+services:
+  redis:
+    container_name: streamerson-redis
+    hostname: streamerson
+    image: "redis:alpine"
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - streamerson
+  stream-consumer:
+    image: "stream-consumer:latest"
+    depends_on:
+      - redis
+    networks:
+      - streamerson
+networks:
+  streamerson:
+    name: streamerson

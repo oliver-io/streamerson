@@ -5,6 +5,12 @@ import {type DataSourceOptions, type ConnectableDataSource, StreamersonLogger} f
 const DEFAULT_PORT = 6379;
 const DEFAULT_HOST = 'localhost';
 
+const moduleLogger = pino({
+  base: {
+    module: 'stream_consumer'
+  },
+});
+
 export class RedisDataSource implements ConnectableDataSource {
 	public _client: Redis | undefined = undefined;
 	public _control: Redis | undefined = undefined;
@@ -15,14 +21,10 @@ export class RedisDataSource implements ConnectableDataSource {
 			port: 6379,
 			host: 'localhost',
 			controllable: true,
-			logger: pino({
-				base: {
-					module: 'streamerson_sdk_datasource',
-				}
-			}),
+			logger: moduleLogger,
 		},
 	) {
-		this.logger = options.logger
+		this.logger = options.logger ?? moduleLogger
 	}
 
 	async debugPing() {
@@ -91,7 +93,7 @@ export class RedisDataSource implements ConnectableDataSource {
 		const connectionPromise = new Promise<RedisDataSource>(
 			(resolve, reject) => {
 				this.client.on('end', (error: Error | unknown) => {
-					this.options.logger.error(error);
+					this.logger.error(error);
 				});
 				this.client.on('connect', async () => {
 					try {
@@ -114,7 +116,7 @@ export class RedisDataSource implements ConnectableDataSource {
 		if (this.options.controllable) {
 			const controlPromise = new Promise<RedisDataSource>((resolve, reject) => {
 				this.control.on('end', (error: Error | unknown) => {
-					this.options.logger.error(error);
+					this.logger.error(error);
 				});
 				this.control.on('connect', async () => {
 					try {

@@ -149,13 +149,13 @@ export type BlockingStreamBatchResponse = {
 	events: Array<MappedStreamEvent | string>;
 };
 
-export type DataSourceOptions = {
-	getConnection?: () => RedisClient;
-	port?: number;
-	host?: string;
+export type DataSourceOptions = Partial<{
+	getConnection: () => RedisClient;
+	port: number;
+	host: string;
 	logger: Logger;
-	controllable?: boolean;
-};
+	controllable: boolean;
+}>;
 
 export type ConnectableDataSource = {
 	options: DataSourceOptions;
