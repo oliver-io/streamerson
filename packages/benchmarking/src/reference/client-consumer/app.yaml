@@ -1,0 +1,6 @@
+client-consumer:
+  image: "client-consumer:latest"
+  depends_on:
+    - redis
+  networks:
+    - streamerson

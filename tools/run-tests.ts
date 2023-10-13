@@ -7,18 +7,21 @@ if (!target) {
     throw new Error("No target specified");
 }
 
-try {
+(async () => {
+
+  try {
     const { projectDirectory } = getPackageMetadata(target);
     const testFiles:Array<string> = await glob(`${projectDirectory}/**/*.test.ts`);
     for (const testFile of testFiles) {
-        if (filter && !testFile.includes(filter)) {
-            continue;
-        }
-        describe(`${testFile}`, async () => {
-            await import(testFile);
-        });
+      if (filter && !testFile.includes(filter)) {
+        continue;
+      }
+      describe(`${testFile}`, async () => {
+        await import(testFile);
+      });
     }
-} catch(err) {
+  } catch(err) {
     console.error(err);
     throw new Error("Cannot read package.json");
-}
+  }
+})().catch(console.error)

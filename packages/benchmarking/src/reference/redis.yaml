@@ -13,13 +13,6 @@ services:
       STREAMERSON_GATEWAY_TOPIC: 'bench'
       STREAMERSON_REDIS_HOST: streamerson
       STREAMERSON_REDIS_PORT: 6379
-
-  stream-consumer:
-    image: "stream-consumer:latest"
-    depends_on:
-      - redis
-    networks:
-      - streamerson
 networks:
   streamerson:
     name: streamerson

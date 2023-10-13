@@ -12,8 +12,8 @@
     "stop:redis": "docker compose down -d",
     "restart:redis": "docker compose restart",
     "release:core": "cd packages/core && yarn version && cd ../../ && yarn build && cd ./dist/packages/core && yarn release",
-    "build:benchmarks": "docker build -t stream-consumer . -f ./packages/benchmarking/src/reference/stream-consumer/consumer.dockerfile",
-    "start:benchmarks": "(cd ./packages/benchmarking/src/reference/stream-consumer && docker compose up)"
+    "prebenchmark": "yarn build",
+    "benchmark": "tsx ./tools/run-benchmarks.ts --build"
   },
   "private": true,
   "dependencies": {
