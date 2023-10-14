@@ -7,12 +7,6 @@ services:
       - 0.0.0.0:6379:6379
     networks:
       - streamerson
-    environment:
-      STREAMERSON_GATEWAY_PORT: 4200
-      STREAMERSON_GATEWAY_HOST: 0.0.0.0
-      STREAMERSON_GATEWAY_TOPIC: 'bench'
-      STREAMERSON_REDIS_HOST: streamerson
-      STREAMERSON_REDIS_PORT: 6379
 networks:
   streamerson:
     name: streamerson

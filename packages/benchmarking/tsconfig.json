@@ -13,7 +13,7 @@
     "baseUrl": ".",
     "paths": {}
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "tools/run-benchmark.sh"],
   "exclude": ["node_modules", "tmp"],
   "references": [
     {

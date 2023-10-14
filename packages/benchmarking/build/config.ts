@@ -5,6 +5,8 @@ function buildEnv<T extends Record<string, string>>(props: T): Record<keyof T, s
   conf({ path: '../.env'});
   conf({ path: '../../.env'});
   conf({ path: '../../../.env'});
+  conf({ path: '../../../../.env'});
+  conf({ path: '../../../../../.env'});
   const env:Partial<Record<keyof typeof props, string | number>> = {};
   for (const k in props) {
     env[k] = process.env[props[k]];

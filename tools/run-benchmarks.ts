@@ -13,7 +13,7 @@ if (!args.target) {
 
 async function run() {
   try {
-    const appFiles:Array<string> = await glob(`./packages/benchmarking/src/reference/**/app.yaml`);
+    const appFiles:Array<string> = await glob(`./packages/benchmarking/src/**/*benchmark.ts`);
     if (!appFiles.length) {
       throw new Error("No such directory found");
     } else {
@@ -27,24 +27,28 @@ async function run() {
         continue;
       }
 
-      const [_dockerfile] = await glob(`./packages/benchmarking/src/reference/${dirname}/**.dockerfile`);
-      const dockerfile = path.posix.resolve(_dockerfile);
-      if (!dockerfile) {
-        throw new Error(`No dockerfile found for ${dirname}`);
-      }
+      // const [_dockerfile] = await glob(`./packages/benchmarking/src/reference/${dirname}/**.dockerfile`);
+      // const dockerfile = path.posix.resolve(_dockerfile);
+      // if (!dockerfile) {
+      //   throw new Error(`No dockerfile found for ${dirname}`);
+      // }
 
-      const commands = [
+      const command = [
         ... (args.build ? [
-          `docker build -t ${dirname} . -f ${dockerfile}`
+          `docker build -t streamerson/benchmarking . -f ./packages/benchmarking/build/benchmarking.dockerfile`,
+          `(docker build --build-arg TARGET=${dirname} -t streamerson/benchmarking/${dirname} . -f ./packages/benchmarking/build/app.dockerfile)`
         ] : []),
-        'cd ./packages/benchmarking/src/reference',
-        `docker compose -f redis.yaml -f ${appFile} up`
-      ];
+        "cd packages/benchmarking",
+        `echo "Starting benchmark for ${dirname}"`,
+        "docker compose -f ./build/stack.yaml -f ./build/app.yaml up"
+      ].join(' && ');
 
-      const command = commands.join(' && ');
-      console.log(command)
-
-      const result = execSync(command, { stdio: 'inherit' });
+      const result = execSync(command, { stdio: 'inherit', env: {
+        ...process.env,
+        STREAMERSON_IMAGE_TARGET: `streamerson/benchmarking/${dirname}:latest`,
+        STREAMERSON_BENCHMARK_APP_TARGET: dirname,
+        STREAMERSON_PROJECT_ROOT: path.posix.resolve('./packages/benchmarking')
+      }});
       console.log(result);
     }
   } catch(err) {

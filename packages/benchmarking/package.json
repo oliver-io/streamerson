@@ -2,6 +2,9 @@
   "name": "@streamerson/benchmarking",
   "version": "0.0.1",
   "module": "CommonJS",
+  "scripts": {
+    "run-benchmark": "./tools/run-benchmark.sh tsx"
+  },
   "dependencies": {
     "@streamerson/core": "0.0.19",
     "dotenv": "^16.3.1",

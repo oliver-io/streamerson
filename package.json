@@ -13,7 +13,8 @@
     "restart:redis": "docker compose restart",
     "release:core": "cd packages/core && yarn version && cd ../../ && yarn build && cd ./dist/packages/core && yarn release",
     "prebenchmark": "yarn build",
-    "benchmark": "tsx ./tools/run-benchmarks.ts --build"
+    "benchmark": "tsx ./tools/run-benchmarks.ts --build",
+    "all:benchmarks": "tools/run-all-benchmarks.ts"
   },
   "private": true,
   "dependencies": {

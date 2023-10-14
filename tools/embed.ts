@@ -96,7 +96,6 @@ export async function generateCodeDocs(options: AddContentArgs):Promise<void> {
         const destPath = options.relativeFilePath.replace(/\\/g, '/') + '/../_API.md';
         const inputPath = options.relativeFilePath.replace(/\\/g, '/');
         const command = `tsdoc --src=${inputPath} --dest=${destPath}`;
-        console.log(command)
         const child = exec(command);
         if (child.stdout) {
             child.stdout.on('data', (d)=>{

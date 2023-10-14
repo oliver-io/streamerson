@@ -1,5 +1,5 @@
 import { StreamingDataSource } from '@streamerson/core';
-import { config } from '../../config';
+import { config } from '../../../build/config';
 import { StreamersonLogger } from "@streamerson/core";
 import {iterateTimedEvents, StageInfo, StepEvent} from "../../benchUtils/iterateTimedEvents";
 import {logTimingEvent} from "../../benchUtils/logging";

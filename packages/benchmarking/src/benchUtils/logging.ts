@@ -1,6 +1,7 @@
 import {StepEvent} from "./iterateTimedEvents";
 import { type StreamersonLogger } from "@streamerson/core";
-export function logTimingEvent(logger: StreamersonLogger, event: StepEvent, options?: {
+import Pino from "pino";
+export function logTimingEvent(logger: StreamersonLogger | ReturnType<typeof Pino>, event: StepEvent, options?: {
   logProperties?: boolean
 }) {
   if (options?.logProperties) {

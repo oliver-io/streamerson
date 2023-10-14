@@ -1,0 +1,12 @@
+services:
+  benchmarking:
+    image: ${STREAMERSON_IMAGE_TARGET}
+    depends_on:
+      - redis
+    networks:
+      - streamerson
+    environment:
+      IMAGE: ${STREAMERSON_IMAGE_TARGET}
+      STREAMERSON_BENCHMARK_APP_TARGET: ${STREAMERSON_BENCHMARK_APP_TARGET}
+      STREAMERSON_PROJECT_ROOT: ${STREAMERSON_PROJECT_ROOT}
+      STREAMERSON_REDIS_HOST: "streamerson"
