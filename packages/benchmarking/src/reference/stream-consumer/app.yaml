@@ -1,7 +1,0 @@
-services:
-  stream-consumer:
-    image: "stream-consumer"
-    depends_on:
-      - redis
-    networks:
-      - streamerson

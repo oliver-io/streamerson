@@ -1,3 +1,5 @@
+import {buildReport} from "./report";
+
 type BaseEventSteps = 'begin' | 'finalized';
 
 export type StepEvent = {
