@@ -53,6 +53,8 @@ The table is presented as follows:
 |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------:|:-----------------------------------------------:|---------------------------------------------------|
 | *the name of the benchmarking case, where <br/>- `bulk` is to mean "all at once"<br/>- `iterative` is to mean "one-by-one"<br/>-`client` is to mean a bare redis client with replicated logic for benchmarking purposes<br/>- `framework` is to mean a streamerson equivalent* | *time in ms for the bare client implementation* | *time in ms for the streamerson implementation* | ~ [*pct overhead imposed by @streamerson logic*]% |
 
+:warning: As of `10/23`, these numbers exist as a first-pass over the benchmarking.  I'm sure that they will reveal many improvements, which is part of the reason I'm gathering the data.  I suspect that some of these initial numbers reflect time spent in creating arrays and et cetera, and may be over-representing the framework overhead by leaving certain logic that the framework has out of the benchmarks.  However, I guess that's part of the point. :warning:  
+
 [//]: # (<details>)
 
 [//]: # (<summary>)
