@@ -1,6 +1,6 @@
 services:
   redis:
-    container_name: streamerson-redis
+    container_name: "streamerson-redis-${STREAMERSON_PROJECT}"
     hostname: streamerson
     image: "redis:alpine"
     ports:

@@ -1,11 +1,9 @@
 import {glob} from 'glob';
 import minimist from 'minimist';
 import path from 'path';
-import { execSync } from 'child_process';
+import {execSync} from 'child_process';
 
-const args = minimist(process.argv.slice(2), {
-
-});
+const args = minimist(process.argv.slice(2), {});
 
 if (!args.target) {
   throw new Error("No target specified");
@@ -13,45 +11,66 @@ if (!args.target) {
 
 async function run() {
   try {
-    const appFiles:Array<string> = await glob(`./packages/benchmarking/src/**/*benchmark.ts`);
+    const buildReport = args.report ?? true;
+    const appFiles: Array<string> = await glob(`./packages/benchmarking/src/**/*benchmark.ts`);
     if (!appFiles.length) {
       throw new Error("No such directory found");
-    } else {
-      console.log(appFiles);
+    }
+
+    const exec = args.exec ?? false;
+
+    if (!exec && !args.build) {
+      throw new Error("No action specified; must be one or both of --build or --exec");
     }
 
     for (const _appFile of appFiles) {
       const appFile = path.posix.resolve(_appFile);
-      const dirname = path.basename(path.dirname(appFile));
-      if (args.target && !args.target.includes(dirname)) {
+      const directory = path.basename(path.dirname(appFile));
+      if (args.target && !args.target.includes(directory)) {
         continue;
       }
 
-      // const [_dockerfile] = await glob(`./packages/benchmarking/src/reference/${dirname}/**.dockerfile`);
-      // const dockerfile = path.posix.resolve(_dockerfile);
-      // if (!dockerfile) {
-      //   throw new Error(`No dockerfile found for ${dirname}`);
-      // }
-
-      const command = [
-        ... (args.build ? [
-          `docker build -t streamerson/benchmarking . -f ./packages/benchmarking/build/benchmarking.dockerfile`,
-          `(docker build --build-arg TARGET=${dirname} -t streamerson/benchmarking/${dirname} . -f ./packages/benchmarking/build/app.dockerfile)`
-        ] : []),
-        "cd packages/benchmarking",
-        `echo "Starting benchmark for ${dirname}"`,
-        "docker compose -f ./build/stack.yaml -f ./build/app.yaml up"
-      ].join(' && ');
-
-      const result = execSync(command, { stdio: 'inherit', env: {
+      const STREAMERSON_IMAGE_TARGET = `streamerson/benchmarking/${directory}:latest`;
+      const STREAMERSON_BENCHMARK_APP_TARGET = directory;
+      const env = {
         ...process.env,
-        STREAMERSON_IMAGE_TARGET: `streamerson/benchmarking/${dirname}:latest`,
-        STREAMERSON_BENCHMARK_APP_TARGET: dirname,
-        STREAMERSON_PROJECT_ROOT: path.posix.resolve('./packages/benchmarking')
-      }});
-      console.log(result);
+        STREAMERSON_IMAGE_TARGET,
+        STREAMERSON_BENCHMARK_APP_TARGET,
+        STREAMERSON_PROJECT: directory
+      };
+
+      if (args.build) {
+        const buildCommands = [
+          ...(args.build ? [
+            `docker build -t streamerson/benchmarking:latest . -f ./packages/benchmarking/build/benchmarking.dockerfile`,
+            `docker build --build-arg TARGET=${directory} -t streamerson/benchmarking/${directory}:latest . -f ./packages/benchmarking/build/app.dockerfile`
+          ] : [])
+        ];
+
+        for (const cmd of buildCommands) {
+          execSync(cmd, {
+            stdio: 'inherit', env
+          });
+        }
+      }
+
+      if (args.exec) {
+        const executeCommands = [
+          `echo "Starting benchmark for ${directory}"`,
+          `docker compose -p ${directory} -f ./build/stack.yaml -f ./build/app.yaml up --abort-on-container-exit --force-recreate --renew-anon-volumes`,
+          ...(buildReport ? [
+            `docker cp ${directory}-benchmarking-1:/app/benchmarking/benchmark-report.json ./_reports/${directory}-report.json`,
+          ] : [])
+        ];
+
+        for (const cmd of executeCommands) {
+          execSync(cmd, {
+            cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit', env
+          });
+        }
+      }
     }
-  } catch(err) {
+  } catch (err) {
     console.error(err);
   }
 }

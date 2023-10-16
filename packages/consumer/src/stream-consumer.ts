@@ -163,7 +163,7 @@ export class StreamConsumer<
     };
 
     addStream(key: string) {
-        this.logger.info({ key }, 'ADDING STREAM TO LISTENING CHANNEL');
+        this.logger.info({ key }, 'Adding stream to listening channel');
         this.incomingChannel.addStreamId(key);
     };
 
@@ -233,7 +233,6 @@ export class StreamConsumer<
         const incomingPipe = this.incomingStream.pipe(new Transform({
             transform: function (object, _, callback) {
                 try {
-                    console.log('RECEIVED A MESSAGE FROM THE FREAKIN THING', object);
                     if (object) {
                         setState(object).then((message) => {
                             this.push({

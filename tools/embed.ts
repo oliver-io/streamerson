@@ -5,7 +5,7 @@ import {green, yellow} from 'colors';
 import {glob} from 'glob';
 import minimist from 'minimist';
 const commandLineArgs = minimist(process.argv.slice(2));
-const directoryDenyList = [".yalc", "node_modules", "deps"]
+const directoryDenyList = [".yalc", "dist/**/*", "tmp/**/*", "node_modules", "deps", '**/node_modules/**/*']
 
 const supportedFileExtensions = [
     ".ts",
@@ -14,7 +14,7 @@ const supportedFileExtensions = [
 ];
 
 async function getAllCodeFiles(dir?: string) {
-    const codeFiles:Array<string> = (await glob(dir ?? `packages/**/*.ts`, { ignore: '**/node_modules/**/*' }));
+    const codeFiles:Array<string> = (await glob(dir ?? `packages/**/*.ts`, { ignore: directoryDenyList }));
     return codeFiles;
 }
 
@@ -110,7 +110,7 @@ export async function generateCodeDocs(options: AddContentArgs):Promise<void> {
 
 export async function findAllMarkdown() {
     try {
-        const testFiles:Array<string> = (await glob([`**/*.md`, '!LICENSE.md'], { ignore: '**/node_modules/**/*' }));
+        const testFiles:Array<string> = (await glob([`**/*.md`, '!LICENSE.md'], { ignore: directoryDenyList }));
         return testFiles;
     } catch(err) {
         console.error(err);

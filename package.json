@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "license": "LAMC",
   "scripts": {
-    "clean": "lerna exec 'rm -rf node_modules' && nx reset && rm -rf dist && docker system prune --volumes -a && rm -rf node_modules && rm -rf tmp && yarn",
+    "clean": "./tools/cleanup.sh",
+    "postclean": "yarn && yarn build",
     "build": "nx run-many -t build --all --exclude=state-machine",
     "build:clean": "yarn clean && yarn build",
     "test": "nx run-many -t test --all --exclude=state-machine",
@@ -12,12 +13,14 @@
     "stop:redis": "docker compose down -d",
     "restart:redis": "docker compose restart",
     "release:core": "cd packages/core && yarn version && cd ../../ && yarn build && cd ./dist/packages/core && yarn release",
-    "prebenchmark": "yarn build",
-    "benchmark": "tsx ./tools/run-benchmarks.ts --build",
-    "all:benchmarks": "tools/run-all-benchmarks.ts"
+    "benchmark": "tsx ./tools/run-benchmarks.ts",
+    "preall:benchmarks": "yarn build",
+    "all:benchmarks": "tsx ./tools/run-all-benchmarks.ts",
+    "clean:all:benchmarks": "yarn clean && yarn all:benchmarks"
   },
   "private": true,
   "dependencies": {
+    "colors": "^1.4.0",
     "lerna": "^7.3.1"
   },
   "devDependencies": {

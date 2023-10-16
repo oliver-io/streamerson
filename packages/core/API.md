@@ -91,5 +91,3 @@ Parameters:
 
 
 <!-- END-CODE: ./src/datasource/_API.md -->
-
-Ok?

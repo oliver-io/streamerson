@@ -205,7 +205,7 @@ const [
   payload 
 ] = messageTuple;
 ```
-Because redis doesn't care much about the size of keys versus the size of values, I am essentially setting key-value pairs to value-value pairs.  This might have some negative repercussions in Redis but if benchmarks reveal that, I'll change it.  For now, it achieves a roughly halving of the field-count for a given message.
+Because redis doesn't care much about the size of keys versus the size of values, I am essentially setting key-value pairs to value-value pairs.  This might have some negative repercussions in Redis but if definitions reveal that, I'll change it.  For now, it achieves a roughly halving of the field-count for a given message.
 
 # Stream Message Payloads
 

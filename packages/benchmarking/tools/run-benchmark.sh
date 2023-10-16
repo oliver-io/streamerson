@@ -14,4 +14,3 @@ else
     echo "No benchmark found for $TARGET"
     exit 1
 fi
-```

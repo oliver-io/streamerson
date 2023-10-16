@@ -11,9 +11,9 @@ async function runAllBenchmarksAndMaybeCollectResults() {
   const appFiles:Array<string> = await glob(`./packages/benchmarking/src/**/*benchmark.ts`);
   if (!appFiles.length) {
     throw new Error("No such directory found");
-  } else {
-    console.log(appFiles);
   }
+
+  const executionCommands:Array<string> = [];
 
   for (const _appFile of appFiles) {
     const appFile = path.posix.resolve(_appFile);
@@ -22,11 +22,17 @@ async function runAllBenchmarksAndMaybeCollectResults() {
       continue;
     }
 
-    const result = execSync(`yarn benchmark --target=${dirname}`, { stdio: 'inherit' });
-    // After we run the benchmark, we should run a `docker cp` of some sort in order to extract
-    // a TODO: file from the docker container containing an aggregate of its JSON.
-    // Then we can take all the executed benchmarks, and aggregate them into a single JSON file
-    // and console.table that here:
-    console.log(result);
+    execSync(`yarn benchmark --build --target=${dirname}`, { stdio: 'inherit' });
+    executionCommands.push(`yarn benchmark --exec --target=${dirname}`);
   }
+
+  for (const cmd of executionCommands) {
+    execSync(cmd, { stdio: 'inherit' });
+  }
+
+  execSync('yarn build:summary', {
+    cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit'
+  });
 }
+
+runAllBenchmarksAndMaybeCollectResults().catch(console.error);

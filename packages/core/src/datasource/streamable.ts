@@ -124,7 +124,6 @@ export class StreamingDataSource
     _streamTitle: string,
   ) {
     const [_id, properties] = rawEvent;
-    this.logger.info('DESERIALIZING: ', rawEvent);
     const eventMap: MappedStreamEvent = {
       streamId: _streamTitle,
       streamMessageId: _id,
@@ -191,18 +190,19 @@ export class StreamingDataSource
     });
   }
 
-  async readAsSingle(stream: string, cursor: string, timeout: number) {
+  async readAsSingle(stream: string, cursor: string, timeout: number, batchSize = 1) {
     return (await this.client.call(
       'XREAD',
       'BLOCK',
       timeout,
-      // "COUNT", 10,
+      "COUNT",
+      batchSize,
       'STREAMS',
       stream,
       cursor,
     ) ?? []) as Array<[
       StreamId,
-      Array<[_id: string, messaage: StreamResponseArray]>,
+      Array<[_id: string, message: StreamResponseArray]>,
     ]>;
   }
 
@@ -234,14 +234,11 @@ export class StreamingDataSource
     const logger = this.logger;
     try {
       if (options.stream && typeof options.last === 'string') {
-        let cursor = options.last ?? '$';
+        let cursor = options.last || '$';
         const stream = shardDecorator({
           key: options.stream,
           shard: options.shard,
         });
-        logger.info(
-          `(Re)initiating Redis stream ${stream} read from key ${cursor}`,
-        );
         const events: MappedStreamEvent[] = [];
         const streamEvents = await (options.consumerGroupInstanceConfig ?
             this.readAsGroup(
@@ -256,7 +253,8 @@ export class StreamingDataSource
             this.readAsSingle(
               stream,
               cursor,
-              options.blockingTimeout ?? DEFAULT_BLOCKING_TIMEOUT
+              options.blockingTimeout ?? DEFAULT_BLOCKING_TIMEOUT,
+              options.requestedBatchSize ?? 1
             )
         );
 
@@ -267,12 +265,6 @@ export class StreamingDataSource
           }
         }
 
-        if (events.length) {
-          logger.info(
-            `Returning ${events.length} events from batch, last key ${cursor}`,
-          );
-        }
-
         return {
           cursor,
           events,
@@ -280,7 +272,6 @@ export class StreamingDataSource
       }
 
       if (!options.stream && typeof options.last === 'object') {
-        logger.info({options}, 'ENGAGING IN MULTISTREAM MODE');
         const cursor = options.last;
         // Multistream mode:
         const streamKeys = Object.keys(this.streamIdMap);
@@ -296,18 +287,7 @@ export class StreamingDataSource
           ...streamKeys.map(s => cursor[s] ?? '$'),
         );
         const events: MappedStreamEvent[] = [];
-        const args: Array<string | number> = [
-          'XREAD',
-          'BLOCK',
-          options.blockingTimeout ?? HOURS_TO_MS(0.5),
-          'STREAMS',
-          ...streamsWithCursors,
-        ];
 
-        logger.info(
-          {arguments: args.join(' ')},
-          '(Re)initiating COMPOSITE Redis stream',
-        );
         const streamEvents = ((await this.client.call(
           'XREAD',
           'BLOCK',
@@ -318,19 +298,12 @@ export class StreamingDataSource
           StreamId,
           Array<[_id: string, messaage: StreamResponseArray]>,
         ]>;
-        logger.info({streamEvents}, 'COMPOSITE Redis stream RESULTS!');
 
         for (const [_streamTitle, entries] of streamEvents ?? []) {
           for (const rawEvent of entries) {
             events.push(this.deserializeMessageArray(rawEvent, _streamTitle));
             cursor[_streamTitle] = rawEvent[0];
           }
-        }
-
-        if (events.length) {
-          logger.info(
-            `Returning ${events.length} events from batch, last key ${cursor}`,
-          );
         }
 
         return {
@@ -374,7 +347,6 @@ export class StreamingDataSource
         const outgoingStreamName = 'topic' in options ? options.topic.producerKey(options.shard) : options.responseChannel;
 
         const {messageId, payload} = chunk;
-        this.logger.info({payload}, '\r\n\r\nRESP Payload\r\n\r\n');
         await this.writeToStream(
           incomingStreamName,
           outgoingStreamName,
@@ -448,7 +420,6 @@ export class StreamingDataSource
     };
 
     const refreshStreams = () => {
-      this.logger.info({options, args}, 'Refreshing streams');
       hasNewStreams = true;
     };
 

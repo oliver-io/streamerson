@@ -244,21 +244,11 @@ export class StreamStateMachine<
     }
 
     async atomicallyIncrementState(stateTarget: keyof AState, keyOptions: KeyOptions) {
-        // Debug print of first value -- not a get&operate:
-        const val0 = await this.stateCache.get(stateTarget, keyOptions);
-        console.log('===========INCR==VAL0 (MAYBE STALE):', val0);
-        const val1 = await this.stateCache.incr(stateTarget, keyOptions);
-        console.log('===========INCR==VALP', val1);
-        return val1;
+        return await this.stateCache.incr(stateTarget, keyOptions);
     }
 
     async atomicallyDecrementState(stateTarget: keyof AState, keyOptions: KeyOptions) {
-        // Debug print of first value, not a get&operate:
-        const val0 = await this.stateCache.get(stateTarget, keyOptions);
-        console.log('===========DECR==VAL0 (MAYBE STALE):', val0);
-        const val1 = await this.stateCache.decr(stateTarget, keyOptions);
-        console.log('===========DECR==VALP', val1);
-        return val1;
+        return await this.stateCache.decr(stateTarget, keyOptions);
     }
 
     async process(streamMessage: MappedStreamEvent) {
@@ -275,9 +265,9 @@ export class StreamStateMachine<
             this.stateTransformers,
             {
                 ...streamMessage,
-                payload: 
-                    typeof streamMessage.payload === 'object' ? 
-                        streamMessage.payload : 
+                payload:
+                    typeof streamMessage.payload === 'object' ?
+                        streamMessage.payload :
                         JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
             }
         );
@@ -309,7 +299,6 @@ export class StreamStateMachine<
         const incomingPipe = this.incomingStream.pipe(new Transform({
             transform: function (object, _, callback) {
                 try {
-                    console.log('RECEIVED A MESSAGE FROM THE FREAKIN THING', object);
                     if (object) {
                         setState(object).then((message) => {
                             this.push({
@@ -322,7 +311,7 @@ export class StreamStateMachine<
                         });
                     }
                 } catch (err) {
-                    this.push('Generic Error Response cijkdcjidkfj');
+                    this.push('Generic Error Response');
                     callback();
                 }
             },

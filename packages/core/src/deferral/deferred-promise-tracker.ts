@@ -53,10 +53,6 @@ export class DeferralTracker extends EventEmitter {
 	}
 
 	responseEvent(event: MappedStreamEvent) {
-		this.logger.info(
-			'DEFERRED PROMISE TRACKER, GETTING REPSONSE EVENT: ',
-			event,
-		);
 		try {
 			const {messageId} = event;
 			if (this.promises[messageId]) {
@@ -78,7 +74,6 @@ export class DeferralTracker extends EventEmitter {
 				};
 			}
 		} catch (err) {
-			this.logger.info('Error occurred in response event: ', err);
 			this.errorEvent({
 				...event,
 				payload: {
@@ -129,6 +124,8 @@ export class DeferralTracker extends EventEmitter {
 				}, this.timeout * 2),
 			};
 		}
+
+    this.logger.error(event);
 	}
 
 	async promise<T extends DeferredEvent>(

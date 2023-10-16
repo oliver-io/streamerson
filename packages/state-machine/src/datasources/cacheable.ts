@@ -104,13 +104,11 @@ export class CacheableDataSource extends RedisDataSource {
         try {
             const cacheKey = shardDecorator(options);
             const cacheable = stateConfig?.replicated || stateConfig?.rent;
-            this.options.logger.info({ cacheKey }, '!!! Cache key')
 
             if (cacheable) {
                 if (this.cache.has(cacheKey)) {
                     const cachedEntry = this.cache.get(cacheKey);
                     if (cachedEntry) {
-                        // this.options.logger.info([...this.cache.entries()], 'DIRECT GET Hash entries')
                         return cachedEntry as T;
                     }
                 }
@@ -128,7 +126,6 @@ export class CacheableDataSource extends RedisDataSource {
             } else {
             }
 
-            // this.options.logger.info([...this.cache.entries()], 'POST GET Hash entries')
             return result ? result as unknown as T : null;
         } catch (err) {
             console.error(err);
@@ -214,7 +211,6 @@ export class CacheableDataSource extends RedisDataSource {
                 }
             }
 
-            // this.options.logger.info([...this.cache.entries()], 'Hash entries')
             return true;
         } catch (err) {
             console.error(err);
@@ -258,9 +254,9 @@ export class CacheableDataSource extends RedisDataSource {
     // These commands only work on redis protocol versions higher than supported:
     async enableCache(id: number) {
         if (await this.cachedChannel.client.client("TRACKING", "on", "REDIRECT", id) !== 'OK') {
-            this.options.logger.error(Error("Cannot enable client tracking"));
+            this.logger.error(Error("Cannot enable client tracking"));
         } else {
-            this.options.logger.info(`Enabled client tracking for ID ${id}`);
+            this.logger.info(`Enabled client tracking for ID ${id}`);
         }
     }
 

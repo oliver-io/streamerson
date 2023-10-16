@@ -4,16 +4,17 @@ type BaseEventSteps = 'begin' | 'finalized';
 
 export type StepEvent = {
   name: string;
+  result?: any;
 } & ({
   step: 'start' | BaseEventSteps
 } | {
   step: 'finished' | BaseEventSteps
-  duration: number
+  duration: number,
 });
 
 export type StageInfo = Array<{
   name: string;
-  fn: () => Promise<void>;
+  fn: () => Promise<any>;
 }>;
 
 export async function *iterateTimedEvents(stages: StageInfo): AsyncGenerator<StepEvent> {
@@ -26,14 +27,15 @@ export async function *iterateTimedEvents(stages: StageInfo): AsyncGenerator<Ste
     yield {
       name: stage.name,
       step: 'start'
-    } ;
+    };
     const start = Date.now();
-    await stage.fn();
+    const result = await stage.fn();
     const end = Date.now();
     yield {
       name: stage.name,
       step: 'finished',
       duration: end - start,
+      result
     };
   }
   yield {
