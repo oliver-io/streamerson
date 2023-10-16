@@ -13,17 +13,23 @@ function makeMarkdownTable(results: Awaited<ReturnType<typeof summarizeResults>>
   const __headers = Object.keys(results[Object.keys(results)[0]]);
   const _headers = [...__headers];
   for (let i = 0; i < _headers.length; i++) {
-    _headers[i] = `**${_headers[i]}** (milliseconds)`;
+    _headers[i] = `**${_headers[i]}** (ms)`;
   }
   return getMarkdownTable({
     table: {
-      head: ['Test Case', ..._headers],
+      head: ['Test Case', ..._headers, 'Framework Overhead'],
       body: Object.keys(results).map((key) => {
         const row = results[key];
         const headers = __headers as Array<keyof typeof row>;
-        return [key, ...headers.map((h) => {
-          return row[h].toString();
-        })]
+        const hasTiming = (row["control"] !== 'n/a' && row["experiment"] !== 'n/a');
+        return [
+          key,
+          row["control"].toString(),
+          row["experiment"].toString(),
+          (row["control"] === 'n/a' || row["experiment"] === 'n/a') ?
+            'n/a' :
+            `~ ${((1 - (row["control"] / (row["experiment"]))) * 100).toFixed(1)}%`
+        ];
       }),
     },
     alignment: [Align.Left, Align.Center, Align.Center],

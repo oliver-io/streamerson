@@ -21,6 +21,22 @@
 <!-- BEGIN-CODE: ./src/datasource/_API.md -->
 [**_API.md**](./src/datasource/_API.md)
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [:factory: StreamingDataSource](#factory-streamingdatasource)
+  - [Methods](#methods)
+    - [:gear: writeToStream](#gear-writetostream)
+    - [:gear: setResponseType](#gear-setresponsetype)
+    - [:gear: addStreamId](#gear-addstreamid)
+    - [:gear: hasStreamId](#gear-hasstreamid)
+    - [:gear: removeStreamId](#gear-removestreamid)
+    - [:gear: getReadStream](#gear-getreadstream)
+    - [:gear: getWriteStream](#gear-getwritestream)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## :factory: StreamingDataSource
 
 A remote source capable of retrieving stream records from a Redis instance.

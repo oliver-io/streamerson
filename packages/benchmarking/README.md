@@ -41,28 +41,37 @@ I'll track the current results below
 
 ### Local Docker
 
-<details>
-<summary>
-  Dropdown for Benchmarking Results
-</summary>
+These tests have thus far been run on my machine with:
+- 32gb RAM
+- 8-core 3.8ghz Intel i7
+- Windoze
+- Docker Desktop
+
+[//]: # (<details>)
+
+[//]: # (<summary>)
+
+[//]: # (  Dropdown for Benchmarking Results)
+
+[//]: # (</summary>)
 
 <!-- BEGIN-CODE: ./_reports/summary.md -->
 [**summary.md**](./_reports/summary.md)
 
-| Test Case            | **control** (milliseconds) | **experiment** (milliseconds) |
-| :------------------- | :------------------------: | :---------------------------: |
-| write-1k-iterative   |            112             |              112              |
-| write-1k-bulk        |             36             |              54               |
-| read-1k-iterative    |            104             |              113              |
-| read-1k-bulk         |             7              |               9               |
-| write-100k-iterative |            8359            |             8654              |
-| write-100k-bulk      |            1061            |             2268              |
-| read-100k-iterative  |            8598            |             9407              |
-| read-100k-bulk       |            413             |              451              |
+| Test Case            | **control** (ms) | **experiment** (ms) | Framework Overhead |
+| :------------------- | :--------------: | :-----------------: | ------------------ |
+| write-1k-iterative   |       112        |         112         | ~ 0.0%             |
+| write-1k-bulk        |        36        |         54          | ~ 33.3%            |
+| read-1k-iterative    |       104        |         113         | ~ 8.0%             |
+| read-1k-bulk         |        7         |          9          | ~ 22.2%            |
+| write-100k-iterative |       8359       |        8654         | ~ 3.4%             |
+| write-100k-bulk      |       1061       |        2268         | ~ 53.2%            |
+| read-100k-iterative  |       8598       |        9407         | ~ 8.6%             |
+| read-100k-bulk       |       413        |         451         | ~ 8.4%             |
 
 <!-- END-CODE: ./_reports/summary.md -->
 
-</details>
+[//]: # (</details>)
 
 ### AWS
 
