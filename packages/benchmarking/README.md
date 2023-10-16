@@ -47,6 +47,12 @@ These tests have thus far been run on my machine with:
 - Windoze
 - Docker Desktop
 
+The table is presented as follows:
+
+| Test Case                                                                                                                                                                                                                                                                    |                **control** (ms)                 |               **experiment** (ms)               | Framework Overhead                                |
+|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------:|:-----------------------------------------------:|---------------------------------------------------|
+| *the name of the benchmarking case, where <br/>- `bulk` is to mean "all at once"<br/>- `iterative` is to mean "one-by-one"<br/>-`client` is to mean a bare redis client with replicated logic for benchmarking purposes<br/>- `framework` is to mean a streamerson equivalent* | *time in ms for the bare client implementation* | *time in ms for the streamerson implementation* | ~ [*pct overhead imposed by @streamerson logic*]% |
+
 [//]: # (<details>)
 
 [//]: # (<summary>)
