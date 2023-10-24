@@ -45,6 +45,7 @@ And lastly,
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [Installation](#installation)
 - [Example:](#example)
   - [Foreword on Monorepo Packages](#foreword-on-monorepo-packages)
@@ -187,13 +188,14 @@ The requisite protocol of `@streamerson` is defined as an ordered array of the f
 
 | Field           | type             | Meaning                                                  |
 |-----------------|------------------|----------------------------------------------------------|
-| streamId        | string           | the name of a Redis stream                               |
+| streamId        | string           | the GUUID of the message                                 |
 | messageType     | string           | the event type                                           |
 | streamHeaders   | JSON string      | a map of header values for routing                       |
 | messageProtocol | `text` or `json` | some encoding (maybe future support for BSON/GRPC _etc_) |
 | sourceId        | GUUID            | the source of the message                                |
 | UnoccupiedField | nil              | [currently unused]                                       |
 | payload         | `text` or `JSON` | the message payload                                      |
+
 
 <!-- END-CODE: ./docs/PROTOCOL.md -->
 

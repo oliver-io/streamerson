@@ -8,8 +8,16 @@ This package is a part of the larger [@streamerson](../../README.md) monorepo, w
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Installation](#installation)
-- [Example](#example)
+
+  - [A Foreword on Naming and Purpose](#a-foreword-on-naming-and-purpose)
+  - [Installation](#installation)
+  - [Example](#example)
+- [Consumer-Producers](#consumer-producers)
+  - [Features](#features)
+  - [Examples in Depth](#examples-in-depth)
+- [API](#api)
+  - [Message Acknowledgement / Tracking](#message-acknowledgement--tracking)
+  - [Stream Recovery / Cursor Iteration](#stream-recovery--cursor-iteration)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -54,16 +62,20 @@ To understand the motivation for these features, first, let's look at a side-by-
 
 <details>
     <summary>Drop Down to see Low-Level "Bidi Stream Processor" Example Code</summary>
+
 <!-- BEGIN-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
 <!-- END-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
+
 </details>
 
 You'll notice the code in the dropdown above is kind of grossly low-level (it is concerned with streams, Transforms, etc.) and requires assembly.  Luckily, the `@streamerson/consumer` comes with lots of features out of the box, and conceals the configuration burden behind reusable interfaces, and allows for a declarative approach to the more imperative components in the monorepo.  Let's take a look:
 
 <details>
     <summary>Drop Down to see High-Level "@streamerson/consumer" Example Code</summary>
+
 <!-- BEGIN-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
 <!-- END-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
+
 </details>
 
 Hopefully this seems cleaner, less concerned with low-level details, and easier to understand from the perspective of someone doing service development.  The handler for each event resembles in principle the handler for a web-request, and is routed along a `MessageType` in much the same way that a web-request is routed by its `path`.  The metadata of the stream message is visible to the handler (much like the `Request` objects many developers know fondly) as is the payload of that message (again-- much like the `Body` of a `Request`).  This familiarity is intentional and why the `@streamerson/consumer` is the sort of "blessed-path" over utilizing the lower level modules (as in the case of the "low-level" example code above).
