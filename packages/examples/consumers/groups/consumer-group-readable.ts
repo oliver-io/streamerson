@@ -1,15 +1,11 @@
+import { Topic } from '@streamerson/core';
 import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer-group';
 
-const consumerGroup = new ConsumerGroupTopic({
-    topic: 'my-stream-topic',
-    namespace: 'examples',
-    mode: 'ORDERED'
-}, {
+const topic = new Topic('my-stream-topic');
+
+const consumerGroup = new ConsumerGroupTopic(topic, {
     name: 'some-consumer-group',
-    min: 1,
-    max: 1,
-    processingTimeout: 0,
-    idleTimeout: 0
+    max: 1
 });
 
 await consumerGroup.connect();

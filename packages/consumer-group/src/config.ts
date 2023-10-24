@@ -1,6 +1,6 @@
 export type ConsumerGroupOptions = {
     name: string;
-    min: number;
+    min?: number;
     max?: number;
     processingTimeout?: number;
     idleTimeout?: number;

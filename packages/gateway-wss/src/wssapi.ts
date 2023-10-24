@@ -55,7 +55,7 @@ export class WebSocketServer<Response extends WebsocketResponse> {
         }
     }
 
-    logger: Pino.Logger;
+    logger: StreamersonLogger;
     server: ReturnType<typeof App>;
     port: number;
     onMessage: (ws: StreamSocket, message: ArrayBuffer) => void;
@@ -63,7 +63,7 @@ export class WebSocketServer<Response extends WebsocketResponse> {
     constructor(public options?: {
         server?: ReturnType<typeof App>,
         port?: number,
-        logger?: Pino.Logger,
+        logger?: StreamersonLogger,
         onMessage?: (ws: StreamSocket, message: ArrayBuffer) => void
     }) {
         this.logger = options?.logger ?? moduleLogger;
@@ -168,10 +168,10 @@ export class WebSocketServer<Response extends WebsocketResponse> {
                 }
 
                 res.upgrade(
-                    {}, 
-                    req.getHeader('sec-websocket-key'), 
-                    req.getHeader('sec-websocket-protocol'), 
-                    req.getHeader('sec-websocket-extensions'), 
+                    {},
+                    req.getHeader('sec-websocket-key'),
+                    req.getHeader('sec-websocket-protocol'),
+                    req.getHeader('sec-websocket-extensions'),
                     context
                 );
             },

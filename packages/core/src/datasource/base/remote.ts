@@ -1,9 +1,10 @@
 import Redis from 'ioredis';
 import pino from 'pino';
 import {type DataSourceOptions, type ConnectableDataSource, StreamersonLogger} from '../../types';
+import { environmentValueFor } from "../../utils/environment";
 
-const DEFAULT_PORT = 6379;
-const DEFAULT_HOST = 'localhost';
+const DEFAULT_PORT = parseInt(environmentValueFor('STREAMERSON_REDIS_PORT'));
+const DEFAULT_HOST = environmentValueFor('STREAMERSON_REDIS_HOST')
 
 const moduleLogger = pino({
   base: {
@@ -18,8 +19,8 @@ export class RedisDataSource implements ConnectableDataSource {
 	public logger: StreamersonLogger;
 	constructor(
 		public options: DataSourceOptions = {
-			port: 6379,
-			host: 'localhost',
+			port: DEFAULT_PORT,
+			host: DEFAULT_HOST,
 			controllable: true,
 			logger: moduleLogger,
 		},
@@ -65,11 +66,13 @@ export class RedisDataSource implements ConnectableDataSource {
 	}
 
 	async disconnect() {
-      if (this.options.controllable) {
-        await this.abort();
-        this.control.disconnect();
-      }
-      this.client.disconnect();
+		if (this.options.controllable) {
+			await this.abort();
+			this.control.disconnect();
+			this._control = undefined;
+		}
+		this.client.disconnect();
+		this._client = undefined;
 	}
 
 	async connect() {
@@ -91,10 +94,10 @@ export class RedisDataSource implements ConnectableDataSource {
 			}
 		}
 
-		const connectionPromise = new Promise<RedisDataSource>(
+		const connectionPromise = new Promise<>(
 			(resolve, reject) => {
 				this.client.on('end', (error: Error | unknown) => {
-					this.logger.error(error);
+					this.logger.warn(error);
 				});
 				this.client.on('connect', async () => {
 					try {
@@ -106,7 +109,7 @@ export class RedisDataSource implements ConnectableDataSource {
 						}
 
 						this.clientId = await this.client.client('ID');
-						resolve(this);
+						resolve();
 					} catch (err) {
 						reject(err);
 					}
@@ -114,8 +117,10 @@ export class RedisDataSource implements ConnectableDataSource {
 			},
 		);
 
+		let controlPromise:Promise<void> | undefined;
+
 		if (this.options.controllable) {
-			const controlPromise = new Promise<RedisDataSource>((resolve, reject) => {
+			controlPromise = new Promise<void>((resolve, reject) => {
 				this.control.on('end', (error: Error | unknown) => {
 					this.logger.error(error);
 				});
@@ -129,15 +134,15 @@ export class RedisDataSource implements ConnectableDataSource {
 						}
 
 						// This.controlClientId = await this.control.client('ID');
-						resolve(this);
+						resolve();
 					} catch (err) {
 						reject(err);
 					}
 				});
 			});
-			return Promise.all([connectionPromise, controlPromise]).then(() => this);
 		}
 
-		return connectionPromise;
+		await Promise.all([connectionPromise, controlPromise]);
+		return this;
 	}
 }

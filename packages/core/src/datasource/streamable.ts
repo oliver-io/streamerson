@@ -32,6 +32,7 @@ enum KeyEvents {
   ADD_STREAM = 'addStream',
   REMOVE_STREAM = 'removeStream',
   UPDATE = 'update',
+  CANCEL = 'abort'
 }
 
 const DEFAULT_BLOCKING_TIMEOUT = HOURS_TO_MS(0.5);
@@ -46,9 +47,7 @@ export type GetReadStreamOptions = {
 
 /**
  * A remote source capable of retrieving stream records from a Redis instance.
- *
- * @constructor options: DataSourceOptions
- *
+ * @constructor options {DataSourceOptions}: the options controlling streaming behavior for this source
  * @beta
  */
 export class StreamingDataSource
@@ -60,6 +59,8 @@ export class StreamingDataSource
   responseType: MessageType = MessageType.RESPONSE;
 
   /**
+   * A low-level implementation wrapping a Redis Stream Write operation
+   *
    @param outgoingStream: The stream ID to target in Redis
    @param incomingStream: Maybe, a stream ID to reply to
    @param messageType: The type of the event
@@ -83,7 +84,7 @@ export class StreamingDataSource
         shardDecorator({key: outgoingStream, shard}),
         '*',
         messageId, // MessageId
-        messageType, // Message packing; TODO: Make this configurable
+        this.responseType ?? messageType,
         incomingStream ?? '', // MessageDestination
         'nil', // Message headers
         'json', // Label for caution and pack type
@@ -91,7 +92,6 @@ export class StreamingDataSource
         'UnoccupiedField',
         message, // Payload
       );
-      // console.timeEnd('Dispatch writeToStream to Redis');
       return await result;
     } catch (err) {
       this.logger.error(err);
@@ -101,24 +101,46 @@ export class StreamingDataSource
     }
   }
 
+  /**
+   * Sets the `MessageType` field default for outgoing messages
+   * @param type: The `MessageType` for outgoing messages
+   */
   setResponseType(type: string) {
     this.responseType = type as MessageType;
   }
 
+  /**
+   * Adds a stream to the set for consumption
+   * @param streamId: the key of the stream to ingest
+   */
   addStreamId(streamId: StreamId) {
     this.keyEvents.emit(KeyEvents.UPDATE, streamId);
     this.streamIdMap[streamId] = Date.now();
   }
 
+  /**
+   * Checks whether a stream is set for consumption
+   * @param streamId: the key of the stream to check
+   */
   hasStreamId(streamId: StreamId) {
     return Boolean(this.streamIdMap[streamId]);
   }
 
+  /**
+   * Removes a stream from the set for consumption
+   * @param streamId: the key of the stream to remove
+   */
   removeStreamId(streamId: StreamId) {
     this.keyEvents.emit(KeyEvents.UPDATE, streamId);
     delete this.streamIdMap[streamId];
   }
 
+  /**
+   * Private function that converts a Redis message to a MappedStreamEvent
+   * @param rawEvent: the raw event from Redis as a tuple-tuple
+   * @param _streamTitle: the title of the stream from whence the message came
+   * @private
+   */
   private deserializeMessageArray(
     rawEvent: StreamEventData,
     _streamTitle: string,
@@ -157,7 +179,15 @@ export class StreamingDataSource
     return eventMap;
   }
 
-  //XGROUP CREATE key group <id | $> [MKSTREAM]
+  /**
+   * @typedef ConsumerGroupConfig
+   * @type {object}
+   * @property {string} stream - a stream ID
+   * @property {string} groupId - a consumer group key that tracks the stream
+   * @property {string} [cursor] - a cursor from which to begin tracking
+   * Create a consumer group in the remote Redis for tracked consumption of a streams
+   * @param config: {ConsumerGroupConfig}
+   */
   async createConsumerGroup(config: {
     stream: string,
     groupId: string,
@@ -171,16 +201,26 @@ export class StreamingDataSource
       }
     });
   }
-
-  // This needs to be executed if we want to do consumer group reads from a stream without data in it already
-  // consider doing some `INFO` operations on the stream?
-  // we might want to throw errors if we try to read from a stream without data that hasn't called this fn
+  /**
+  * @typedef ConsumerGroupMemberConfig
+  * @type {object}
+  * @property {string} stream - a stream ID
+   * @property {string} groupId - a consumer group key that tracks the stream
+   * @property {string} groupMemberId - a member ID that tracks messages within the consumer group
+  * @property {string} [cursor] - a cursor from which to begin tracking
+  * Create a consumer group in the remote Redis for tracked consumption of a streams
+  * Create a consumer group in the remote Redis for tracked consumption of a streams
+  * @param config: {ConsumerGroupMemberConfig}
+  */
   async createGroupMember(config: {
     stream: string,
     groupId: string,
     groupMemberId: string,
     cursor?: string
   }) {
+    // This needs to be executed if we want to do consumer group reads from a stream without data in it already
+    // consider doing some `INFO` operations on the stream?
+    // we might want to throw errors if we try to read from a stream without data that hasn't called this fn
     return await new Promise((resolve, reject) => {
       try {
         this.client.xgroup("CREATECONSUMER", config.stream, config.groupId, config.groupMemberId, resolve)
@@ -190,6 +230,13 @@ export class StreamingDataSource
     });
   }
 
+  /**
+   * Read a message or batch from a stream as a single consumer rather than a part of a group
+   * @param stream: the key of the stream from which to read
+   * @param cursor: the cursor from which to begin reading
+   * @param timeout: the timeout in milliseconds to wait for a message
+   * @param batchSize: the number of messages to read
+   */
   async readAsSingle(stream: string, cursor: string, timeout: number, batchSize = 1) {
     return (await this.client.call(
       'XREAD',
@@ -206,17 +253,25 @@ export class StreamingDataSource
     ]>;
   }
 
+  /**
+   * Read a message or batch from a stream as a part of a consumer group
+   * @param stream: the key of the stream from which to read
+   * @param cursor: the cursor from which to begin reading
+   * @param groupId: the key of the group to which the member belongs
+   * @param groupMemberId: the key of the member within the group
+   * @param timeout: the timeout in milliseconds to wait for a message
+   */
   async readAsGroup(
     stream: string,
     cursor: string,
-    groupName: string,
+    groupId: string,
     groupMemberId: string,
     timeout: number
   ) {
     return (await this.client.call(
       'XREADGROUP',
       'GROUP',
-      groupName,
+      groupId,
       groupMemberId,
       'BLOCK',
       timeout,
@@ -230,6 +285,11 @@ export class StreamingDataSource
     ]>;
   }
 
+  /**
+   * Dispatch a blocking request for a stream message[s], and receive the messages as MappedStreamEvents
+   * Returns a cursor & event list, which respectively identify the current stream position and the list of events
+   * @param options {BlockingStreamBatchMapOptions}
+   */
   async blockingStreamBatchMap(options: BlockingStreamBatchMapOptions) {
     const logger = this.logger;
     try {
@@ -321,6 +381,13 @@ export class StreamingDataSource
     }
   }
 
+  /**
+   * @typedef {Object} StreamStreamOptions
+   * @property {Topic} topic: the Topic from which to read
+   * @property {string} [shard]: optionally, the shard from which to read
+   * For a given Topic or stream, get a `Readable` stream which reads from the remote
+   * @param options {StreamStreamOptions|GetReadStreamOptions}
+   */
   getReadStream(options: { topic: Topic, shard?: string } | GetReadStreamOptions) {
     this.addStreamId('topic' in options ? options.topic.consumerKey(options.shard) : options.stream);
     return Readable.from(this.iterateStream(options), {
@@ -328,6 +395,10 @@ export class StreamingDataSource
     }) as Readable & { readableObjectMode: true };
   }
 
+  /**
+   * Get a `Writable` stream, for which written objects will be written to the remote
+   * @param options {StreamStreamOptions}: The Topic to publish messages to
+   */
   getWriteStream(options: { topic: Topic, shard?: string } | {
     stream: string;
     responseChannel?: string;
@@ -361,6 +432,11 @@ export class StreamingDataSource
     }) as Writable & { writableObjectMode: true };
   }
 
+  /**
+   * Get a key's value from the remote
+   * @param key: the key targeted
+   * @param [shard]: optionally, the shard from which to read
+   */
   async get(key: string, shard?: string) {
     try {
       return await this.client.get(shardDecorator({key, shard})) ?? undefined;
@@ -370,6 +446,11 @@ export class StreamingDataSource
     }
   }
 
+  /**
+   * Atomically increment a key's numeric value on the remote
+   * @param key: the key targeted
+   * @param shard: optionally, the shard from which to read
+   */
   async incr(key: string, shard?: string) {
     try {
       return await this.client.incr(shardDecorator({key, shard})) ?? undefined;
@@ -379,6 +460,11 @@ export class StreamingDataSource
     }
   }
 
+  /**
+   * Set a key's value on the remote
+   * @param options {KeyOptions}: the key targeted
+   * @param value: the value to set
+   */
   async set(options: KeyOptions, value: string) {
     try {
       if (!value) {
@@ -394,6 +480,13 @@ export class StreamingDataSource
     }
   }
 
+  /**
+   * Mark a remote stream message as Processed for a given Consumer Group
+   * @param topic: the Topic on which the message was published
+   * @param groupId: the Consumer Group ID
+   * @param messageId: the MessageID to mark as Processed
+   * @param [shard]: optionally, the shard from which to read
+   */
   async markProcessedByGroup(
     topic: Topic,
     groupId: string,
@@ -406,6 +499,17 @@ export class StreamingDataSource
     }
   }
 
+  /**
+   * @typedef {Object} IterateStreamOptions
+   * @property {string} stream: the stream key from which to read
+   * @property {string} [shard]: optionally, the shard from which to read
+   * @property {string} [last]: optionally, the last cursor retrieved
+   * @property {number} [requestedBatchSize]: optionally, the number of messages to read
+   * @property {number} [blockingTimeout]: optionally, the number of milliseconds to block
+   * Get an AsyncIterable object, the values yielded from which will be a stream message
+   * @param options
+   * @private
+   */
   private async* iterateStream(options: {
     stream?: string;
     shard?: string;
@@ -425,7 +529,12 @@ export class StreamingDataSource
 
     this.keyEvents.on(KeyEvents.UPDATE, refreshStreams);
 
-    do {
+    let active = true;
+    this.keyEvents.once(KeyEvents.CANCEL, ()=>{
+      active = false;
+    });
+
+    while(active) {
       if (hasNewStreams) {
         delete args.stream;
         hasNewStreams = false;
@@ -444,11 +553,12 @@ export class StreamingDataSource
         events: MappedStreamEvent[];
       };
 
+      // Could be a timeout, or a key update, or cancelling all streams:
       if (!raced.cursor) {
         this.logger.info(
-          'Aborted early from stream, terminating pending connections',
+          'Change in streams detected, terminating pending connections',
         );
-        await this.abort();
+        await this.abort(false);
         continue;
       }
 
@@ -457,6 +567,12 @@ export class StreamingDataSource
       for (const event of raced.events) {
         yield event;
       }
-    } while (true);
+    }
   }
+
+  override async abort(e) {
+    await super.abort(e);
+    this.keyEvents.emit(KeyEvents.CANCEL);
+  }
+
 }

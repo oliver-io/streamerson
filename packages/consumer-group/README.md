@@ -8,7 +8,6 @@ Part of a larger monorepo, this package provides a Typescript implementation for
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Installation](#installation)
 - [Example](#example)
 
@@ -27,18 +26,14 @@ This example binds an event handler to `"my-event"`, which means that if the con
 <!-- BEGIN-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
 [**consumer-group-readable.ts**](../examples/consumers/groups/consumer-group-readable.ts)
 ```typescript
+import { Topic } from '@streamerson/core';
 import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer-group';
 
-const consumerGroup = new ConsumerGroupTopic({
-    topic: 'my-stream-topic',
-    namespace: 'examples',
-    mode: 'ORDERED'
-}, {
+const topic = new Topic('my-stream-topic');
+
+const consumerGroup = new ConsumerGroupTopic(topic, {
     name: 'some-consumer-group',
-    min: 1,
-    max: 1,
-    processingTimeout: 0,
-    idleTimeout: 0
+    max: 1
 });
 
 await consumerGroup.connect();
@@ -55,6 +50,7 @@ consumerGroupMember.registerStreamEvent('my-event', (data) => {
 });
 
 await consumerGroupMember.connectAndListen();
+
 ```
 <!-- END-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
 

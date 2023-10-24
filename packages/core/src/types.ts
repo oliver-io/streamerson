@@ -120,7 +120,14 @@ export type StreamConfiguration = {
 	redisConfiguration?: any;
 };
 
-export type StreamersonLogger = Logger | typeof console;
+export type StreamersonLogger = {
+	info: Logger['info'],
+	debug: Logger['debug'],
+	error: Logger['error'],
+	warn: Logger['warn'],
+	child: Logger['child'],
+	level: Logger['level']
+} | (typeof console);
 
 export type KeyOptions = {
 	key: string;
@@ -135,6 +142,7 @@ export type ConsumerGroupInstanceConfig = {
 export type MaybeConsumerGroupInstanceConfig = {
 	consumerGroupInstanceConfig?: ConsumerGroupInstanceConfig
 };
+
 
 export type BlockingStreamBatchMapOptions = {
 	stream?: string;
@@ -153,13 +161,13 @@ export type DataSourceOptions = Partial<{
 	getConnection: () => RedisClient;
 	port: number;
 	host: string;
-	logger: Logger;
+	logger: StreamersonLogger;
 	controllable: boolean;
 }>;
 
 export type ConnectableDataSource = {
 	options: DataSourceOptions;
-	connect: () => Promise<ConnectableDataSource>;
+	connect: () => Promise<this>;
 };
 
 export type DataSource = {

@@ -5,7 +5,7 @@ import {
     ChannelTupleArray,
     IncomingChannel,
     MappedStreamEvent, MessageId, MessageType, NonNullablePrimitive, NullablePrimitive,
-    OutgoingChannel, StreamId,
+    OutgoingChannel, StreamersonLogger, StreamId,
     StreamingDataSource,
     Topic
 } from "@streamerson/core";
@@ -24,7 +24,7 @@ type StreamHandlerEvent<
 
 type HandlerLogicFunction<
     T extends PayloadVariety,
-    R extends PayloadVariety
+    R extends (PayloadVariety | void)
 > = (e: StreamHandlerEvent<T>) => Promise<R> | R;
 
 type Handler<
@@ -46,7 +46,7 @@ function handler<
 export type EventMapRecord<T extends PayloadVariety, R extends PayloadVariety> = Record<string, HandlerLogicFunction<T, R>>;
 
 export type StreamConsumerOptions<EventMap extends EventMapRecord<Record<string, NullablePrimitive>, any>> = {
-    logger?: Pino.Logger,
+    logger?: StreamersonLogger,
     redisConfiguration?: {
         port: number,
         host: string
@@ -71,7 +71,7 @@ export class StreamConsumer<
     outgoingStream?: OutgoingChannel;
     streamEvents: Partial<Record<keyof EventMap, (e: MappedStreamEvent)=> MappedStreamEvent | Promise<MappedStreamEvent>>>;
     bidirectional?: boolean;
-    public logger: Pino.Logger;
+    public logger: StreamersonLogger;
     constructor(public options: StreamConsumerOptions<EventMap>) {
         super();
         this.streamEvents = {};
@@ -79,12 +79,13 @@ export class StreamConsumer<
         const producerStream = this.options.topic.producerKey(this.options.shard);
         this.bidirectional = options.bidirectional ?? true;
         this.topic = options.topic ?? this.options.topic;
-        this.logger = options.logger ?? this.options.logger ?? moduleLogger.child({
+        this.logger = (options.logger ?? this.options.logger ?? moduleLogger.child({
             shard: this.options.shard,
             meta: this.options.topic.meta(),
             streamName: consumerStream,
             destination: producerStream,
-        });
+        })) as StreamersonLogger;
+
         this.incomingChannel = new StreamingDataSource({
             logger: this.logger,
             controllable: true
@@ -150,7 +151,7 @@ export class StreamConsumer<
 
     registerStreamEvent<
         T extends PayloadVariety = Record<string, NonNullablePrimitive>,
-        R extends PayloadVariety = Record<string, NonNullablePrimitive>
+        R extends (PayloadVariety | void) = Record<string, NonNullablePrimitive>
     >(
         typeKey: keyof EventMap,
         handle: HandlerLogicFunction<T, R>

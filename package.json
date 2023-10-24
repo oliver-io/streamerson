@@ -22,7 +22,8 @@
   "private": true,
   "dependencies": {
     "colors": "^1.4.0",
-    "lerna": "^7.3.1"
+    "lerna": "^7.3.1",
+    "tsdoc": "^0.0.4"
   },
   "devDependencies": {
     "@nx/eslint-plugin": "16.10.0",

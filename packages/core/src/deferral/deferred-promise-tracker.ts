@@ -1,26 +1,23 @@
 import {EventEmitter} from 'events';
-import {type MappedStreamEvent} from '../types';
-import {type Logger} from 'pino';
+import { type MappedStreamEvent, StreamersonLogger } from '../types';
 
 export const DEFAULT_TIMEOUT = 3000;
 
-const noOpFunction = () => {};
+function noOpFunction():void{ void 0; }
 
-type ResponseTracker = {
-	self: Promise<any>;
-	resolve: Function;
-	reject: Function;
+type ResponseTracker<T = any> = {
+	self: Promise<T>;
+	resolve: (t: T)=>void;
+	reject: (e: Error | unknown)=>void;
 	timeout: NodeJS.Timeout | undefined;
 };
 
-type LoggerOrTestLogger = Logger | typeof console;
-
-export type DeferralTrackerOptions = ConstructorParameters<
-  typeof EventEmitter
->[0] & {
+export type DeferralTrackerOptions = {
 	timeout?: number;
-	logger?: LoggerOrTestLogger;
-};
+	logger?: StreamersonLogger;
+} & ConstructorParameters<
+  typeof EventEmitter
+>[0];
 
 type DeferredEvent<T = Record<string, any>> = {
 	messageId: string;
@@ -40,7 +37,7 @@ export class DeferralTracker extends EventEmitter {
 	staticTimeoutError: Error;
 	timeout: number;
 	promises: Record<string, ResponseTracker> = {};
-	logger: LoggerOrTestLogger;
+	logger: StreamersonLogger;
 	constructor(args: DeferralTrackerOptions = {}) {
 		super(args);
 		this.addListener('response', this.responseEvent.bind(this));
@@ -49,7 +46,7 @@ export class DeferralTracker extends EventEmitter {
 		this.staticTimeoutError = new Error(
 			`Request timed out after ${this.timeout / 1000} seconds`,
 		);
-		this.logger = args.logger ?? console;
+		this.logger = args.logger ?? console as Console;
 	}
 
 	responseEvent(event: MappedStreamEvent) {
@@ -154,8 +151,8 @@ export class DeferralTracker extends EventEmitter {
 			return this.promises[id].self;
 		}
 
-		let resolve: Function | undefined = noOpFunction;
-		let reject: Function | undefined = noOpFunction;
+		let resolve: (t: T)=>void | undefined = noOpFunction;
+		let reject: (e: Error | unknown)=>void | undefined = noOpFunction;
 		const promise = new Promise<T>((resolver, rejecter) => {
 			resolve = resolver;
 			reject = rejecter;

@@ -16,16 +16,12 @@ export function buildStreamConfiguration(
 	const readChannel = options.channels?.readChannel ?? new StreamingDataSource({
 		logger: options.logger,
 		controllable: true,
-		host: 'localhost',
-		port: 6379,
 		...options?.redisConfiguration ?? {}
 	});
 
 	const writeChannel = options.channels?.readChannel ?? new StreamingDataSource({
 		logger: options.logger,
 		controllable: true,
-		host: 'localhost',
-		port: 6379,
 		...options?.redisConfiguration ?? {}
 	});
 

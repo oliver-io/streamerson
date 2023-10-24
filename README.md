@@ -4,11 +4,28 @@
 
 :warning: **This project is in active development and is not yet trustable to be stable or work.  If you're interested in using it, hit me with a watch or star, and perhaps prod me toward publishing a 1.0.0 version.** :warning:
 
-Welcome.  I hope you're a fan of Redis Streams, Event-Oriented Architecture, or just people recommending you books about the Observer Model.  If not, turn back, because here there be dragons.
+Welcome.  I hope you're a fan of Redis Streams, Event-Oriented Architecture, or just people recommending you books about the Observer Model (that you never end up reading despite your best intentions).  If not, turn back, because here there be dragons.
 
-This monorepo is a collection of tools and instrumentation to make Redis streams fun & easy to confuse yourself with.  Enjoy!
+This monorepo is a collection of tools and instrumentation to make Redis streams fun & easy to confuse yourself with.  It's probably for you if you're interested in any of the following subjects:
 
-![the streamerson guy](./docs/mr_streamerson.png)
+- :heavy_check_mark: Low-latency Event Streaming
+- :heavy_check_mark: Asynchronous Event-Oriented architecture
+- :heavy_check_mark: Streaming nicely typed objects in realtime with Typescript
+- :heavy_check_mark: Bidirectional Streams / Channels and Consumer-Producers
+- :heavy_check_mark: Parallelization of stream consumers with Consumer Groups
+- :heavy_check_mark: Remote Streams presented as a Node.JS `EventEmitter`
+- :heavy_check_mark: Remote Streams presented as a Node.JS `Readable`/`Writable`
+- :heavy_check_mark: Remote Streams presented as a Node.JS `AsyncIterable`
+- :heavy_check_mark: Low-level control over "Stream" abstractions and partitioning
+- :heavy_check_mark: Higher-level interfaces leveraging these low-level Streams
+
+And lastly,
+
+- A Harebrained API Framework where all services are built atop event-oriented stream pipelines.
+
+<p align="center" justify="center">
+  <img src="./docs/mr_streamerson.png">
+</p>
 
 # Monorepo Package Links:
 
@@ -27,7 +44,6 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 ## Table of Contents:
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
 
 - [Installation](#installation)
 - [Example:](#example)
@@ -52,7 +68,7 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 
 # Example:
 
-A thousand-foot view of what this package is attempting to enable:
+A thousand-foot view of some stuff you can do:
 
 <!-- BEGIN-CODE: ./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts -->
 [**consumer-with-framework.example.ts**](./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts)
@@ -75,7 +91,7 @@ await consumer.connectAndListen();
 ```
 <!-- END-CODE: ./packages/examples/consumers/single-bidi/consumer-with-framework.example.ts -->
 
-For more examples, please check the dedicated monorepo entry [`@streamerson/examples`](./packages/examples/README.md).  There are examples of the lower-level modules there, as well as:
+In the above example, we listen for events and write down the bidirectional channel when we process one.  This is a primitive unit-- with more similar units you could build event-oriented applications using the high-level modules.  For more examples, please check the dedicated monorepo entry [`@streamerson/examples`](./packages/examples/README.md).  There are examples of the low-level pieces from which the high-level module are assembled.  However, if you are interested in the higher-level API framework picture, some use-case examples are laid out here:
 - [A Hello World App](./packages/examples/app-hello-world/README.md)
 - [A Typical CRUD App](./packages/examples/app-basic-crud/README.md)
 - [A Websocket<->Stream Adapter](./packages/examples/app-websockets/README.md)

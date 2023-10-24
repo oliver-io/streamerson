@@ -36,10 +36,10 @@ export class StreamStateMachine<
     outgoingChannel?: StreamingDataSource;
     transferChannel: ReturnType<typeof streamAwaiter>
     streamEvents: Record<string, { handle: EventHandler<AState> }>
-    public logger: Pino.Logger;
+    public logger: StreamersonLogger;
     public stateTransformers: StateTransformerMap<AState>;
     constructor(public options: {
-        logger?: Pino.Logger,
+        logger?: StreamersonLogger,
         stateConfigurations: ApplicationState<AState>,
         redisConfiguration?: {
             port: number,

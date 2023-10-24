@@ -3,7 +3,7 @@ import {
     streamAwaiter,
     buildStreamConfiguration,
     MessageType,
-    StreamOptions, StreamMessageFlowModes, Topic,
+    StreamOptions, StreamMessageFlowModes, Topic, StreamersonLogger,
 } from '@streamerson/core';
 import Pino from 'pino';
 import fp from 'fastify-plugin';
@@ -29,7 +29,7 @@ type StreamersonRouteOptions = {
     Partial<RouteOptions>;
 
 export function CreateGatewayPlugin(options: {
-    logger?: Pino.Logger;
+    logger?: StreamersonLogger;
     streamOptions?: Partial<StreamOptions>;
     topic: Topic;
     routes: StreamersonRouteOptions | StreamersonRouteOptions[]
@@ -40,10 +40,6 @@ export function CreateGatewayPlugin(options: {
             mode: 'ORDERED' as StreamMessageFlowModes.ORDERED,
             namespace: 'default',
             sharded: false
-        },
-        redisConfiguration: {
-            host: 'localhost',
-            port: 6379,
         }
     }
 

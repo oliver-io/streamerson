@@ -91,11 +91,12 @@ export async function addTableOfContents(options: AddContentArgs) {
 }
 
 export async function generateCodeDocs(options: AddContentArgs):Promise<void> {
-    return new Promise((resolve)=>{
+    return new Promise<void>((resolve)=>{
         let buf = '';
         const destPath = options.relativeFilePath.replace(/\\/g, '/') + '/../_API.md';
         const inputPath = options.relativeFilePath.replace(/\\/g, '/');
         const command = `tsdoc --src=${inputPath} --dest=${destPath}`;
+        console.log(command);
         const child = exec(command);
         if (child.stdout) {
             child.stdout.on('data', (d)=>{
@@ -103,7 +104,7 @@ export async function generateCodeDocs(options: AddContentArgs):Promise<void> {
             });
         }
         child.on('exit', (code)=>{
-            resolve();
+            resolve(buf.toString());
         });
     });
 }
@@ -148,7 +149,7 @@ async function enrichFile(target: string) {
 
 async function cli() {
     const codeFiles = await getAllCodeFiles();
-    console.log(await Promise.all(((await Promise.all(codeFiles.map(async (codePath)=>{
+    const annotatedFiles = (await Promise.all(codeFiles.map(async (codePath)=>{
         try {
             const codeText = (await fs.promises.readFile(codePath)).toString();
             if(codeText.includes('@param')) {
@@ -159,12 +160,16 @@ async function cli() {
         } catch(err) {
             return false;
         }
-    }))).filter(f=>!!f)).map(async eligibleFile=>{
-        await generateCodeDocs({
+    }))).filter(f=>!!f)
+
+    await Promise.all(annotatedFiles.map(async eligibleFile=>{
+        const result = await generateCodeDocs({
             absoluteFilePath: eligibleFile! as string,
             relativeFilePath: path.relative(process.cwd(), eligibleFile! as string)
         });
-    })));
+
+        console.log(result);
+    }));
 
     const files = await findAllMarkdown();
     const result = await Promise.all(files.map(enrichFile));
@@ -176,11 +181,13 @@ async function cli() {
             embed+=item.embeddings;
         }
 
-        console.log(((doctoc + embed) ? green('✓ ') : yellow('x ')) + `Added ${
+        console.log(((doctoc + embed) ? green('✓ ') : yellow('x ')) + `Updated ${
             doctoc ? green(doctoc.toString()) : yellow('0')
-        } DocTocs and ${
+        } DocTocs, ${
             embed ? green(embed.toString()) : yellow('0')
-        } Embeddings`);
+        } Embeddings, and ${
+          annotatedFiles.length ? green(annotatedFiles.length.toString()) : yellow('0')
+        } TSDocs`);
     }
 }
 

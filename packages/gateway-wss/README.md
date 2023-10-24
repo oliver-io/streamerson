@@ -9,7 +9,6 @@ This package provides an out-of-the-box solution for proxying traffic between us
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
 - [Installation](#installation)
 - [Usage](#usage)
 - [More Documentation](#more-documentation)
