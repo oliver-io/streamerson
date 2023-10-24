@@ -37,38 +37,43 @@ export function tagWithType(content: string, file: string) {
 }
 
 export async function addEmbeddings(options: AddContentArgs) {
+  let i=0, j=0;
+
+  try {
     let readme = (await fs.promises.readFile(options.absoluteFilePath)).toString();
     const beginTags = readme.match(/<!-- BEGIN-CODE:(\s+)(.*)(\s)+-->/g);
     const endTags = readme.match(/<!-- END-CODE:(\s+)(.*)(\s)+-->/g);
-    let i=0, j=0;
     const tags = (beginTags?.length ?? 1);
     if (tags && beginTags?.[0] && endTags?.[0]) {
-        for (; i < tags; i++, j++) {
-            const beginTag = beginTags?.[i];
-            const endTag = endTags?.[j];
-            if (!beginTag || !endTag) {
-                throw new Error('Tag Mismatch');
-            }
-            const fileReference = beginTag.replace('<!-- BEGIN-CODE:', '').replace('-->', '').trim();
-            const filePath = path.resolve(`${options.absoluteFilePath}/..`, fileReference);
-            const beginEmbedIndex = readme.indexOf(beginTag);
-            const endEmbedIndex = readme.indexOf(endTag);
-            const newContent = (await fs.promises.readFile(filePath)).toString();
-            const embeddedHref = `[**${
-                fileReference.substring(fileReference.lastIndexOf('/')+1, fileReference.length)
-            }**](${fileReference})`;
-            const firstHalf = readme.substring(0, beginEmbedIndex + beginTag.length);
-            const secondHalf = readme.substring(endEmbedIndex, readme.length);
-            readme = `${firstHalf}\n${embeddedHref}\n${tagWithType(newContent, filePath)}\n${secondHalf}`;
+      for (; i < tags; i++, j++) {
+        const beginTag = beginTags?.[i];
+        const endTag = endTags?.[j];
+        if (!beginTag || !endTag) {
+          throw new Error('Tag Mismatch');
         }
+        const fileReference = beginTag.replace('<!-- BEGIN-CODE:', '').replace('-->', '').trim();
+        const filePath = path.resolve(`${options.absoluteFilePath}/..`, fileReference);
+        const beginEmbedIndex = readme.indexOf(beginTag);
+        const endEmbedIndex = readme.indexOf(endTag);
+        const newContent = (await fs.promises.readFile(filePath)).toString();
+        const embeddedHref = `[**${
+          fileReference.substring(fileReference.lastIndexOf('/')+1, fileReference.length)
+        }**](${fileReference})`;
+        const firstHalf = readme.substring(0, beginEmbedIndex + beginTag.length);
+        const secondHalf = readme.substring(endEmbedIndex, readme.length);
+        readme = `${firstHalf}\n${embeddedHref}\n${tagWithType(newContent, filePath)}\n${secondHalf}`;
+      }
     }
 
     fs.writeFileSync(options.absoluteFilePath, readme);
+  } catch(err) {
+    console.error(err, `Failed embedding for file: ${options.relativeFilePath}`);
+  }
 
-    return {
-        path,
-        embedded: i
-    }
+  return {
+    path,
+    embedded: i
+  }
 }
 
 export async function addTableOfContents(options: AddContentArgs) {
@@ -90,13 +95,12 @@ export async function addTableOfContents(options: AddContentArgs) {
     });
 }
 
-export async function generateCodeDocs(options: AddContentArgs):Promise<void> {
-    return new Promise<void>((resolve)=>{
+export async function generateCodeDocs(options: AddContentArgs):Promise<string> {
+    return new Promise<string>((resolve)=>{
         let buf = '';
         const destPath = options.relativeFilePath.replace(/\\/g, '/') + '/../_API.md';
         const inputPath = options.relativeFilePath.replace(/\\/g, '/');
         const command = `tsdoc --src=${inputPath} --dest=${destPath}`;
-        console.log(command);
         const child = exec(command);
         if (child.stdout) {
             child.stdout.on('data', (d)=>{
@@ -163,12 +167,10 @@ async function cli() {
     }))).filter(f=>!!f)
 
     await Promise.all(annotatedFiles.map(async eligibleFile=>{
-        const result = await generateCodeDocs({
+        await generateCodeDocs({
             absoluteFilePath: eligibleFile! as string,
             relativeFilePath: path.relative(process.cwd(), eligibleFile! as string)
         });
-
-        console.log(result);
     }));
 
     const files = await findAllMarkdown();

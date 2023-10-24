@@ -16,6 +16,16 @@ This package is a part of the larger [@streamerson](../../README.md) monorepo, w
   - [Features](#features)
   - [Examples in Depth](#examples-in-depth)
 - [API](#api)
+  - [:factory: StreamConsumer](#factory-streamconsumer)
+    - [Methods](#methods)
+      - [:gear: bindStreamEvents](#gear-bindstreamevents)
+      - [:gear: setOutgoingChannel](#gear-setoutgoingchannel)
+      - [:gear: registerStreamEvent](#gear-registerstreamevent)
+      - [:gear: deregisterStreamEvent](#gear-deregisterstreamevent)
+      - [:gear: addStream](#gear-addstream)
+      - [:gear: hasStream](#gear-hasstream)
+      - [:gear: removeStream](#gear-removestream)
+      - [:gear: cacheComposite](#gear-cachecomposite)
   - [Message Acknowledgement / Tracking](#message-acknowledgement--tracking)
   - [Stream Recovery / Cursor Iteration](#stream-recovery--cursor-iteration)
 
@@ -37,6 +47,24 @@ The reason this package is called `@streamerson/consumer` rather than `@streamer
 The following example will create a consumer reading from a Redis stream called `my-stream-topic`, and listening for messages with the `messageType: "my-event"`.  The example binds an event handler to `"my-event"`, the return value of which will be sent along the bidirectional channel to whoever may be listening:
 
 <!-- BEGIN-CODE: ../examples/consumers/single-bidi/consumer-with-framework.example.ts -->
+[**consumer-with-framework.example.ts**](../examples/consumers/single-bidi/consumer-with-framework.example.ts)
+```typescript
+import { Topic } from '@streamerson/core';
+import { StreamConsumer } from '@streamerson/consumer';
+
+const consumer = new StreamConsumer({
+    topic: new Topic('my-stream-topic'),
+    bidirectional: true
+});
+
+consumer.registerStreamEvent<{ name: string }>('hello', async (e) => {
+   return {
+       howdy: `there, ${e.payload.name}`
+   }
+});
+
+await consumer.connectAndListen();
+```
 <!-- END-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
 
 # Consumer-Producers
@@ -64,6 +92,61 @@ To understand the motivation for these features, first, let's look at a side-by-
     <summary>Drop Down to see Low-Level "Bidi Stream Processor" Example Code</summary>
 
 <!-- BEGIN-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
+[**consumer-without-framework.example.ts**](../examples/consumers/single-bidi/consumer-without-framework.example.ts)
+```typescript
+import {MappedStreamEvent, StreamingDataSource, Topic} from '@streamerson/core';
+import {Transform} from 'stream';
+
+const streamTopic = new Topic('my-stream-topic');
+
+const channels = {
+    read: new StreamingDataSource(),
+    write: new StreamingDataSource()
+}
+
+await Promise.all([
+    channels.read.connect(),
+    channels.write.connect()
+]);
+
+const [readableStream, writableStream] = [
+    channels.read.getReadStream({
+        stream: streamTopic.consumerKey()
+    }),
+    channels.write.getWriteStream({
+        stream: streamTopic.producerKey()
+    }),
+];
+
+const transform = new Transform({
+    objectMode: true,
+    transform: function (e: MappedStreamEvent, _, cb) {
+        switch(e.messageType as string) {
+            case 'hello':
+                this.push(({
+                    ...e,
+                    payload: {
+                        hello: 'world!  I just saw a message: \r\n\r\n' + JSON.stringify(e.payload, null, 2)
+                    }
+                } as MappedStreamEvent));
+                cb();
+                break;
+            default:
+                this.push(({
+                    ...e,
+                    payload: {
+                        error: 'Unknown message type',
+                        statusCode: 400
+                    }
+                } as MappedStreamEvent));
+                cb();
+                break;
+        }
+    }
+});
+
+readableStream.pipe(transform).pipe(writableStream);
+```
 <!-- END-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
 
 </details>
@@ -82,6 +165,79 @@ Hopefully this seems cleaner, less concerned with low-level details, and easier 
 
 # API
 <!-- BEGIN-CODE: ../consumer/src/_API.md -->
+[**_API.md**](../consumer/src/_API.md)
+
+## :factory: StreamConsumer
+
+### Methods
+
+- [bindStreamEvents](#gear-bindstreamevents)
+- [setOutgoingChannel](#gear-setoutgoingchannel)
+- [registerStreamEvent](#gear-registerstreamevent)
+- [deregisterStreamEvent](#gear-deregisterstreamevent)
+- [addStream](#gear-addstream)
+- [hasStream](#gear-hasstream)
+- [removeStream](#gear-removestream)
+- [cacheComposite](#gear-cachecomposite)
+
+#### :gear: bindStreamEvents
+
+| Method | Type |
+| ---------- | ---------- |
+| `bindStreamEvents` | `(topic: Topic) => void` |
+
+#### :gear: setOutgoingChannel
+
+| Method | Type |
+| ---------- | ---------- |
+| `setOutgoingChannel` | `(channel: StreamingDataSource) => void` |
+
+#### :gear: registerStreamEvent
+
+Bind an `MessageType` to a handler function
+
+| Method | Type |
+| ---------- | ---------- |
+| `registerStreamEvent` | `<T extends PayloadVariety = Record<string, NonNullablePrimitive>, R extends void or PayloadVariety = Record<string, NonNullablePrimitive>>(typeKey: keyof EventMap, handle: HandlerLogicFunction<...>) => void` |
+
+Parameters:
+
+* `typeKey`: the `MessageType` to bind
+* `handle`: the handler function to bind to the `MessageType`
+
+
+#### :gear: deregisterStreamEvent
+
+| Method | Type |
+| ---------- | ---------- |
+| `deregisterStreamEvent` | `(typeKey: keyof EventMap) => void` |
+
+#### :gear: addStream
+
+| Method | Type |
+| ---------- | ---------- |
+| `addStream` | `(key: string) => void` |
+
+#### :gear: hasStream
+
+| Method | Type |
+| ---------- | ---------- |
+| `hasStream` | `(key: string) => boolean` |
+
+#### :gear: removeStream
+
+| Method | Type |
+| ---------- | ---------- |
+| `removeStream` | `(key: string) => void` |
+
+#### :gear: cacheComposite
+
+| Method | Type |
+| ---------- | ---------- |
+| `cacheComposite` | `(cacheKey: string) => { key: string; shard: string; }` |
+
+
+
 <!-- END-CODE: ../consumer/src/_API.md -->
 
 ## Message Acknowledgement / Tracking

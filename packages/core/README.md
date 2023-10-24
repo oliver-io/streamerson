@@ -31,6 +31,15 @@ The idea for the exported code of this package is essentially to achieve the fol
     - [Stream Awaiter](#stream-awaiter)
     - [Utils](#utils)
 - [API Reference](#api-reference)
+  - [:factory: StreamingDataSource](#factory-streamingdatasource)
+    - [Methods](#methods)
+      - [:gear: writeToStream](#gear-writetostream)
+      - [:gear: setResponseType](#gear-setresponsetype)
+      - [:gear: addStreamId](#gear-addstreamid)
+      - [:gear: hasStreamId](#gear-hasstreamid)
+      - [:gear: removeStreamId](#gear-removestreamid)
+      - [:gear: getReadStream](#gear-getreadstream)
+      - [:gear: getWriteStream](#gear-getwritestream)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -137,3 +146,119 @@ for await (const event of readChannel.getReadStream({
     - **new Topic({ /\* options \*/ })** _(creates a Topic, which should probably be a first-class citizen of the core package but for now resides here)_
 
 # API Reference
+
+<details>
+    <summary>Consumer Example Code</summary>
+
+<!-- BEGIN-CODE: ./src/datasource/_API.md -->
+[**_API.md**](./src/datasource/_API.md)
+
+## :factory: StreamingDataSource
+
+A remote source capable of retrieving stream records from a Redis instance.
+
+### Methods
+
+- [writeToStream](#gear-writetostream)
+- [setResponseType](#gear-setresponsetype)
+- [addStreamId](#gear-addstreamid)
+- [hasStreamId](#gear-hasstreamid)
+- [removeStreamId](#gear-removestreamid)
+- [getReadStream](#gear-getreadstream)
+- [getWriteStream](#gear-getwritestream)
+
+#### :gear: writeToStream
+
+A low-level implementation wrapping a Redis Stream Write operation
+
+| Method | Type |
+| ---------- | ---------- |
+| `writeToStream` | `(outgoingStream: string, incomingStream: string, messageType: MessageType, messageId: string, message: string, sourceId: string, shard?: string) => Promise<string>` |
+
+Parameters:
+
+* `outgoingStream`: : The stream ID to target in Redis
+* `incomingStream`: : Maybe, a stream ID to reply to
+* `messageType`: : The type of the event
+* `messageId`: : The ID of the message
+* `message`: : The message payload
+* `sourceId`: : The ID of the source
+* `shard`: : Maube, the shard to target
+
+
+#### :gear: setResponseType
+
+Sets the `MessageType` field default for outgoing messages
+
+| Method | Type |
+| ---------- | ---------- |
+| `setResponseType` | `(type: string) => void` |
+
+Parameters:
+
+* `type`: : The `MessageType` for outgoing messages
+
+
+#### :gear: addStreamId
+
+Adds a stream to the set for consumption
+
+| Method | Type |
+| ---------- | ---------- |
+| `addStreamId` | `(streamId: string) => void` |
+
+Parameters:
+
+* `streamId`: : the key of the stream to ingest
+
+
+#### :gear: hasStreamId
+
+Checks whether a stream is set for consumption
+
+| Method | Type |
+| ---------- | ---------- |
+| `hasStreamId` | `(streamId: string) => boolean` |
+
+Parameters:
+
+* `streamId`: : the key of the stream to check
+
+
+#### :gear: removeStreamId
+
+Removes a stream from the set for consumption
+
+| Method | Type |
+| ---------- | ---------- |
+| `removeStreamId` | `(streamId: string) => void` |
+
+Parameters:
+
+* `streamId`: : the key of the stream to remove
+
+
+#### :gear: getReadStream
+
+| Method | Type |
+| ---------- | ---------- |
+| `getReadStream` | `(options: { topic: Topic; shard?: string; } or GetReadStreamOptions) => Readable and { readableObjectMode: true; }` |
+
+#### :gear: getWriteStream
+
+Get a `Writable` stream, for which written objects will be written to the remote
+
+| Method | Type |
+| ---------- | ---------- |
+| `getWriteStream` | `(options: { topic: Topic; shard?: string; } or { stream: string; responseChannel?: string; shard?: string; }) => Writable and { writableObjectMode: true; }` |
+
+Parameters:
+
+* `options`: : The Topic to publish messages to
+
+
+
+
+<!-- END-CODE: ./src/datasource/_API.md -->
+
+</details>

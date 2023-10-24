@@ -61,6 +61,10 @@ export type StreamConsumerOptions<EventMap extends EventMapRecord<Record<string,
     eventMap?: EventMap;
 }
 
+/**
+ * @class StreamConsumer
+ * @description A Consumer-Producer to process and produce stream events
+ */
 export class StreamConsumer<
     EventMap extends EventMapRecord<any, any>
 > extends EventEmitter {
@@ -149,6 +153,11 @@ export class StreamConsumer<
         this.bindStreamEvents(this.topic);
     }
 
+  /**
+   * Bind an `MessageType` to a handler function
+   * @param typeKey the `MessageType` to bind
+   * @param handle the handler function to bind to the `MessageType`
+   */
     registerStreamEvent<
         T extends PayloadVariety = Record<string, NonNullablePrimitive>,
         R extends (PayloadVariety | void) = Record<string, NonNullablePrimitive>
@@ -257,15 +266,6 @@ export class StreamConsumer<
             incomingPipe.pipe(this.outgoingStream);
         }
     }
-/*
-		outgoingStream: StreamId,
-		incomingStream: StreamId | undefined,
-		messageType: MessageType,
-		messageId: MessageId,
-		message: string,
-		sourceId: string,
-		shard?: string,
- */
     async produceMessage(options: {
         messageId: string,
         messageType: string,
