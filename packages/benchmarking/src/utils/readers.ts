@@ -30,6 +30,49 @@ export function createFrameworkReader(dataSource: StreamingDataSource, stream: s
   }
 }
 
+
+export function createFrameworkStreamer(dataSource: StreamingDataSource, stream: string, options: {
+  stopAt: number,
+  startAt: number,
+  failIfFewerRead: boolean,
+  failIfMoreRead: boolean,
+  batchSize?: number
+}) {
+  let { batchSize = 1, stopAt, startAt = 0 } = options;
+  return async () => {
+    const readStream = dataSource.getReadStream({
+      stream,
+      last: startAt.toString(),
+      requestedBatchSize: batchSize,
+      blockingTimeout: 1000
+    });
+
+    let eventCount = 0;
+    let timeout: NodeJS.Timeout | null = null;
+
+    await Promise.race([
+      new Promise<void>((resolve, reject) =>{
+        readStream.on('data', (e)=> {
+          dataSource.logger.info(e);
+          eventCount++;
+          if (eventCount >= stopAt) {
+            resolve();
+          }
+        });
+      }),
+      new Promise<void>((resolve, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error(`Expected ${stopAt} messages, but only read ${eventCount}`));
+        }, 10000);
+      })
+    ]);
+
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
+}
+
 export function createClientReader(client: Redis, stream: string, config: {
   stopAt: number,
   startAt: number,

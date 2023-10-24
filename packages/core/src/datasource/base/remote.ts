@@ -65,10 +65,11 @@ export class RedisDataSource implements ConnectableDataSource {
 	}
 
 	async disconnect() {
-		this.client.disconnect();
-		if (this.options.controllable) {
-			this.control.disconnect();
-		}
+      if (this.options.controllable) {
+        await this.abort();
+        this.control.disconnect();
+      }
+      this.client.disconnect();
 	}
 
 	async connect() {

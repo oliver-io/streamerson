@@ -17,7 +17,7 @@ export async function buildReport(ctx: BenchmarkingContext, timingEvents: Array<
   const file = path.resolve('./benchmark-report.json');
   await writeFile(
     `/app/benchmarking/benchmark-report.json`,
-    JSON.stringify({ experimentType: ctx.experimentType, timingEvents }, null, 2)
+    JSON.stringify({experimentType: ctx.experimentType, timingEvents}, null, 2)
   );
   return file;
 }
@@ -26,7 +26,7 @@ export function withReport<T extends BenchmarkingContext>(
   ctx: T,
   eventIterator: ReturnType<typeof iterateTimedEvents>
 ): () => Promise<void> {
-  return async function() {
+  return async function () {
     const eventList = [];
     for await (const timingEvent of eventIterator) {
       eventList.push(timingEvent);
@@ -36,7 +36,17 @@ export function withReport<T extends BenchmarkingContext>(
       });
 
       if (timingEvent.step === 'finalized') {
-        ctx.datasource.disconnect();
+        try {
+          if (ctx.connect) {
+            if (ctx.datasource instanceof StreamingDataSource) {
+              await ctx.datasource.abort();
+            }
+
+            await ctx.datasource.disconnect();
+          }
+        } catch (err) {
+          ctx.logger.error({err}, 'Error disconnecting datasource');
+        }
       }
     }
 

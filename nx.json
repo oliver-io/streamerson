@@ -15,7 +15,8 @@
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "inputs": ["production", "^production"],
+      "generatePackageJson": true
     },
     "lint": {
       "inputs": [

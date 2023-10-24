@@ -47,11 +47,25 @@ These tests have thus far been run on my machine with:
 - Windoze
 - Docker Desktop
 
-The table is presented as follows:
+The table is presented with the following meanings:
 
-| Test Case                                                                                                                                                                                                                                                                    |                **control** (ms)                 |               **experiment** (ms)               | Framework Overhead                                |
+ - `Test Name`: the name of the scenario, where
+   - `bulk` is to mean "all at once"
+   - `iterative` is to mean "one-by-one"
+   - `client` is to mean a bare redis client with replicated logic for benchmarking purposes
+   - `framework` is to mean a streamerson equivalent
+ - `control`: the time in milliseconds (ms) for the bare client implementation
+ - `experiment`: the time it takes in ms for a simple streamerson implementation doing a wrapper operation to read the same stream as the `control` case
+ - `Base Overhead`: the percentage difference between `experiment` and `control`
+ - `stream`: the time it takes in milliseconds using the `get[read/write]Stream` API
+ - `Stream Overhead`: the percentage difference between `experiment` and `stream`
+ - `iterative`: the time it takes in millseconds using the `iterateStream` API
+ - `Iterator Overhead`: the percentage difference between `experiment` and `iterative`
+
+
+| Test Case                                                                                                                                                                                                                                                                    |                **control** (ms)                 |               **experiment** (ms)               | Framework<br/>Overhead                            |
 |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------:|:-----------------------------------------------:|---------------------------------------------------|
-| *the name of the benchmarking case, where <br/>- `bulk` is to mean "all at once"<br/>- `iterative` is to mean "one-by-one"<br/>-`client` is to mean a bare redis client with replicated logic for benchmarking purposes<br/>- `framework` is to mean a streamerson equivalent* | *time in ms for the bare client implementation* | *time in ms for the streamerson implementation* | ~ [*pct overhead imposed by @streamerson logic*]% |
+| *the name of the benchmarking case, where <br/> | *time in ms for the bare client implementation* | *time in ms for the streamerson implementation* | ~ [*pct overhead imposed by @streamerson logic*]% |
 
 :warning: As of `10/23`, these numbers exist as a first-pass over the benchmarking.  I'm sure that they will reveal many improvements, which is part of the reason I'm gathering the data.  I suspect that some of these initial numbers reflect time spent in transforming the Redis messages into `MappedStreamEvent`s (and et cetera), and may be over-representing the framework overhead by leaving certain logic that the framework has out of the benchmarks.  However, I guess that's part of the point. :warning:
 

@@ -7,7 +7,7 @@ import minimist from 'minimist';
 
 const args = minimist(process.argv.slice(2));
 
-type ExperimentType = 'control' | 'experiment';
+export type ExperimentType = 'control' | 'experiment' | 'stream' | 'iterator';
 
 function makeMarkdownTable(results: Awaited<ReturnType<typeof summarizeResults>>) {
   const __headers = Object.keys(results[Object.keys(results)[0]]);
@@ -17,7 +17,16 @@ function makeMarkdownTable(results: Awaited<ReturnType<typeof summarizeResults>>
   }
   return getMarkdownTable({
     table: {
-      head: ['Test Case', ..._headers, 'Framework Overhead'],
+      head: [
+        'Test Case',
+        _headers[0],
+        _headers[1],
+        'Base<br/>Overhead',
+        _headers[2],
+        'Stream<br/>Overhead',
+        _headers[3],
+        'Iterator<br/>Overhead'
+      ],
       body: Object.keys(results).map((key) => {
         const row = results[key];
         const headers = __headers as Array<keyof typeof row>;
@@ -28,7 +37,15 @@ function makeMarkdownTable(results: Awaited<ReturnType<typeof summarizeResults>>
           row["experiment"].toString(),
           (row["control"] === 'n/a' || row["experiment"] === 'n/a') ?
             'n/a' :
-            `~ ${((1 - (row["control"] / (row["experiment"]))) * 100).toFixed(1)}%`
+            `~ ${((1 - (row["control"] / (row["experiment"]))) * 100).toFixed(1)}%`,
+          row["stream"].toString(),
+          (row["control"] === 'n/a' || row["stream"] === 'n/a') ?
+            'n/a' :
+            `~ ${((1 - (row["control"] / (row["stream"]))) * 100).toFixed(1)}%`,
+          row["iterator"].toString(),
+          (row["control"] === 'n/a' || row["iterator"] === 'n/a') ?
+            'n/a' :
+            `~ ${((1 - (row["control"] / (row["iterator"]))) * 100).toFixed(1)}%`
         ];
       }),
     },
@@ -37,10 +54,7 @@ function makeMarkdownTable(results: Awaited<ReturnType<typeof summarizeResults>>
 }
 
 export async function summarizeResults() {
-  const results: Record<string, {
-    control: number | 'n/a',
-    experiment: number | 'n/a'
-  }> = {};
+  const results: Record<string, Record<ExperimentType, number | 'n/a'>> = {};
 
   // gather up all the results files in the _reports directory:
   const filePaths = await glob('**/_reports/*.json');
@@ -71,7 +85,9 @@ export async function summarizeResults() {
     if (!results[eventName]) {
       results[eventName] = {
         control: 'n/a',
-        experiment: 'n/a'
+        experiment: 'n/a',
+        stream: 'n/a',
+        iterator: 'n/a'
       }
     }
 
