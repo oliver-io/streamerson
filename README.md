@@ -217,7 +217,7 @@ type RawRedisMessageTuple = [
 In, order to avoid behavior where we search through the keys of a message to marshall it into a `MappedStreamEvent`, we define a common/required ordering of the keys (`k`) and values (`v`).  In fact,  I've taken some liberties and jammed values into both the key and value components of the messages, to compress the size of a single message by defining a strict protocol by which all messages are sent.  This protocol could be thought of as a piece of code which does the following:
 
 ```typescript
-// redisResponse[1] assumes a single requested stream:
+// this assumes a single requested stream in the response:
 const [ streamId, messages ] = redisResponse;
 
 for (const message in messages) {
