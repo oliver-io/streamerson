@@ -25,7 +25,7 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 
 And lastly,
 
-- A Harebrained API Framework where all services are built atop event-oriented stream pipelines.
+- :question: A Harebrained API Framework where all services are built atop event-oriented stream pipelines.
 
 # Monorepo Package Links:
 
