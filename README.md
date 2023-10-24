@@ -2,6 +2,10 @@
 
 > An API framework powered by distributed stream processing
 
+<p align="center" justify="center">
+  <img src="./docs/mr_streamerson.png">
+</p>
+
 :warning: **This project is in active development and is not yet trustable to be stable or work.  If you're interested in using it, hit me with a watch or star, and perhaps prod me toward publishing a 1.0.0 version.** :warning:
 
 Welcome.  I hope you're a fan of Redis Streams, Event-Oriented Architecture, or just people recommending you books about the Observer Model (that you never end up reading despite your best intentions).  If not, turn back, because here there be dragons.
@@ -22,10 +26,6 @@ This monorepo is a collection of tools and instrumentation to make Redis streams
 And lastly,
 
 - A Harebrained API Framework where all services are built atop event-oriented stream pipelines.
-
-<p align="center" justify="center">
-  <img src="./docs/mr_streamerson.png">
-</p>
 
 # Monorepo Package Links:
 
