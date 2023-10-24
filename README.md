@@ -197,29 +197,39 @@ The requisite protocol of `@streamerson` is defined as an ordered array of the f
 
 <!-- END-CODE: ./docs/PROTOCOL.md -->
 
-The reasonf for this shape is that Redis essentially encodes the fields of a stream-message as the following:
+The reason for this shape is that Redis essentially encodes the fields of a stream-message as the following:
 
 ```typescript
-type RawRedisMessage = Array<
-        Array<string, string>
->;
-
-// or:
-type RawRedisMessageTuple = [fields: [k: string, v: string]]
+type RawRedisMessageTuple = [
+    streamId: string, 
+    messages: [
+        messageId: string, 
+        message: [
+          k: string, 
+          v: string
+        ]
+    ]
+]
 ```
 
-The array tuples each encode, typically, a `[key, value]` pair.  However, in, order to avoid behavior where we search through the keys of a message to marshall it into a `MappedStreamEvent`, we define a common/required ordering of the keys and values.  In fact,  I've taken some liberties and jammed values into both the key and value components of the messages, to compress the size of a single message by defining a strict protocol by which all messages are sent.  This protocol could be thought of as a piece of code which does the following:
+In, order to avoid behavior where we search through the keys of a message to marshall it into a `MappedStreamEvent`, we define a common/required ordering of the keys (`k`) and values (`v`).  In fact,  I've taken some liberties and jammed values into both the key and value components of the messages, to compress the size of a single message by defining a strict protocol by which all messages are sent.  This protocol could be thought of as a piece of code which does the following:
 
 ```typescript
-const [
-  id,
-  type,
-  headers,
-  protocol,
-  source,
-  _,
-  payload 
-] = messageTuple;
+// redisResponse[1] assumes a single requested stream:
+const [ streamId, messages ] = redisResponse;
+
+for (const message in messages) {
+  const cursor = message[0]; // a timestamp, usually
+  const [
+    messageId,
+    type,
+    headers,
+    protocol,
+    source,
+    _,
+    payload
+  ] = message[1]; // the key-values
+}
 ```
 Because redis doesn't care much about the size of keys versus the size of values, I am essentially setting key-value pairs to value-value pairs.  This might have some negative repercussions in Redis but if definitions reveal that, I'll change it.  For now, it achieves a roughly halving of the field-count for a given message.
 
