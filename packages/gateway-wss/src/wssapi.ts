@@ -1,6 +1,14 @@
 import Pino from 'pino';
 import {App, HttpRequest, WebSocket} from 'uWebSockets.js';
-import {ids, MappedStreamEvent, MessageType, NullablePrimitive, StreamingDataSource, Topic} from '@streamerson/core';
+import {
+  ids,
+  MappedStreamEvent,
+  MessageType,
+  NullablePrimitive,
+  StreamersonLogger,
+  StreamingDataSource,
+  Topic
+} from '@streamerson/core';
 
 export { WebSocket };
 // import { StreamConsumer } from '../state';

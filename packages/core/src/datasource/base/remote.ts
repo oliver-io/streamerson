@@ -94,7 +94,7 @@ export class RedisDataSource implements ConnectableDataSource {
 			}
 		}
 
-		const connectionPromise = new Promise<>(
+		const connectionPromise = new Promise<void>(
 			(resolve, reject) => {
 				this.client.on('end', (error: Error | unknown) => {
 					this.logger.warn(error);

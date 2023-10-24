@@ -6,7 +6,7 @@ export type ConsumerGroupOptions = {
     idleTimeout?: number;
 }
 
-function validateOptions(options: ConsumerGroupOptions) {
+function validateOptions(options: Required<ConsumerGroupOptions>) {
     // min must be good:
     if (options.min < 1) {
         throw new Error(`min must be greater than 0`);
@@ -16,26 +16,26 @@ function validateOptions(options: ConsumerGroupOptions) {
     if (options.max && options.min > options.max) {
         throw new Error(`min must be less than max`);
     }
+
+    return options;
 }
 
 export function createConsumerGroupConfig(options: ConsumerGroupOptions) {
-    validateOptions(options);
-
     const {
         name,
-        min,
-        max = options.min,
+        min = options.min ?? 1,
+        max = options.max ?? 1,
         processingTimeout = 0,
         idleTimeout = 0
     } = options;
 
-    return {
+    return validateOptions({
         name,
         min,
         max,
         processingTimeout,
         idleTimeout
-    }
+    })
 }
 
 export type ConsumerGroupConfig = ReturnType<typeof createConsumerGroupConfig>;

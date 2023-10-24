@@ -46,9 +46,9 @@ export class StreamAwaiter<T extends MappedStreamEvent> implements streamAwaiter
     const id = ids.guuid();
     let $expectedResponse = (
       this.promiseQueue ?
-        this.promiseQueue.add(() => (this.stateTracker.promise<T>(id))) :
-        this.stateTracker.promise<T>(id)
-    ) as ReturnType<typeof DeferralTracker['promise']> | null;
+        this.promiseQueue.add(() => (this.stateTracker.promise(id))) :
+        this.stateTracker.promise(id)
+    ) as Promise<T> | null;
 
     await this.writeChannel.writeToStream(
       target,

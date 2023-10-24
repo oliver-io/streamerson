@@ -570,7 +570,7 @@ export class StreamingDataSource
     }
   }
 
-  override async abort(e) {
+  override async abort(e?: boolean) {
     await super.abort(e);
     this.keyEvents.emit(KeyEvents.CANCEL);
   }

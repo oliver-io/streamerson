@@ -167,7 +167,7 @@ export type DataSourceOptions = Partial<{
 
 export type ConnectableDataSource = {
 	options: DataSourceOptions;
-	connect: () => Promise<this>;
+	connect: () => Promise<ConnectableDataSource>;
 };
 
 export type DataSource = {
