@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 RUNNER="${1:-node}"
 TARGET="${2:-$STREAMERSON_BENCHMARK_DIRECTORY}"
-SCRIPT="${3:-$STREAMERSON_BENCHMARK_SCRIPT}"
+SCRIPT="${3:-$STREAMERSON_BENCHMARK_FILE_TARGET}"
 echo "Running benchmark with $RUNNER for target: $TARGET ($SCRIPT)"
 
 ## find a directory with the name of the target:

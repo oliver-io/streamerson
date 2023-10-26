@@ -5,7 +5,7 @@ RUN addgroup --system streamerson && adduser --system --group streamerson
 
 COPY dist/packages/benchmarking benchmarking
 COPY packages/benchmarking/.env benchmarking/.env
-COPY packages/benchmarking/tools/run-benchmark.sh benchmarking/tools/run-benchmark.sh
+COPY packages/benchmarking/tools/start-benchmark.sh benchmarking/tools/start-benchmark.sh
 
 RUN chown -R streamerson:streamerson .
 

@@ -1,4 +1,4 @@
-import {StreamersonLogger, StreamingDataSource} from '@streamerson/core';
+import {StreamingDataSource} from '@streamerson/core';
 import {config} from '../../build/config';
 import { Redis } from 'ioredis';
 import pino from 'pino';
@@ -15,7 +15,7 @@ export interface ClientBenchmarkingContext extends BaseContext {
 }
 export interface FrameworkBenchmarkingContext extends BaseContext {
   datasource: StreamingDataSource;
-  logger: StreamersonLogger;
+  logger: any;
   connect: boolean;
 }
 
@@ -28,7 +28,7 @@ export async function getClientContext(options?: { connect?: boolean }):Promise<
   });
   const logger = pino();
   if (connect) {
-    await datasource.connect();
+    //await datasource.connect();
   }
   return {
     experimentType: 'control',

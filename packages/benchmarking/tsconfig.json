@@ -15,7 +15,9 @@
     "baseUrl": ".",
     "paths": {}
   },
-  "include": ["src/**/*.ts", "tools/run-benchmark.sh"],
+  "include": ["src/**/*.ts",
+    "tools/start-benchmark.sh"
+  ],
   "exclude": ["node_modules", "tmp"],
   "references": [
     {

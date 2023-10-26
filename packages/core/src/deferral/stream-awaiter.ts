@@ -1,9 +1,7 @@
-import { type Logger } from 'pino';
-import { DeferralTracker, StreamersonLogger, StreamingDataSource } from '..';
-import { type MappedStreamEvent, type MessageType, type StreamConfiguration } from '../types';
-import { ids } from '../utils/ids';
-import { shardDecorator } from '../utils/keys';
-import PQueue from 'p-queue';
+import {DeferralTracker, StreamersonLogger} from '..';
+import {type MappedStreamEvent, type MessageType, type StreamConfiguration} from '../types';
+import {ids} from '../utils/ids';
+import {shardDecorator} from '../utils/keys';
 
 type streamAwaiterOptions = Omit<StreamConfiguration, 'outgoingStream'> & {
   logger?: StreamersonLogger;
@@ -18,7 +16,7 @@ export class StreamAwaiter<T extends MappedStreamEvent> implements streamAwaiter
   incomingStream;
   writeChannel;
   readChannel;
-  promiseQueue: { add: (fn: () => Promise<T>) => Promise<T> };
+  // promiseQueue: { add: (fn: () => Promise<T>) => Promise<T> };
 
   constructor(public options: streamAwaiterOptions) {
     this.stateTracker = new DeferralTracker(options);
@@ -26,7 +24,7 @@ export class StreamAwaiter<T extends MappedStreamEvent> implements streamAwaiter
     this.incomingStream = options.incomingStream;
     this.writeChannel = options.writeChannel;
     this.readChannel = options.readChannel;
-    this.promiseQueue = new PQueue({concurrency: options.concurrency ?? 1});
+    // this.promiseQueue = new PQueue({concurrency: options.concurrency ?? 1});
   }
 
   async dispatch(
@@ -45,8 +43,8 @@ export class StreamAwaiter<T extends MappedStreamEvent> implements streamAwaiter
 
     const id = ids.guuid();
     let $expectedResponse = (
-      this.promiseQueue ?
-        this.promiseQueue.add(() => (this.stateTracker.promise(id))) :
+      // this.promiseQueue ?
+      //   this.promiseQueue.add(() => (this.stateTracker.promise(id))) :
         this.stateTracker.promise(id)
     ) as Promise<T> | null;
 
@@ -77,50 +75,50 @@ export class StreamAwaiter<T extends MappedStreamEvent> implements streamAwaiter
 }
 
 export const streamAwaiter = <T extends MappedStreamEvent>(
-	options: streamAwaiterOptions,
+  options: streamAwaiterOptions,
 ) => {
-	const stateTracker = new DeferralTracker(options);
-	const {outgoingStream, incomingStream, writeChannel, readChannel} = options;
+  const stateTracker = new DeferralTracker(options);
+  const {outgoingStream, incomingStream, writeChannel, readChannel} = options;
 
-	return {
-		stateTracker,
-		async dispatch(
-			message: string,
-			messageType: MessageType,
-			messageSourceId?: string,
-			shard?: string,
-			outgoingStreamOverride?: string,
-		) {
-			const target = outgoingStream ?? outgoingStreamOverride;
-			if (!target) {
-				throw new Error(
-					'Either a configured or override stream target must be provided',
-				);
-			}
+  return {
+    stateTracker,
+    async dispatch(
+      message: string,
+      messageType: MessageType,
+      messageSourceId?: string,
+      shard?: string,
+      outgoingStreamOverride?: string,
+    ) {
+      const target = outgoingStream ?? outgoingStreamOverride;
+      if (!target) {
+        throw new Error(
+          'Either a configured or override stream target must be provided',
+        );
+      }
 
-			const id = ids.guuid();
-			let $expectedResponse = (stateTracker.promise<T>(id) as ReturnType<typeof stateTracker.promise<T>> | null);
-			await writeChannel.writeToStream(
-				target,
-				incomingStream,
-				messageType,
-				id,
-				message,
-				messageSourceId ?? '',
-				shard,
-			);
-			const deferredResponse = await $expectedResponse;
-			// Todo: consider using a weakmap here to avoid memory leaks, but for now:
-			$expectedResponse = null;
-			stateTracker.delete(id);
-			return deferredResponse!.payload;
-		},
-		async readResponseStream(shard?: string) {
-			for await (const event of readChannel.getReadStream({
-				stream: shardDecorator({key: incomingStream, shard}),
-			})) {
-				stateTracker.emit('response', event);
-			}
-		},
-	};
+      const id = ids.guuid();
+      let $expectedResponse = (stateTracker.promise<T>(id) as ReturnType<typeof stateTracker.promise<T>> | null);
+      await writeChannel.writeToStream(
+        target,
+        incomingStream,
+        messageType,
+        id,
+        message,
+        messageSourceId ?? '',
+        shard,
+      );
+      const deferredResponse = await $expectedResponse;
+      // Todo: consider using a weakmap here to avoid memory leaks, but for now:
+      $expectedResponse = null;
+      stateTracker.delete(id);
+      return deferredResponse!.payload;
+    },
+    async readResponseStream(shard?: string) {
+      for await (const event of readChannel.getReadStream({
+        stream: shardDecorator({key: incomingStream, shard}),
+      })) {
+        stateTracker.emit('response', event);
+      }
+    },
+  };
 };

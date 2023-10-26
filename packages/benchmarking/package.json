@@ -3,11 +3,13 @@
   "version": "0.0.1",
   "module": "CommonJS",
   "scripts": {
-    "run-benchmark": "./tools/run-benchmark.sh tsx",
+    "run-benchmark": "STREAMERSON_BENCHMARK_FILE_TARGET=benchmark tools/start-benchmark.sh tsx",
     "build:summary": "tsx ./src/utils/summarizeResults --write"
   },
   "dependencies": {
-    "@streamerson/core": "^0.0.21",
+    "@streamerson/consumer": "^0.0.9",
+    "@streamerson/core": "^0.0.33",
+    "@streamerson/gateway-fastify": "^0.0.13",
     "dotenv": "^16.3.1",
     "fastify": "^4.24.0",
     "markdown-table-ts": "^1.0.3",

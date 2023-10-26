@@ -79,7 +79,7 @@ export class StreamingDataSource
     shard?: string,
   ) {
     try {
-      // console.time('Dispatch writeToStream to Redis');
+      this.logger.info({outgoingStream, incomingStream, messageType, messageId, message, sourceId, shard}, 'Dispatching message to stream')
       const result = this.client.xadd(
         shardDecorator({key: outgoingStream, shard}),
         '*',
@@ -145,38 +145,47 @@ export class StreamingDataSource
     rawEvent: StreamEventData,
     _streamTitle: string,
   ) {
-    const [_id, properties] = rawEvent;
-    const eventMap: MappedStreamEvent = {
-      streamId: _streamTitle,
-      streamMessageId: _id,
-      messageId: properties[MessageHeaderIndex.ID],
-      messageType: properties[MessageHeaderIndex.TYPE],
-      messageDestination: properties[MessageHeaderIndex.DESTINATION],
-      messageProtocol: properties[MessageHeaderIndex.CONTENT_TYPE],
-      messageSourceId: properties[MessageHeaderIndex.SOURCE_ID],
-      payload: {},
-    };
-    if (
-      properties[MessageHeaderIndex.HEADERS]
-      && properties[MessageHeaderIndex.HEADERS] !== 'nil'
-    ) {
-      eventMap.messageHeaders = JSON.parse(
-        Buffer.from(properties[MessageHeaderIndex.HEADERS]).toString(),
-      );
+    this.logger.info(rawEvent, 'RAW EVENT!');
+    try {
+      const [_id, properties] = rawEvent;
+      const eventMap: MappedStreamEvent = {
+        streamId: _streamTitle,
+        streamMessageId: _id,
+        messageId: properties[MessageHeaderIndex.ID],
+        messageType: properties[MessageHeaderIndex.TYPE],
+        messageDestination: properties[MessageHeaderIndex.DESTINATION],
+        messageProtocol: properties[MessageHeaderIndex.CONTENT_TYPE],
+        messageSourceId: properties[MessageHeaderIndex.SOURCE_ID],
+        payload: {},
+      };
+      if (
+        properties[MessageHeaderIndex.HEADERS]
+        && properties[MessageHeaderIndex.HEADERS] !== 'nil'
+      ) {
+        eventMap.messageHeaders = JSON.parse(
+          Buffer.from(properties[MessageHeaderIndex.HEADERS]).toString(),
+        );
+      }
+
+      ["0626c879-0c33-451f-b595-a2758c94fcc7","bench","default-stream-topic::DEFAULT::PRODUCER_OUTGOING","nil","json","","UnoccupiedField",""]
+
+      eventMap.payload
+        = properties[MessageHeaderIndex.CONTENT_TYPE] === 'json'
+        ? JSON.parse(properties[MessageHeaderIndex.PAYLOAD] as string)
+        : (properties[MessageHeaderIndex.PAYLOAD] as string);
+
+      if (!eventMap.messageId) {
+        this.logger.error('MAP', eventMap);
+        this.logger.error('PROPS', properties);
+        throw new Error('No Message ID in Message');
+      }
+
+      return eventMap;
+    } catch(err) {
+      this.logger.error(err);
+      console.error(err);
+      throw err;
     }
-
-    eventMap.payload
-      = properties[MessageHeaderIndex.CONTENT_TYPE] === 'json'
-      ? JSON.parse(properties[MessageHeaderIndex.PAYLOAD] as string)
-      : (properties[MessageHeaderIndex.PAYLOAD] as string);
-
-    if (!eventMap.messageId) {
-      this.logger.error('MAP', eventMap);
-      this.logger.error('PROPS', properties);
-      throw new Error('No Message ID in Message');
-    }
-
-    return eventMap;
   }
 
   /**
@@ -376,7 +385,7 @@ export class StreamingDataSource
     } catch (err) {
       logger.error(err);
       throw new Error(
-        `Failed attempt to call XREAD [key=${options.stream},shard=${options.shard}]`,
+        `Failed attempt to WOT call XREAD [key=${options.stream},shard=${options.shard}]`,
       );
     }
   }

@@ -16,13 +16,13 @@ export function buildStreamConfiguration(
 	const readChannel = options.channels?.readChannel ?? new StreamingDataSource({
 		logger: options.logger,
 		controllable: true,
-		...options?.redisConfiguration ?? {}
+		... (options?.redisConfiguration ?? {})
 	});
 
-	const writeChannel = options.channels?.readChannel ?? new StreamingDataSource({
+	const writeChannel = options.channels?.writeChannel ?? new StreamingDataSource({
 		logger: options.logger,
-		controllable: true,
-		...options?.redisConfiguration ?? {}
+		controllable: false,
+		... (options?.redisConfiguration ?? {})
 	});
 
 	return {

@@ -1,11 +1,24 @@
 import http from 'http';
 
 export async function makeHTTPRequest(hostname: string, path: string = '/', method: 'GET' | 'POST' = 'GET', data?: any) {
+  // const options = {
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   method,
+  //   body: JSON.stringify(data) ?? undefined
+  // };
+  //
+  // if (data) {
+  //   options.headers['Content-Length'] = Buffer.byteLength(options.body);
+  // }
+
   const response = await fetch(`${hostname}${path}`, {
     headers: {
       'Content-Type': 'application/json',
     },
-    method
+    method,
+    body: JSON.stringify(data) ?? undefined
   });
 
   return await response.json();

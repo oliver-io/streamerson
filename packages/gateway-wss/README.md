@@ -25,8 +25,8 @@ This package provides an out-of-the-box solution for proxying traffic between us
 
 Create a WSS Gateway proxying Websocket connections to a Redis stream:
 
-<!-- BEGIN-CODE: ../examples/app-websockets/api.ts -->
-[**api.ts**](../examples/app-websockets/api.ts)
+<!-- BEGIN-CODE: ../examples/app-websockets/gateway.ts -->
+[**gateway.ts**](../examples/app-websockets/api.ts)
 ```typescript
 import {WebSocketServer} from '@streamerson/gateway-wss';
 import {Topic} from "@streamerson/core";
@@ -49,7 +49,7 @@ await wssServer.streamRoute('/hello', Events.HELLO_EVENT, streamTopic, {
 
 await wssServer.listen();
 ```
-<!-- END-CODE: ../examples/app-websockets/api.ts -->
+<!-- END-CODE: ../examples/app-websockets/gateway.ts -->
 
 (See: [app-websockets example](../examples/app-websockets/README.md))).
 

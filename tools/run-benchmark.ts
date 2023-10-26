@@ -60,27 +60,34 @@ async function runSingleBenchmark(options: CLIOptions) {
         continue;
       }
 
-      const
-        STREAMERSON_IMAGE_TARGET = `streamerson/benchmarking/${directory}:latest`;
-      const STREAMERSON_BENCHMARK_APP_TARGET = directory;
+      const STREAMERSON_IMAGE_TARGET = `streamerson/benchmarking/${directory}:latest`;
+      const STREAMERSON_BENCHMARK_DIRECTORY = directory;
+      const STREAMERSON_BENCHMARK_LOCATION = 'benchmark';
+      const STREAMERSON_BENCHMARK_GATEWAY_LOCATION = 'gateway';
+      const STREAMERSON_BENCHMARK_MICROSERVICE_LOCATION = 'microservice';
       const env = {
         ...process.env,
         STREAMERSON_IMAGE_TARGET,
-        STREAMERSON_BENCHMARK_APP_TARGET,
+        STREAMERSON_BENCHMARK_DIRECTORY,
         STREAMERSON_PROJECT: directory
       };
 
-      // if the directory has its own app.yaml, then we need to use that instead of the default
-      const [projectDockerFile] = await glob(`./packages/benchmarking/src/${directory}/app.dockerfile`);
-      const [projectComposeFile] = await glob(`./packages/benchmarking/src/${directory}/app.yaml`);
+      // if the directory has its own compose.benchmark.yaml, then we need to use that instead of the default
+      const [projectDockerFile] = await glob(`./packages/benchmarking/src/${directory}/benchmark.dockerfile`);
+      const [projectComposeFile] = await glob(`./packages/benchmarking/src/${directory}/benchmark.compose.yaml`);
+
+      const baseImageName = 'streamerson/benchmarking:latest';
+      const baseImagePath = path.resolve('./packages/benchmarking/build/base.dockerfile');
+
+      const benchmarkDockerFile = path.resolve('./packages/benchmarking/build/app.dockerfile');
 
       if (options.build) {
         const buildCommands = [
           ...(options.build ? [
             // The base image, which is just the `benchmarking` monorepo package with its dependencies already built:
-            `docker build -t streamerson/benchmarking:latest . -f ./packages/benchmarking/build/benchmarking.dockerfile`,
+            `docker build -t ${baseImageName} . -f ${baseImagePath}`,
             // The target image, i.e. the benchmarking app
-            `docker build --build-arg TARGET=${directory} -t streamerson/benchmarking/${directory}:latest . -f ${projectDockerFile ?? './packages/benchmarking/build/app.dockerfile'}`
+            `docker build --build-arg TARGET=${directory} -t ${STREAMERSON_IMAGE_TARGET} . -f ${projectDockerFile ?? benchmarkDockerFile}`
           ] : [])
         ];
 
@@ -91,16 +98,20 @@ async function runSingleBenchmark(options: CLIOptions) {
         }
       }
 
+      // TODO: `stack` vs `benchmark` stuff:
+      const composeFileTarget = projectComposeFile ?? './build/compose.stack.yaml';
+
       if (options.exec) {
         const executeCommands = [
           `echo "Starting benchmark for ${directory}"`,
-          `docker compose -p ${directory} -f ./build/stack.yaml -f ${projectComposeFile ?? './build/app.yaml'} up --abort-on-container-exit --force-recreate --renew-anon-volumes`,
+          `docker compose -p ${directory} -f ./build/compose.redis.yaml -f ${composeFileTarget} up --abort-on-container-exit --force-recreate --renew-anon-volumes`,
           ...(buildReport ? [
-            `docker cp ${directory}-benchmarking-1:/app/benchmarking/benchmark-report.json ./_reports/${directory}-report.json`,
+            `docker cp ${directory}-benchmark-1:/app/benchmarking/benchmark-report.json ./_reports/${directory}-report.json`,
           ] : [])
         ];
 
         for (const cmd of executeCommands) {
+          console.log(cmd);
           execSync(cmd, {
             cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit', env
           });

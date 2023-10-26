@@ -28,8 +28,8 @@ That said, this package might be of interest to anyone that simply wants to acce
 
 Create a Fastify Gateway proxying REST transactions to a Redis stream:
 
-<!-- BEGIN-CODE: ../examples/app-hello-world/api.ts -->
-[**api.ts**](../examples/app-hello-world/api.ts)
+<!-- BEGIN-CODE: ../examples/app-hello-world/gateway.ts -->
+[**gateway.ts**](../examples/app-hello-world/api.ts)
 ```typescript
 import fastify from 'fastify';
 import {CreateGatewayPlugin} from '@streamerson/gateway-fastify';
@@ -66,7 +66,7 @@ const serverOptions = {
 
 await apiServer.listen(serverOptions);
 ```
-<!-- END-CODE: ../examples/app-hello-world/api.ts -->
+<!-- END-CODE: ../examples/app-hello-world/gateway.ts -->
 
 (See: [app-hello-world example](../examples/app-hello-world/README.md))).
 
