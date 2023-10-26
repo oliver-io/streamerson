@@ -1,8 +1,7 @@
 {
   "name": "@streamerson/consumer",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "dependencies": {
-    "@streamerson/core": "^0.0.32",
     "ioredis": "^5.0.4",
     "pino": "^7.11.0",
     "tslib": "^2.3.0"
