@@ -1,8 +1,7 @@
 {
   "name": "@streamerson/gateway-fastify",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "dependencies": {
-    "@streamerson/core": "^0.0.32",
     "fastify": "^4.23.2",
     "fastify-plugin": "^4.5.1",
     "ioredis": "^5.0.4",
