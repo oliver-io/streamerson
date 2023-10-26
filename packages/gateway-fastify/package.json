@@ -1,6 +1,6 @@
 {
   "name": "@streamerson/gateway-fastify",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "dependencies": {
     "fastify": "^4.23.2",
     "fastify-plugin": "^4.5.1",
