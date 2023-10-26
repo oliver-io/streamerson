@@ -1,6 +1,6 @@
 {
   "name": "@streamerson/consumer",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "dependencies": {
     "@streamerson/core": "^0.0.32",
     "ioredis": "^5.0.4",
