@@ -1,0 +1,21 @@
+services:
+  microservice:
+    image: ${STREAMERSON_SERVICE_IMAGE_TARGET}
+    networks:
+      - streamerson
+  gateway:
+    image: ${STREAMERSON_API_IMAGE_TARGET}
+    depends_on:
+      - microservice
+    networks:
+      - streamerson
+  benchmark:
+    image: ${STREAMERSON_BENCHMARK_IMAGE_TARGET}
+    depends_on:
+      - microservice
+      - gateway
+    networks:
+      - streamerson
+networks:
+  streamerson:
+    name: streamerson
