@@ -12,3 +12,7 @@ resource "docker_container" "redis" {
         external = 6379
     }
 }
+
+resource "docker_network" "streamerson" {
+  name = "streamerson"
+}

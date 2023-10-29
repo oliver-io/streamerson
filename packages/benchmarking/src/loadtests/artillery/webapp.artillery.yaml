@@ -1,0 +1,23 @@
+config:
+  # This is a test server run by team Artillery
+  # It's designed to be highly scalable
+  target: http://gateway:8080
+  phases:
+    - duration: 5
+      arrivalRate: 1
+      rampTo: 5
+      name: Warm up phase
+    - duration: 5
+      arrivalRate: 5
+      rampTo: 10
+      name: Ramp up load
+    - duration: 5
+      arrivalRate: 10
+      rampTo: 30
+      name: Spike phase
+scenarios:
+  - flow:
+      - loop:
+          - get:
+              url: "/bench"
+        count: 100

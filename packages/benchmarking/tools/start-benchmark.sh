@@ -7,9 +7,12 @@ echo "Running benchmark with $RUNNER for target: $TARGET ($SCRIPT)"
 ## find a directory with the name of the target:
 DIR=$(find . -type d -name $TARGET)
 
+## debug stuff:
+
 ## if the directory exists, run the benchmark:
 if [ -d "$DIR" ]; then
-    echo "Running benchmark for $TARGET"
+    echo "Running benchmark for $TARGET (\"$RUNNER $DIR/$SCRIPT\") ..."
+    set STREAMERSON_LOG_LEVEL=warn
     $RUNNER $DIR/$SCRIPT
 else
     echo "No benchmark found for $TARGET"

@@ -1,15 +1,13 @@
 import Redis from 'ioredis';
-import pino from 'pino';
 import {type DataSourceOptions, type ConnectableDataSource, StreamersonLogger} from '../../types';
 import { environmentValueFor } from "../../utils/environment";
+import {createStreamersonLogger} from "../../utils/logger";
 
 const DEFAULT_PORT = parseInt(environmentValueFor('STREAMERSON_REDIS_PORT'));
 const DEFAULT_HOST = environmentValueFor('STREAMERSON_REDIS_HOST')
 
-const moduleLogger = pino({
-  base: {
-    module: 'stream_consumer'
-  },
+const moduleLogger = createStreamersonLogger({
+  module: 'datasource'
 });
 
 export class RedisDataSource implements ConnectableDataSource {

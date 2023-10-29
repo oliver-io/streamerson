@@ -1,20 +1,17 @@
 import {RouteOptions} from 'fastify';
 import {
-  buildStreamConfiguration,
+  createStreamersonLogger,
   MessageType,
   streamAwaiter,
-  StreamersonLogger, StreamingDataSource,
-  StreamMessageFlowModes,
+  StreamersonLogger,
+  StreamingDataSource,
   StreamOptions,
   Topic,
 } from '@streamerson/core';
-import Pino from 'pino';
 import fp from 'fastify-plugin';
 
-const moduleLogger = Pino({
-  base: {
-    module: 'streamerson_gateway_fastify',
-  }
+const moduleLogger = createStreamersonLogger({
+  module: 'streamerson_gateway_fastify',
 });
 
 declare module 'fastify' {
@@ -106,7 +103,7 @@ export function CreateGatewayPlugin(options: {
       fastify.log.info(`... Sending incoming messages to ${messageStream}`);
       fastify.log.info(`... Listening for responses from ${responseStream}`);
       for (const stateTracker in streamStateTrackers) {
-        streamStateTrackers[stateTracker].readResponseStream().catch(err=>{
+        streamStateTrackers[stateTracker].readResponseStream().catch(err => {
           throw err;
         });
       }

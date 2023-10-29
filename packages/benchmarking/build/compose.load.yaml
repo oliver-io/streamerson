@@ -1,0 +1,48 @@
+services:
+  microservice:
+    networks:
+      - streamerson
+    build:
+      dockerfile: ./app.dockerfile
+    expose:
+      - 8081
+    environment:
+      STREAMERSON_REDIS_HOST: redis
+      STREAMERSON_BENCHMARK_DIRECTORY: ${STREAMERSON_BENCHMARK_DIRECTORY}
+      STREAMERSON_BENCHMARK_FILE_TARGET: ${STREAMERSON_BENCHMARK_MICROSERVICE_FILE_TARGET}
+      STREAMERSON_LOG_LEVEL: warn
+      PINO_LOG_LEVEL: warn
+  gateway:
+    depends_on:
+      - microservice
+    networks:
+      - streamerson
+    build:
+      dockerfile: ./app.dockerfile
+    expose:
+      - 8080
+    environment:
+      STREAMERSON_GATEWAY_PORT: 8080
+      STREAMERSON_MICROSERVICE_PORT: 8081
+      STREAMERSON_MICROSERVICE_HOST: microservice
+      STREAMERSON_BENCHMARK_DIRECTORY: ${STREAMERSON_BENCHMARK_DIRECTORY}
+      STREAMERSON_BENCHMARK_FILE_TARGET: ${STREAMERSON_BENCHMARK_GATEWAY_FILE_TARGET}
+      STREAMERSON_BENCHMARK_TARGET: ${STREAMERSON_BENCHMARK_TARGET}
+      STREAMERSON_BENCHMARK_REPORT_PATH: ${STREAMERSON_BENCHMARK_REPORT_PATH}
+      STREAMERSON_LOG_LEVEL: warn
+      PINO_LOG_LEVEL: warn
+  benchmark:
+    environment:
+      STREAMERSON_GATEWAY_PORT: 8080
+      STREAMERSON_MICROSERVICE_HOST: microservice
+      STREAMERSON_BENCHMARK_DIRECTORY: ${STREAMERSON_BENCHMARK_DIRECTORY}
+      STREAMERSON_BENCHMARK_FILE_TARGET: ${STREAMERSON_BENCHMARK_GATEWAY_FILE_TARGET}
+      STREAMERSON_BENCHMARK_TARGET: ${STREAMERSON_BENCHMARK_TARGET}
+      STREAMERSON_BENCHMARK_REPORT_PATH: ${STREAMERSON_BENCHMARK_REPORT_PATH}
+    image: artilleryio/artillery:latest
+    volumes:
+      - ../src/loadtests:/app/benchmarking
+      - ../_reports:/app/reports
+    command: ["run", "/app/benchmarking/artillery/${STREAMERSON_BENCHMARK_TARGET}.yaml", "--output", "/app/reports/${STREAMERSON_BENCHMARK_REPORT_PATH}"]
+    networks:
+      - streamerson

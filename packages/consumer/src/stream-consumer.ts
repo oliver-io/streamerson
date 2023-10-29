@@ -11,13 +11,12 @@ import {
   OutgoingChannel,
   StreamersonLogger,
   StreamingDataSource,
-  Topic
+  Topic,
+  createStreamersonLogger
 } from "@streamerson/core";
 
-const moduleLogger = Pino({
-  base: {
-    module: 'stream_consumer'
-  },
+const moduleLogger = createStreamersonLogger({
+  module: 'streamerson_consumer'
 });
 
 type PayloadVariety = Record<string, NullablePrimitive>;
@@ -88,12 +87,12 @@ export class StreamConsumer<
     const producerStream = this.options.topic.producerKey(this.options.shard);
     this.bidirectional = options.bidirectional ?? true;
     this.topic = options.topic ?? this.options.topic;
-    this.logger = (options.logger ?? this.options.logger ?? moduleLogger.child({
+    this.logger = createStreamersonLogger({
       shard: this.options.shard,
-      meta: this.options.topic.meta(),
+      ...this.options.topic.meta(),
       streamName: consumerStream,
       destination: producerStream,
-    })) as StreamersonLogger;
+    }, (options.logger ?? this.options.logger ?? moduleLogger));
 
     this.incomingChannel = new StreamingDataSource({
       host: this.options.redisConfiguration?.host,

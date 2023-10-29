@@ -17,11 +17,15 @@ yarn clean
 cd dist/packages/$TARGET
 yarn publish --access public --non-interactive
 
-cd ../../../packages/benchmarking
-sleep 2
-yarn add @streamerson/$TARGET
-sleep 2
-yarn add @streamerson/$TARGET
+# If not "core", install in benchmarking?
+
+if [ "$TARGET" != "core" ]; then
+  cd ../../../packages/benchmarking
+  sleep 10
+  yarn add @streamerson/$TARGET
+  sleep 2
+  yarn add @streamerson/$TARGET
+fi
 
 cd ../../
 yarn build

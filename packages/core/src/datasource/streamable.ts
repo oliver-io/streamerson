@@ -61,13 +61,13 @@ export class StreamingDataSource
   /**
    * A low-level implementation wrapping a Redis Stream Write operation
    *
-   @param outgoingStream: The stream ID to target in Redis
-   @param incomingStream: Maybe, a stream ID to reply to
-   @param messageType: The type of the event
-   @param messageId: The ID of the message
-   @param message: The message payload
-   @param sourceId: The ID of the source
-   @param shard: Maube, the shard to target
+   @param outgoingStream The stream ID to target in Redis
+   @param incomingStream Maybe, a stream ID to reply to
+   @param messageType The type of the event
+   @param messageId The ID of the message
+   @param message The message payload
+   @param sourceId The ID of the source
+   @param shard Maybe, the shard to target
    */
   public async writeToStream(
     outgoingStream: StreamId,
@@ -79,7 +79,7 @@ export class StreamingDataSource
     shard?: string,
   ) {
     try {
-      this.logger.info({outgoingStream, incomingStream, messageType, messageId, message, sourceId, shard}, 'Dispatching message to stream')
+      this.logger.debug({outgoingStream, incomingStream, messageType, messageId, message, sourceId, shard}, 'Dispatching message to stream')
       const result = this.client.xadd(
         shardDecorator({key: outgoingStream, shard}),
         '*',
@@ -103,7 +103,7 @@ export class StreamingDataSource
 
   /**
    * Sets the `MessageType` field default for outgoing messages
-   * @param type: The `MessageType` for outgoing messages
+   * @param type The `MessageType` for outgoing messages
    */
   setResponseType(type: string) {
     this.responseType = type as MessageType;
@@ -111,7 +111,7 @@ export class StreamingDataSource
 
   /**
    * Adds a stream to the set for consumption
-   * @param streamId: the key of the stream to ingest
+   * @param streamId the key of the stream to ingest
    */
   addStreamId(streamId: StreamId) {
     this.keyEvents.emit(KeyEvents.UPDATE, streamId);
@@ -120,7 +120,7 @@ export class StreamingDataSource
 
   /**
    * Checks whether a stream is set for consumption
-   * @param streamId: the key of the stream to check
+   * @param streamId the key of the stream to check
    */
   hasStreamId(streamId: StreamId) {
     return Boolean(this.streamIdMap[streamId]);
@@ -128,7 +128,7 @@ export class StreamingDataSource
 
   /**
    * Removes a stream from the set for consumption
-   * @param streamId: the key of the stream to remove
+   * @param streamId the key of the stream to remove
    */
   removeStreamId(streamId: StreamId) {
     this.keyEvents.emit(KeyEvents.UPDATE, streamId);
@@ -137,15 +137,15 @@ export class StreamingDataSource
 
   /**
    * Private function that converts a Redis message to a MappedStreamEvent
-   * @param rawEvent: the raw event from Redis as a tuple-tuple
-   * @param _streamTitle: the title of the stream from whence the message came
+   * @param rawEvent the raw event from Redis as a tuple-tuple
+   * @param _streamTitle the title of the stream from whence the message came
    * @private
    */
   private deserializeMessageArray(
     rawEvent: StreamEventData,
     _streamTitle: string,
   ) {
-    this.logger.info(rawEvent, 'RAW EVENT!');
+    this.logger.debug(rawEvent, 'Raw stream event!');
     try {
       const [_id, properties] = rawEvent;
       const eventMap: MappedStreamEvent = {
@@ -195,7 +195,7 @@ export class StreamingDataSource
    * @property {string} groupId - a consumer group key that tracks the stream
    * @property {string} [cursor] - a cursor from which to begin tracking
    * Create a consumer group in the remote Redis for tracked consumption of a streams
-   * @param config: {ConsumerGroupConfig}
+   * @param config {ConsumerGroupConfig}
    */
   async createConsumerGroup(config: {
     stream: string,
@@ -219,7 +219,7 @@ export class StreamingDataSource
   * @property {string} [cursor] - a cursor from which to begin tracking
   * Create a consumer group in the remote Redis for tracked consumption of a streams
   * Create a consumer group in the remote Redis for tracked consumption of a streams
-  * @param config: {ConsumerGroupMemberConfig}
+  * @param config {ConsumerGroupMemberConfig}
   */
   async createGroupMember(config: {
     stream: string,
@@ -241,10 +241,10 @@ export class StreamingDataSource
 
   /**
    * Read a message or batch from a stream as a single consumer rather than a part of a group
-   * @param stream: the key of the stream from which to read
-   * @param cursor: the cursor from which to begin reading
-   * @param timeout: the timeout in milliseconds to wait for a message
-   * @param batchSize: the number of messages to read
+   * @param stream the key of the stream from which to read
+   * @param cursor the cursor from which to begin reading
+   * @param timeout the timeout in milliseconds to wait for a message
+   * @param batchSize the number of messages to read
    */
   async readAsSingle(stream: string, cursor: string, timeout: number, batchSize = 1) {
     return (await this.client.call(
@@ -264,11 +264,11 @@ export class StreamingDataSource
 
   /**
    * Read a message or batch from a stream as a part of a consumer group
-   * @param stream: the key of the stream from which to read
-   * @param cursor: the cursor from which to begin reading
-   * @param groupId: the key of the group to which the member belongs
-   * @param groupMemberId: the key of the member within the group
-   * @param timeout: the timeout in milliseconds to wait for a message
+   * @param stream the key of the stream from which to read
+   * @param cursor the cursor from which to begin reading
+   * @param groupId the key of the group to which the member belongs
+   * @param groupMemberId the key of the member within the group
+   * @param timeout the timeout in milliseconds to wait for a message
    */
   async readAsGroup(
     stream: string,
@@ -443,7 +443,7 @@ export class StreamingDataSource
 
   /**
    * Get a key's value from the remote
-   * @param key: the key targeted
+   * @param key the key targeted
    * @param [shard]: optionally, the shard from which to read
    */
   async get(key: string, shard?: string) {
@@ -457,8 +457,8 @@ export class StreamingDataSource
 
   /**
    * Atomically increment a key's numeric value on the remote
-   * @param key: the key targeted
-   * @param shard: optionally, the shard from which to read
+   * @param key the key targeted
+   * @param shard optionally, the shard from which to read
    */
   async incr(key: string, shard?: string) {
     try {
@@ -472,7 +472,7 @@ export class StreamingDataSource
   /**
    * Set a key's value on the remote
    * @param options {KeyOptions}: the key targeted
-   * @param value: the value to set
+   * @param value the value to set
    */
   async set(options: KeyOptions, value: string) {
     try {
@@ -491,9 +491,9 @@ export class StreamingDataSource
 
   /**
    * Mark a remote stream message as Processed for a given Consumer Group
-   * @param topic: the Topic on which the message was published
-   * @param groupId: the Consumer Group ID
-   * @param messageId: the MessageID to mark as Processed
+   * @param topic the Topic on which the message was published
+   * @param groupId the Consumer Group ID
+   * @param messageId the MessageID to mark as Processed
    * @param [shard]: optionally, the shard from which to read
    */
   async markProcessedByGroup(

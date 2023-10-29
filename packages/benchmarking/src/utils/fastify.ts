@@ -7,7 +7,7 @@ export async function createServer(port: number, host: string, options: {
   }>
 }) {
   const app = Fastify({
-    logger: true
+    logger: false
   });
 
   for (const endpoint of options.endpoints) {

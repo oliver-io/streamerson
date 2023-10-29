@@ -8,4 +8,5 @@ export * from './utils/ids';
 export * from './utils/streamConfiguration';
 export * from './utils/topic';
 export * from './utils/connectedTopic';
+export * from './utils/logger';
 export type * from './types';

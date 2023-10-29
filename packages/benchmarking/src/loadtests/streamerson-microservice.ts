@@ -1,0 +1,30 @@
+import {StreamConsumer} from '@streamerson/consumer';
+import {topic} from "../utils/topic";
+import pino from 'pino';
+import {StreamersonLogger} from '@streamerson/core';
+
+export async function run() {
+  console.log('Starting stream consumer....');
+  const consumer = new StreamConsumer({
+    logger: pino({
+      level: 'warn'
+    }) as unknown as StreamersonLogger,
+    topic,
+    redisConfiguration: {
+      host: 'redis',
+      port: 6379
+    },
+    bidirectional: true,
+    eventMap: {
+      resp: (e) => {
+        return {
+          hello: "world"
+        }
+      }
+    }
+  });
+
+  await consumer.connectAndListen();
+}
+
+run().catch(console.error);

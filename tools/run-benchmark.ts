@@ -2,47 +2,24 @@ import {glob} from 'glob';
 import minimist from 'minimist';
 import path from 'path';
 import {execSync} from 'child_process';
+import {
+  definitions,
+  environmentForDefinition,
+  getDefinition
+} from "@streamerson/benchmarking/src/core_modules/definitions";
+
 
 type CLIOptions = {
   report?: boolean,
   build?: boolean,
-  exec?: boolean,
+  exec?: boolean
   target: string
-}
+} & ({ framework: true, control: false } | { control: true, framework: false });
 
-async function runAllBenchmarksAndMaybeCollectResults(options: CLIOptions) {
-  const appFiles: Array<string> = await glob(`./packages/benchmarking/src/**/*benchmark.ts`);
-  if (!appFiles.length) {
-    throw new Error("No such directory found");
-  }
-
-  for (const _appFile of appFiles) {
-    const appFile = path.posix.resolve(_appFile);
-    const dirname = path.basename(path.dirname(appFile));
-    if (options.target && !options.target.includes(dirname)) {
-      continue;
-    }
-
-    execSync(`yarn benchmark --build --target=${dirname}`, {stdio: 'inherit'});
-    try {
-      await runSingleBenchmark({
-        ...options,
-        target: dirname
-      });
-    } catch(err) {
-      console.error(err);
-    }
-  }
-
-  execSync('yarn build:summary', {
-    cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit'
-  });
-}
-
-async function runSingleBenchmark(options: CLIOptions) {
+export async function runSingleBenchmark(options: CLIOptions, reportName: string, fileKey: string = "benchmark", envExtra: Record<string, string> = {}) {
   try {
     const buildReport = options.report ?? true;
-    const appFiles: Array<string> = await glob(`./packages/benchmarking/src/**/*benchmark.ts`);
+    const appFiles: Array<string> = await glob(`./packages/benchmarking/src/**/*${fileKey}.ts`);
     if (!appFiles.length) {
       throw new Error("No such directory found");
     }
@@ -62,26 +39,23 @@ async function runSingleBenchmark(options: CLIOptions) {
 
       const STREAMERSON_IMAGE_TARGET = `streamerson/benchmarking/${directory}:latest`;
       const STREAMERSON_BENCHMARK_DIRECTORY = directory;
-      const STREAMERSON_BENCHMARK_LOCATION = 'benchmark';
-      const STREAMERSON_BENCHMARK_GATEWAY_LOCATION = 'gateway';
-      const STREAMERSON_BENCHMARK_MICROSERVICE_LOCATION = 'microservice';
       const env = {
         ...process.env,
         STREAMERSON_IMAGE_TARGET,
+        STREAMERSON_BENCHMARK_TARGET: options.target,
         STREAMERSON_BENCHMARK_DIRECTORY,
-        STREAMERSON_PROJECT: directory
+        STREAMERSON_PROJECT: directory,
+        ...envExtra
       };
 
-      // if the directory has its own compose.benchmark.yaml, then we need to use that instead of the default
-      const [projectDockerFile] = await glob(`./packages/benchmarking/src/${directory}/benchmark.dockerfile`);
-      const [projectComposeFile] = await glob(`./packages/benchmarking/src/${directory}/benchmark.compose.yaml`);
 
       const baseImageName = 'streamerson/benchmarking:latest';
       const baseImagePath = path.resolve('./packages/benchmarking/build/base.dockerfile');
 
       const benchmarkDockerFile = path.resolve('./packages/benchmarking/build/app.dockerfile');
-
       if (options.build) {
+        // if the directory has its own compose.benchmark.yaml, then we need to use that instead of the default
+        const [projectDockerFile] = await glob(`./packages/benchmarking/src/**/${directory}/benchmark.dockerfile`);
         const buildCommands = [
           ...(options.build ? [
             // The base image, which is just the `benchmarking` monorepo package with its dependencies already built:
@@ -98,15 +72,22 @@ async function runSingleBenchmark(options: CLIOptions) {
         }
       }
 
-      // TODO: `stack` vs `benchmark` stuff:
-      const composeFileTarget = projectComposeFile ?? './build/compose.stack.yaml';
-
       if (options.exec) {
+        const dockerUpOptions = '--abort-on-container-exit --force-recreate --renew-anon-volumes';
+        const stackComposeFile = './build/compose.stack.yaml';
+        const defaultComposeFile = './build/compose.benchmark.yaml';
+        const [projectComposeFile] = await glob(`./packages/benchmarking/src/**/${directory}/benchmark.compose.yaml`);
+
+        const targetedComposeFile = projectComposeFile ?? (
+          appFile.includes('webapp') ? stackComposeFile :
+            defaultComposeFile
+        );
+
         const executeCommands = [
           `echo "Starting benchmark for ${directory}"`,
-          `docker compose -p ${directory} -f ./build/compose.redis.yaml -f ${composeFileTarget} up --abort-on-container-exit --force-recreate --renew-anon-volumes`,
+          `docker compose -p ${directory} -f ./build/compose.redis.yaml -f ${targetedComposeFile} up ${dockerUpOptions}`,
           ...(buildReport ? [
-            `docker cp ${directory}-benchmark-1:/app/benchmarking/benchmark-report.json ./_reports/${directory}-report.json`,
+            `docker cp ${directory}-benchmark-1:/app/benchmarking/benchmark-report.json ./_reports/${directory}/${reportName}`,
           ] : [])
         ];
 
@@ -123,17 +104,54 @@ async function runSingleBenchmark(options: CLIOptions) {
   }
 }
 
+const defs = Object.keys(definitions).map((d) => {
+  return {
+    name: d,
+    ...getDefinition(d),
+    ...environmentForDefinition(d, definitions[d])
+  }
+});
+
+async function runAllBenchmarks() {
+  const options = minimist(process.argv.slice(2)) as unknown as CLIOptions;
+  for (const def of defs) {
+    const test: 'read' | 'write' = def.read ? 'read' : 'write';
+    let type: 'client' | 'framework' = options.framework ? 'framework' : 'client';
+    let isStream = false;
+    const target = `${test}-${isStream ? 'stream-' : ''}${type}`;
+    await runSingleBenchmark({
+        ...options,
+        build: true,
+        exec: true,
+        report: true,
+        target: 'core_modules',
+      },
+      `${def.name}-${type}-report.json`,
+      target,
+      {
+        ...environmentForDefinition(def.name, def),
+        STREAMERSON_BENCHMARK_FILE_TARGET: target,
+        STREAMERSON_BENCHMARK_DIRECTORY: 'core_modules',
+        STREAMERSON_PROJECT: 'core_modules',
+      }
+    );
+  }
+}
+
 async function run() {
-  const args = minimist(process.argv.slice(2), {});
+  const args = minimist(process.argv.slice(2), {}) as unknown as CLIOptions;
   if (!args.target) {
-    await runAllBenchmarksAndMaybeCollectResults({
-      ...args,
-      target: "*"
-    });
+    await runAllBenchmarks();
   } else {
     await runSingleBenchmark({
       ...args,
       target: args.target
+    }, `${args.target}-report.json`);
+  }
+
+  if (args.report) {
+    execSync('yarn build:summary', {
+      cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit'
     });
   }
 }

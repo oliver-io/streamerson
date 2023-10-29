@@ -1,0 +1,26 @@
+{
+  "experimentType": "control",
+  "timingEvents": [
+    {
+      "name": "timing",
+      "step": "begin"
+    },
+    {
+      "name": "write-1k-bulk",
+      "step": "start"
+    },
+    {
+      "name": "write-1k-bulk",
+      "step": "finished",
+      "duration": 42,
+      "result": {
+        "processed": 1000
+      }
+    },
+    {
+      "name": "timing",
+      "step": "finalized",
+      "duration": 43
+    }
+  ]
+}

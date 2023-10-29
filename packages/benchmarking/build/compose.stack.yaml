@@ -10,6 +10,7 @@ services:
       STREAMERSON_REDIS_HOST: redis
       STREAMERSON_BENCHMARK_DIRECTORY: ${STREAMERSON_BENCHMARK_DIRECTORY}
       STREAMERSON_BENCHMARK_FILE_TARGET: "microservice"
+      STREAMERSON_LOG_LEVEL: "warn"
   gateway:
     depends_on:
       - microservice
@@ -25,6 +26,7 @@ services:
       STREAMERSON_MICROSERVICE_HOST: microservice
       STREAMERSON_BENCHMARK_DIRECTORY: ${STREAMERSON_BENCHMARK_DIRECTORY}
       STREAMERSON_BENCHMARK_FILE_TARGET: "gateway"
+      STREAMERSON_LOG_LEVEL: "warn"
   benchmark:
     image: ${STREAMERSON_IMAGE_TARGET}
     depends_on:
@@ -38,6 +40,7 @@ services:
       IMAGE: ${STREAMERSON_IMAGE_TARGET}
       STREAMERSON_BENCHMARK_DIRECTORY: ${STREAMERSON_BENCHMARK_DIRECTORY}
       STREAMERSON_BENCHMARK_FILE_TARGET: "benchmark"
+      STREAMERSON_LOG_LEVEL: "warn"
 networks:
   streamerson:
     name: streamerson

@@ -53,5 +53,9 @@ export function withReport<T extends BenchmarkingContext>(
     ctx.logger.info('Building reports:');
     const reportPath = await buildReport(ctx, eventList);
     ctx.logger.info({reportPath}, 'Report built');
+    await new Promise((r)=>{
+      setTimeout(r, 1000);
+    })
+    process.exit(0);
   }
 }

@@ -15,7 +15,8 @@
     "release:core": "cd packages/core && yarn version && cd ../../ && yarn build && cd ./dist/packages/core && yarn release",
     "prebenchmark": "yarn build",
     "benchmark": "tsx ./tools/run-benchmark.ts",
-    "pre:benchmark": "yarn build",
+    "preloadtest": "yarn build",
+    "loadtest": "tsx ./tools/run-load-test.ts",
     "release": "./tools/release.sh"
   },
   "private": true,
