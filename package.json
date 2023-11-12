@@ -10,7 +10,7 @@
     "test": "nx run-many -t test --all --exclude=state-machine",
     "docgen": "tsx ./tools/embed -w --summary",
     "start:redis": "docker compose up -d",
-    "stop:redis": "docker compose down -d",
+    "stop:redis": "docker compose down",
     "restart:redis": "docker compose restart",
     "release:core": "cd packages/core && yarn version && cd ../../ && yarn build && cd ./dist/packages/core && yarn release",
     "prebenchmark": "yarn build",

@@ -13,8 +13,27 @@ type CLIOptions = {
   report?: boolean,
   build?: boolean,
   exec?: boolean
+  buildBase?: boolean,
   target: string
 } & ({ framework: true, control: false } | { control: true, framework: false });
+
+const baseImageName = 'streamerson/benchmarking:latest';
+function buildBaseImageCommand(baseImageName: string, baseImagePath: string) {
+  return `docker build -t ${baseImageName} . -f ${baseImagePath}`
+}
+
+function buildBenchmarkImageCommand(directory: string, tag: string, dockerfilePath: string) {
+  return `docker build --build-arg TARGET=${directory} -t ${tag} . -f ${dockerfilePath}`
+}
+
+async function getBaseImagePath() {
+  const [filePath] = await glob(`./packages/benchmarking/src/**/base.dockerfile`);
+  if (!filePath) {
+    throw new Error("Base image dockerfile not found");
+  }
+}
+
+const baseImagePath = path.resolve('./packages/benchmarking/build/base.dockerfile');
 
 export async function runSingleBenchmark(options: CLIOptions, reportName: string, fileKey: string = "benchmark", envExtra: Record<string, string> = {}) {
   try {
@@ -48,10 +67,6 @@ export async function runSingleBenchmark(options: CLIOptions, reportName: string
         ...envExtra
       };
 
-
-      const baseImageName = 'streamerson/benchmarking:latest';
-      const baseImagePath = path.resolve('./packages/benchmarking/build/base.dockerfile');
-
       const benchmarkDockerFile = path.resolve('./packages/benchmarking/build/app.dockerfile');
       if (options.build) {
         // if the directory has its own compose.benchmark.yaml, then we need to use that instead of the default
@@ -59,9 +74,9 @@ export async function runSingleBenchmark(options: CLIOptions, reportName: string
         const buildCommands = [
           ...(options.build ? [
             // The base image, which is just the `benchmarking` monorepo package with its dependencies already built:
-            `docker build -t ${baseImageName} . -f ${baseImagePath}`,
+            buildBaseImageCommand(baseImageName, baseImagePath),
             // The target image, i.e. the benchmarking app
-            `docker build --build-arg TARGET=${directory} -t ${STREAMERSON_IMAGE_TARGET} . -f ${projectDockerFile ?? benchmarkDockerFile}`
+            buildBenchmarkImageCommand(directory, STREAMERSON_IMAGE_TARGET, projectDockerFile ?? benchmarkDockerFile),
           ] : [])
         ];
 
@@ -114,6 +129,7 @@ const defs = Object.keys(definitions).map((d) => {
 
 async function runAllBenchmarks() {
   const options = minimist(process.argv.slice(2)) as unknown as CLIOptions;
+
   for (const def of defs) {
     const test: 'read' | 'write' = def.read ? 'read' : 'write';
     let type: 'client' | 'framework' = options.framework ? 'framework' : 'client';
@@ -140,6 +156,7 @@ async function runAllBenchmarks() {
 
 async function run() {
   const args = minimist(process.argv.slice(2), {}) as unknown as CLIOptions;
+
   if (!args.target) {
     await runAllBenchmarks();
   } else {

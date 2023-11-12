@@ -23,7 +23,7 @@ export async function createStreamersonGateway(port: number, host: string, optio
     topic,
     streamOptions: {
       redisConfiguration: {
-        host: 'redis'
+        host: process.env['STREAMERSON_REDIS_HOST'] || 'localhost'
       }
     },
     routes: options.endpoints.map((endpoint) => {

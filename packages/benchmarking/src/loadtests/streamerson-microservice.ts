@@ -11,8 +11,8 @@ export async function run() {
     }) as unknown as StreamersonLogger,
     topic,
     redisConfiguration: {
-      host: 'redis',
-      port: 6379
+      host: process.env['STREAMERSON_REDIS_HOST'] || 'localhost',
+      port: parseInt(process.env['STREAMERSON_REDIS_PORT'] || '0') || 6379
     },
     bidirectional: true,
     eventMap: {

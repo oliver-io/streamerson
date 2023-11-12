@@ -1,3 +1,7 @@
+locals {
+  project = "streamerson-benchmarks"
+}
+
 terraform {
     required_providers {
         google = {
@@ -8,13 +12,8 @@ terraform {
 }
 
 provider "google" {
-    credentials = file("<NAME>.json")
-
-    project = "<PROJECT_ID>"
+    credentials = file("key.GCP.json")
+    project = local.project
     region  = "us-central1"
     zone    = "us-central1-c"
-}
-
-resource "google_compute_network" "vpc_network" {
-    name = "terraform-network"
 }

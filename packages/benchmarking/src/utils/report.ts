@@ -1,17 +1,9 @@
 import {writeFile} from 'node:fs/promises';
 import * as path from 'path';
-import {Redis} from 'ioredis';
 import {iterateTimedEvents, StepEvent} from "./iterateTimedEvents";
 import {logTimingEvent} from "./logging";
-import {type StreamersonLogger, StreamingDataSource} from '@streamerson/core';
-import Pino from 'pino';
-import {
-  BenchmarkingContext,
-  ClientBenchmarkingContext,
-  FrameworkBenchmarkingContext,
-  getClientContext,
-  getFrameworkContext
-} from "./contexts";
+import {StreamingDataSource} from '@streamerson/core';
+import {BenchmarkingContext} from "./contexts";
 
 export async function buildReport(ctx: BenchmarkingContext, timingEvents: Array<StepEvent>) {
   const file = path.resolve('./benchmark-report.json');
@@ -53,7 +45,7 @@ export function withReport<T extends BenchmarkingContext>(
     ctx.logger.info('Building reports:');
     const reportPath = await buildReport(ctx, eventList);
     ctx.logger.info({reportPath}, 'Report built');
-    await new Promise((r)=>{
+    await new Promise((r) => {
       setTimeout(r, 1000);
     })
     process.exit(0);

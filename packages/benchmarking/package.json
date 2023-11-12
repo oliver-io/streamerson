@@ -4,7 +4,9 @@
   "module": "CommonJS",
   "scripts": {
     "run-benchmark": "STREAMERSON_BENCHMARK_FILE_TARGET=benchmark tools/start-benchmark.sh tsx",
-    "build:summary": "tsx ./tools/summarizeResults --write"
+    "run-loadtest": "tools/start-loadtest.sh",
+    "build:summary": "tsx ./tools/summarizeResults --write",
+    "import:gcp": "cd ./deploy/gcp && GOOGLE_APPLICATION_CREDENTIALS=key.gcp.json ./import import google --regions=us-central1 --projects=streamerson-benchmarks --resources=*"
   },
   "dependencies": {
     "@streamerson/consumer": "^0.0.11",

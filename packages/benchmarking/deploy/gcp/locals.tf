@@ -1,0 +1,8 @@
+locals {
+  redis_image = "docker.io/0liveri0/streamerson-redis:latest"
+  benchmarking_image = "docker.io/0liveri0/streamerson-microservice:latest"
+  loadtesting_image = "docker.io/0liveri0/streamerson-loadtest:latest"
+  gateway_port = 8080
+  microservice_port = 8081
+  presigned_url = "https://storage.googleapis.com/streamerson-benchmarks/small-streamerson-report.json?x-goog-signature=79cec308bbf5fe84395cf623799a6ad23b626c3bfda0f0f7b87316b0af9da307fa0556c50b10bbb8c1068443afa1a47ca4fa72045e5317ef4a3c7e9509f6986a769690399262961ac8a890093678a3a815f0dfcd5e97c3b7cc603eafbe966626c61c7243f101831fed7a135d39a5374e7885ac101b8aaf5e0682537de4b49ad2c6fd19d05b47a605865b773aaf51d4e519a469e6fcba0a83b6ff0d80346e6fcf7c3552373d86598c4002fc1a315d5481d434b6791232554b7616ac2c64abc44e2f6491763d807cdf0d08f57b7703ba91de297fb538c490cb8aa130fa08cda2c745af14151ed09a9ab7903d4de76720ed8744950c3af77119722b41a7f54251c5&x-goog-algorithm=GOOG4-RSA-SHA256&x-goog-credential=admin-services%40streamerson-benchmarks.iam.gserviceaccount.com%2F20231112%2Fus%2Fstorage%2Fgoog4_request&x-goog-date=20231112T015402Z&x-goog-expires=604800&x-goog-signedheaders=host"
+}

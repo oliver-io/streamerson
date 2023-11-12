@@ -12,7 +12,7 @@
     {
       "name": "write-100k-iterative",
       "step": "finished",
-      "duration": 1032,
+      "duration": 1045,
       "result": {
         "processed": 100000
       }
@@ -20,7 +20,7 @@
     {
       "name": "timing",
       "step": "finalized",
-      "duration": 1032
+      "duration": 1046
     }
   ]
 }

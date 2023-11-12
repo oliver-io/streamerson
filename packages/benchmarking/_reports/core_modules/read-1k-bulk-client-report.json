@@ -12,7 +12,7 @@
     {
       "name": "read-1k-bulk",
       "step": "finished",
-      "duration": 8,
+      "duration": 7,
       "result": {
         "iterations": 1,
         "messageCount": 1000
@@ -21,7 +21,7 @@
     {
       "name": "timing",
       "step": "finalized",
-      "duration": 9
+      "duration": 8
     }
   ]
 }

@@ -47,3 +47,5 @@ Thumbs.db
 **/terraform.tfstate*
 **/_API.md
 **/_reports/*.json
+
+**/*.GCP.json

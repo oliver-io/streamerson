@@ -40,20 +40,24 @@ async function runSingleLoadTest(args: CLIOptions) {
   const baseImageName = 'streamerson/benchmarking:latest';
   const baseImagePath = path.resolve('./packages/benchmarking/build/base.dockerfile');
 
-  execSync(`docker build -t ${baseImageName} . -f ${baseImagePath}`, {
-    stdio: 'inherit', env
-  });
+  if (args.build) {
+    execSync(`docker build -t ${baseImageName} . -f ${baseImagePath}`, {
+      stdio: 'inherit', env
+    });
+  }
 
   const executeCommands = [
     `echo "Initiating Dockerized loadtest for ${args.target} (${modePrefix})"`,
-    `docker compose -p ${loadTestName} -f ./build/compose.redis.yaml -f ./build/compose.load.yaml up ${dockerUpOptions}`,
+    `docker compose build -p ${loadTestName} -f ./build/compose.redis.yaml -f ./build/compose.load.yaml up ${dockerUpOptions}`,
   ];
 
-  for (const cmd of executeCommands) {
-    console.log(cmd);
-    execSync(cmd, {
-      cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit', env
-    });
+  if (args.exec) {
+    for (const cmd of executeCommands) {
+      console.log(cmd);
+      execSync(cmd, {
+        cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit', env
+      });
+    }
   }
 }
 
