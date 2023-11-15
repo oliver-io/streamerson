@@ -52,14 +52,14 @@ These tests have thus far been run on my machine with:
 ## :star: 11/4/2023 LOCAL BENCHMARKS :star
 
 Local results for benchmarks using Artillery locally:
-- [small payloads against local fastify w/ microservice](https://htmlpreview.github.io/?https://github.com/oliver-io/streamerson/blob/main/packages/benchmarking/_reports/loadtest/fastify-small-report.html)
-- [small payloads against equivalent local streamerson](https://htmlpreview.github.io/?https://github.com/oliver-io/streamerson/blob/main/packages/benchmarking/_reports/loadtest/streamerson-small-report.html)
-- [large payloads against local fastify w/ microservice](https://htmlpreview.github.io/?https://github.com/oliver-io/streamerson/blob/main/packages/benchmarking/_reports/loadtest/fastify-large-report.html)
-- [large payloads against equivalent local streamerson](https://htmlpreview.github.io/?https://github.com/oliver-io/streamerson/blob/main/packages/benchmarking/_reports/loadtest/streamerson-large-report.html)
+- [small payloads against local fastify w/ microservice](https://oliver-io.github.io//streamerson/fastify-small-report.html)
+- [small payloads against equivalent local streamerson](https://oliver-io.github.io//streamerson/streamerson-small-report.html)
+- [large payloads against local fastify w/ microservice](https://oliver-io.github.io//streamerson/fastify-large-report.html)
+- [large payloads against equivalent local streamerson](https://oliver-io.github.io//streamerson/streamerson-large-report.html)
 
 ## :star: 11/4/2023 GCP BENCHMARKS :star:
-- [large payloads against fastify w/ microservice running on GCP](https://htmlpreview.github.io/?https://github.com/oliver-io/streamerson/blob/main/packages/benchmarking/_reports/gcp/large-fastify-report.html)
-- [large payloads against equivalent streamerson running on GCP](https://htmlpreview.github.io/?https://github.com/oliver-io/streamerson/blob/main/packages/benchmarking/_reports/gcp/large-streamerson-report.html)
+- [large payloads against fastify w/ microservice running on GCP](https://oliver-io.github.io//streamerson/large-fastify-report.html)
+- [large payloads against equivalent streamerson running on GCP](https://oliver-io.github.io//streamerson/large-streamerson-report.html)
 
 
 The table is presented with the following meanings:
