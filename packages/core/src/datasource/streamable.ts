@@ -374,9 +374,6 @@ export class StreamingDataSource
           }
         }
 
-        console.log('\r\n\r\nDIRECT EVENT(S):')
-        console.log(events);
-
         return {
           cursor,
           events,
@@ -425,24 +422,10 @@ export class StreamingDataSource
           return;
         }
 
-        console.log('\r\n\r\nCHUNK!!!');
-        console.log('Chunk: ', chunk);
-
         const incomingStreamName = 'topic' in options ? options.topic.consumerKey(options.shard) : options.stream;
         const outgoingStreamName = 'topic' in options ? options.topic.producerKey(options.shard) : options.responseChannel;
 
         const {messageId, payload} = chunk;
-        console.log('\r\nWRITING TO STREAM')
-        console.log([
-          incomingStreamName,
-          outgoingStreamName,
-          MessageType.RESPONSE,
-          messageId,
-          JSON.stringify(payload),
-          chunk.messageSourceId,
-          options.shard
-        ])
-
         await this.writeToStream(
           incomingStreamName,
           outgoingStreamName,

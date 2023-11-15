@@ -222,9 +222,6 @@ export class StreamConsumer<
             JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
       }
     );
-
-    console.log('PROCESS LEVEL RETURN VALUE:');
-    console.log(processLevelReturnValue);
     return processLevelReturnValue;
   }
 
@@ -259,8 +256,6 @@ export class StreamConsumer<
         try {
           if (object) {
             setState(object).then((message) => {
-              console.log('\r\n\r\nSETSTATE');
-              console.log('message', message);
               this.push(message);
               callback();
             }).catch(err => {
