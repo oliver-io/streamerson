@@ -1,5 +1,5 @@
 {
-  "experimentType": "control",
+  "experimentType": "experiment",
   "timingEvents": [
     {
       "name": "timing",
@@ -12,16 +12,12 @@
     {
       "name": "read-100k-bulk",
       "step": "finished",
-      "duration": 385,
-      "result": {
-        "iterations": 1,
-        "messageCount": 100000
-      }
+      "duration": 402
     },
     {
       "name": "timing",
       "step": "finalized",
-      "duration": 386
+      "duration": 403
     }
   ]
 }

@@ -36,6 +36,7 @@ enum KeyEvents {
 }
 
 const DEFAULT_BLOCKING_TIMEOUT = HOURS_TO_MS(0.5);
+const DEFAULT_MAX_BATCH_SIZE = 10;
 
 export type GetReadStreamOptions = {
   stream: string;
@@ -166,8 +167,6 @@ export class StreamingDataSource
           Buffer.from(properties[MessageHeaderIndex.HEADERS]).toString(),
         );
       }
-
-      ["0626c879-0c33-451f-b595-a2758c94fcc7","bench","default-stream-topic::DEFAULT::PRODUCER_OUTGOING","nil","json","","UnoccupiedField",""]
 
       eventMap.payload
         = properties[MessageHeaderIndex.CONTENT_TYPE] === 'json'
@@ -323,7 +322,7 @@ export class StreamingDataSource
               stream,
               cursor,
               options.blockingTimeout ?? DEFAULT_BLOCKING_TIMEOUT,
-              options.requestedBatchSize ?? 1
+              options.requestedBatchSize ?? DEFAULT_MAX_BATCH_SIZE
             )
         );
 
@@ -375,6 +374,9 @@ export class StreamingDataSource
           }
         }
 
+        console.log('\r\n\r\nDIRECT EVENT(S):')
+        console.log(events);
+
         return {
           cursor,
           events,
@@ -423,10 +425,24 @@ export class StreamingDataSource
           return;
         }
 
+        console.log('\r\n\r\nCHUNK!!!');
+        console.log('Chunk: ', chunk);
+
         const incomingStreamName = 'topic' in options ? options.topic.consumerKey(options.shard) : options.stream;
         const outgoingStreamName = 'topic' in options ? options.topic.producerKey(options.shard) : options.responseChannel;
 
         const {messageId, payload} = chunk;
+        console.log('\r\nWRITING TO STREAM')
+        console.log([
+          incomingStreamName,
+          outgoingStreamName,
+          MessageType.RESPONSE,
+          messageId,
+          JSON.stringify(payload),
+          chunk.messageSourceId,
+          options.shard
+        ])
+
         await this.writeToStream(
           incomingStreamName,
           outgoingStreamName,

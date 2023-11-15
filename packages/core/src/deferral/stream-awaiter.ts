@@ -111,14 +111,26 @@ export const streamAwaiter = <T extends MappedStreamEvent>(
       // Todo: consider using a weakmap here to avoid memory leaks, but for now:
       $expectedResponse = null;
       stateTracker.delete(id);
+      console.log('\r\n\r\nDEFERRED RESPONSE:')
+      console.log('deferredResponse', deferredResponse)
       return deferredResponse!.payload;
     },
     async readResponseStream(shard?: string) {
-      for await (const event of readChannel.getReadStream({
+      // If we aren't in ordered mode, I think something like this is more appropriate:
+      const stream = readChannel.getReadStream({
         stream: shardDecorator({key: incomingStream, shard}),
-      })) {
-        stateTracker.emit('response', event);
-      }
+      });
+
+      stream.on('data', (e)=>{
+        stateTracker.emit('response', e);
+      });
+
+      // // For ordered mode??
+      // for await (const event of readChannel.getReadStream({
+      //   stream: shardDecorator({key: incomingStream, shard}),
+      // })) {
+      //   stateTracker.emit('response', event);
+      // }
     },
   };
 };

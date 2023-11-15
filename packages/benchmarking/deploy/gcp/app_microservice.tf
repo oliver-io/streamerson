@@ -1,6 +1,6 @@
 module "microservice" {
   restart_policy  = "Always"
-  machine_type    = "n1-standard-1"
+  machine_type    = local.microservice_machine_type
   instance_name   = "microservice"
   source          = "./modules/gce"
   image           = local.benchmarking_image

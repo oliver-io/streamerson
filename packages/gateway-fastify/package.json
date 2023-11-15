@@ -1,6 +1,6 @@
 {
   "name": "@streamerson/gateway-fastify",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "dependencies": {
     "fastify": "^4.23.2",
     "fastify-plugin": "^4.5.1",
@@ -15,6 +15,6 @@
     "pino-pretty": "^7.6.1"
   },
   "type": "commonjs",
-  "main": "./src/index.js",
+  "main": "./src/index",
   "typings": "./src/index.d.ts"
 }

@@ -4,22 +4,23 @@ export async function createServer(port: number, host: string, options: {
     method: 'GET' | 'POST';
     path: string;
     handler?: (request: FastifyRequest, reply: FastifyReply) => Promise<any>;
+    timeout?: number
   }>
 }) {
   const app = Fastify({
-    logger: false
+    logger: {
+      level: 'warn'
+    }
   });
 
   for (const endpoint of options.endpoints) {
-    if (endpoint.method === 'GET') {
-      app.get(endpoint.path, endpoint.handler ?? (async () => {
+    app.route({
+      method: endpoint.method,
+      url: endpoint.path,
+      handler: endpoint.handler ?? (async (request, reply) => {
         return { data: "Hello World!" };
-      }));
-    } else if (endpoint.method === 'POST') {
-      app.post(endpoint.path, endpoint.handler ?? (async (request) => {
-        return { data: "Hello World!" };
-      }));
-    }
+      })
+    });
   }
 
   await app.listen(port, host);

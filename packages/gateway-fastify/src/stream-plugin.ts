@@ -1,6 +1,6 @@
 import {RouteOptions} from 'fastify';
 import {
-  createStreamersonLogger,
+  createStreamersonLogger, DEFAULT_TIMEOUT,
   MessageType,
   streamAwaiter,
   StreamersonLogger,
@@ -32,7 +32,8 @@ export function CreateGatewayPlugin(options: {
   logger?: StreamersonLogger;
   streamOptions?: Partial<StreamOptions>;
   topic: Topic;
-  routes: StreamersonRouteOptions | StreamersonRouteOptions[]
+  routes: StreamersonRouteOptions | StreamersonRouteOptions[],
+  timeout?: number
 }) {
   const streamStateTrackers: ReturnType<typeof streamAwaiter>[] = [];
   const {routes} = options;
@@ -72,6 +73,7 @@ export function CreateGatewayPlugin(options: {
         writeChannel,
         incomingStream: responseStream,
         outgoingStream: messageStream,
+        timeout: options.timeout
       });
 
       const trackerIndex = streamStateTrackers.push(streamStateTracker) - 1;

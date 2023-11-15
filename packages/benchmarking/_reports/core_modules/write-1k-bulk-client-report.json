@@ -12,7 +12,7 @@
     {
       "name": "write-1k-bulk",
       "step": "finished",
-      "duration": 41,
+      "duration": 35,
       "result": {
         "processed": 1000
       }
@@ -20,7 +20,7 @@
     {
       "name": "timing",
       "step": "finalized",
-      "duration": 43
+      "duration": 35
     }
   ]
 }

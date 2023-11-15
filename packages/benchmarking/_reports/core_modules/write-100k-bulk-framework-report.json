@@ -1,27 +1,26 @@
 {
-  "experimentType": "control",
+  "experimentType": "experiment",
   "timingEvents": [
     {
       "name": "timing",
       "step": "begin"
     },
     {
-      "name": "read-100k-bulk",
+      "name": "write-100k-bulk",
       "step": "start"
     },
     {
-      "name": "read-100k-bulk",
+      "name": "write-100k-bulk",
       "step": "finished",
-      "duration": 385,
+      "duration": 940,
       "result": {
-        "iterations": 1,
-        "messageCount": 100000
+        "processed": 100000
       }
     },
     {
       "name": "timing",
       "step": "finalized",
-      "duration": 386
+      "duration": 941
     }
   ]
 }

@@ -3,18 +3,24 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "declaration": true,
+    "composite": true,
     "types": ["node"]
   },
   "include": ["src/**/*.ts",
+    "build/config/*.ts",
+    "tools/*.ts",
     "tools/start-benchmark.sh"
   ],
   "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "../core/tsconfig.lib.json"
     },
     {
-      "path": "../core/tsconfig.lib.json"
+      "path": "../consumer/tsconfig.lib.json"
+    },
+    {
+      "path": "../gateway-fastify/tsconfig.lib.json"
     }
   ]
 }

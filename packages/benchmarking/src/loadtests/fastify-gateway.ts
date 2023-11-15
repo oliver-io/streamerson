@@ -9,6 +9,8 @@ const MICROSERVICE_URL = `http://${
 
 const GATEWAY_PORT = parseInt(process.env.STREAMERSON_GATEWAY_PORT || '8080');
 
+console.log('Routing traffic to '+MICROSERVICE_URL);
+
 export async function run() {
   await createServer(GATEWAY_PORT, '0.0.0.0', {
     endpoints: [{

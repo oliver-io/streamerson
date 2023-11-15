@@ -22,7 +22,7 @@ structure will be like this:
 
 - Prepare several different implementations of the same thing, some with @streamerson modules in the mix
 - Prepare several different _deployments_ of those same things
-- Run a series of definitions using [`gatling`](https://gatling.io/) against the deployed images _from_ another deployed
+- Run a series of definitions using [`artillery`](https://artillery.io/) against the deployed images _from_ another deployed
   image
 - Compare the results to their peers, strictly relatively.
 - Generate some graphs. Use them to improve, and/or brag, and/or understand things.

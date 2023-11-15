@@ -151,6 +151,12 @@ async function enrichFile(target: string) {
     }
 }
 
+async function enrichArtilleryReports() {
+  for (const file of await glob('./**/_reports/loadtest/*.json')) {
+    const cmd = `artillery report ${file} --output ${file.replace('.json', '.html')}`;
+  }
+}
+
 async function cli() {
     const codeFiles = await getAllCodeFiles();
     const annotatedFiles = (await Promise.all(codeFiles.map(async (codePath)=>{

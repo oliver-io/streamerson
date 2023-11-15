@@ -212,8 +212,8 @@ export class StreamConsumer<
       // sus-- do we want to stream the error back?  probably need to TODO: wrap this
       return error;
     }
-    ;
-    return await this.streamEvents[(streamMessage.messageType as keyof EventMap)]!(
+
+    const processLevelReturnValue = await this.streamEvents[(streamMessage.messageType as keyof EventMap)]!(
       {
         ...streamMessage,
         payload:
@@ -222,6 +222,10 @@ export class StreamConsumer<
             JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
       }
     );
+
+    console.log('PROCESS LEVEL RETURN VALUE:');
+    console.log(processLevelReturnValue);
+    return processLevelReturnValue;
   }
 
   async disconnect() {
@@ -255,10 +259,9 @@ export class StreamConsumer<
         try {
           if (object) {
             setState(object).then((message) => {
-              this.push({
-                messageId: object.messageId,
-                payload: message
-              });
+              console.log('\r\n\r\nSETSTATE');
+              console.log('message', message);
+              this.push(message);
               callback();
             }).catch(err => {
               logger.error(err, 'Cannot transform state in stream');

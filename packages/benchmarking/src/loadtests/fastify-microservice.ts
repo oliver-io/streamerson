@@ -2,6 +2,8 @@ import {createServer} from "../utils/fastify";
 
 const SERVICE_PORT = parseInt(process.env.STREAMERSON_MICROSERVICE_PORT || '8081');
 
+console.log('Listening on port '+SERVICE_PORT)
+
 export async function run() {
   await createServer(SERVICE_PORT, '0.0.0.0', {
     endpoints: [{

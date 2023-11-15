@@ -12,7 +12,7 @@
     {
       "name": "read-1k-iterative",
       "step": "finished",
-      "duration": 115,
+      "duration": 134,
       "result": {
         "iterations": 1000,
         "messageCount": 1000
@@ -21,7 +21,7 @@
     {
       "name": "timing",
       "step": "finalized",
-      "duration": 116
+      "duration": 134
     }
   ]
 }

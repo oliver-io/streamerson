@@ -1,7 +1,7 @@
 module "gateway" {
   restart_policy  = "Always"
   instance_name   = "gateway"
-  machine_type    = "n1-standard-1"
+  machine_type    = local.gateway_machine_type
   source          = "./modules/gce"
   image           = local.benchmarking_image
   privileged_mode = true

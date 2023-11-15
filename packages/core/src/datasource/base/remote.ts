@@ -84,10 +84,11 @@ export class RedisDataSource implements ConnectableDataSource {
 		} else {
 			this._client = new Redis(this.options.port ?? DEFAULT_PORT, this.options.host ?? DEFAULT_HOST, {
 				retryStrategy: undefined,
+        enableAutoPipelining: true
 			});
 			if (this.options.controllable) {
 				this._control = new Redis(this.options.port ?? DEFAULT_PORT, this.options.host ?? DEFAULT_HOST, {
-					retryStrategy: undefined,
+					retryStrategy: undefined
 				});
 			}
 		}

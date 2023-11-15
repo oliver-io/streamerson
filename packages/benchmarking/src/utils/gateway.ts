@@ -2,7 +2,7 @@ import Fastify, {FastifyReply, FastifyRequest} from 'fastify';
 import {topic} from './topic';
 import { type StreamersonLogger } from '@streamerson/core';
 import {CreateGatewayPlugin} from '@streamerson/gateway-fastify';
-import pino from 'pino';
+import pino, { type Logger } from 'pino';
 
 export async function createStreamersonGateway(port: number, host: string, options: {
   endpoints: Array<{
@@ -13,13 +13,15 @@ export async function createStreamersonGateway(port: number, host: string, optio
 }) {
 
   const app = Fastify({
-    logger: false
+    logger: pino({
+      level: 'debug'
+    }) as unknown as Logger,
   });
 
   await app.register(CreateGatewayPlugin({
     logger: pino({
-      level: 'warn'
-    }) as unknown as StreamersonLogger,
+      level: 'debug'
+    }) as any,
     topic,
     streamOptions: {
       redisConfiguration: {

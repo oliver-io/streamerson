@@ -15,16 +15,13 @@
     "baseUrl": ".",
     "paths": {}
   },
-  "include": ["src/**/*.ts",
+  "include": ["src/*/**.ts",
     "tools/start-benchmark.sh"
   ],
   "exclude": ["node_modules", "tmp"],
   "references": [
     {
       "path": "./tsconfig.lib.json"
-    },
-    {
-      "path": "../core/tsconfig.lib.json"
     }
   ]
 }
