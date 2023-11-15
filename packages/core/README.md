@@ -177,13 +177,13 @@ A low-level implementation wrapping a Redis Stream Write operation
 
 Parameters:
 
-* `outgoingStream`: : The stream ID to target in Redis
-* `incomingStream`: : Maybe, a stream ID to reply to
-* `messageType`: : The type of the event
-* `messageId`: : The ID of the message
-* `message`: : The message payload
-* `sourceId`: : The ID of the source
-* `shard`: : Maube, the shard to target
+* `outgoingStream`: The stream ID to target in Redis
+* `incomingStream`: Maybe, a stream ID to reply to
+* `messageType`: The type of the event
+* `messageId`: The ID of the message
+* `message`: The message payload
+* `sourceId`: The ID of the source
+* `shard`: Maybe, the shard to target
 
 
 #### :gear: setResponseType
@@ -196,7 +196,7 @@ Sets the `MessageType` field default for outgoing messages
 
 Parameters:
 
-* `type`: : The `MessageType` for outgoing messages
+* `type`: The `MessageType` for outgoing messages
 
 
 #### :gear: addStreamId
@@ -209,7 +209,7 @@ Adds a stream to the set for consumption
 
 Parameters:
 
-* `streamId`: : the key of the stream to ingest
+* `streamId`: the key of the stream to ingest
 
 
 #### :gear: hasStreamId
@@ -222,7 +222,7 @@ Checks whether a stream is set for consumption
 
 Parameters:
 
-* `streamId`: : the key of the stream to check
+* `streamId`: the key of the stream to check
 
 
 #### :gear: removeStreamId
@@ -235,7 +235,7 @@ Removes a stream from the set for consumption
 
 Parameters:
 
-* `streamId`: : the key of the stream to remove
+* `streamId`: the key of the stream to remove
 
 
 #### :gear: getReadStream

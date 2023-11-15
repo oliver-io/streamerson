@@ -99,7 +99,7 @@ export async function summarizeResults(folder: string) {
 }
 
 async function run() {
-  const folders = ["throughput", "webapp"];
+  const folders = ["core_modules"];
   for (const folder of folders) {
     console.log(`Summarizing reports for ${folder}...`);
     try {

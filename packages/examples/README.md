@@ -48,8 +48,8 @@ These examples build upon the `@streamerson/core` library, providing user-friend
 - #### [A One-Way Consumer](./consumers/single-uni/README.md)
 - #### [A Bidirectional Consumer/Producer](./consumers/single-bidi/README.md)
 - #### [A Kafka-like Consumer/Producer Group](./consumers/groups/README.md)
-- #### [Loading a Fastify Plugin to create a REST Gateway](./app-hello-world/api.ts)
-- #### [A Websocket Server to create a WSS Gateway](./app-websockets/api.ts) 
+- #### [Loading a Fastify Plugin to create a REST Gateway](./app-hello-world/streamerson-gateway.ts)
+- #### [A Websocket Server to create a WSS Gateway](./app-websockets/streamerson-gateway.ts) 
 
 ## Implementation Examples / Usage-level
 

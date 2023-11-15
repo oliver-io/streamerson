@@ -29,7 +29,7 @@ That said, this package might be of interest to anyone that simply wants to acce
 Create a Fastify Gateway proxying REST transactions to a Redis stream:
 
 <!-- BEGIN-CODE: ../examples/app-hello-world/streamerson-gateway.ts -->
-[**streamerson-gateway.ts**](../examples/app-hello-world/api.ts)
+[**streamerson-gateway.ts**](../examples/app-hello-world/streamerson-gateway.ts)
 ```typescript
 import fastify from 'fastify';
 import {CreateGatewayPlugin} from '@streamerson/gateway-fastify';
@@ -81,7 +81,7 @@ This allows a [consumer](../consumer/README.md) or [consumer-group](../consumer-
 [**worker.ts**](../examples/app-hello-world/worker.ts)
 ```typescript
 import {StreamConsumer} from '@streamerson/consumer';
-import {Events, streamTopic} from "./api";
+import {Events, streamTopic} from "./streamerson-gateway";
 
 const consumer = new StreamConsumer({
     eventMap: {
@@ -95,6 +95,7 @@ const consumer = new StreamConsumer({
 });
 
 await consumer.connectAndListen();
+
 ```
 <!-- END-CODE: ../examples/app-hello-world/worker.ts -->
 </details>

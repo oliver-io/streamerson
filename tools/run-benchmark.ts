@@ -155,15 +155,20 @@ async function runAllBenchmarks() {
 }
 
 async function run() {
-  const args = minimist(process.argv.slice(2), {}) as unknown as CLIOptions;
+  const args = minimist(process.argv.slice(2), {
+    boolean: ['report', 'build', 'exec'],
+    string: ['target']
+  }) as unknown as CLIOptions;
 
-  if (!args.target) {
-    await runAllBenchmarks();
-  } else {
-    await runSingleBenchmark({
-      ...args,
-      target: args.target
-    }, `${args.target}-report.json`);
+  if ((args.build ?? true) || (args.exec ?? true)) {
+    if (!args.target) {
+      await runAllBenchmarks();
+    } else {
+      await runSingleBenchmark({
+        ...args,
+        target: args.target
+      }, `${args.target}-report.json`);
+    }
   }
 
   if (args.report) {

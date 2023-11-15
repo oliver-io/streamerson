@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {exec} from 'child_process';
+import {exec, execSync} from 'child_process';
 import {green, yellow} from 'colors';
 import {glob} from 'glob';
 import minimist from 'minimist';
@@ -152,12 +152,20 @@ async function enrichFile(target: string) {
 }
 
 async function enrichArtilleryReports() {
-  for (const file of await glob('./**/_reports/loadtest/*.json')) {
-    const cmd = `artillery report ${file} --output ${file.replace('.json', '.html')}`;
+  const files = [
+    ...await glob('./packages/**/_reports/loadtest/*.json'),
+    ...await glob('./packages/**/_reports/gcp/*.json')
+  ];
+  let generated = 0;
+  for (const file of files) {
+    execSync(`artillery report ${file} --output ${file.replace('.json', '.html')}`);
+    generated++;
   }
+  return generated;
 }
 
 async function cli() {
+    const artilleryHTMLGenerated = await enrichArtilleryReports();
     const codeFiles = await getAllCodeFiles();
     const annotatedFiles = (await Promise.all(codeFiles.map(async (codePath)=>{
         try {
@@ -192,6 +200,8 @@ async function cli() {
         console.log(((doctoc + embed) ? green('✓ ') : yellow('x ')) + `Updated ${
             doctoc ? green(doctoc.toString()) : yellow('0')
         } DocTocs, ${
+          artilleryHTMLGenerated ? green(artilleryHTMLGenerated.toString()) : yellow('0')
+        } Artillery Reports, ${
             embed ? green(embed.toString()) : yellow('0')
         } Embeddings, and ${
           annotatedFiles.length ? green(annotatedFiles.length.toString()) : yellow('0')
