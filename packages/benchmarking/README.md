@@ -97,16 +97,16 @@ The table is presented with the following meanings:
 <!-- BEGIN-CODE: ./_reports/core_modules/summary.md -->
 [**summary.md**](./_reports/core_modules/summary.md)
 
-| Test Case            | **control** (ms) | **experiment** (ms) | Base<br/>Overhead | **stream** (ms) | Stream<br/>Overhead | **iterator** (ms) | Iterator<br/>Overhead |
-| :------------------- | :--------------: | :-----------------: | ----------------- | --------------- | ------------------- | ----------------- | --------------------- |
-| write-100k-bulk      |       1033       |         940         | ~ -9.9%           | n/a             | n/a                 | n/a               | n/a                   |
-| write-1k-iterative   |        44        |         19          | ~ -131.6%         | n/a             | n/a                 | n/a               | n/a                   |
-| write-1k-bulk        |        35        |         20          | ~ -75.0%          | n/a             | n/a                 | n/a               | n/a                   |
-| write-100k-iterative |       1057       |         938         | ~ -12.7%          | n/a             | n/a                 | n/a               | n/a                   |
-| read-100k-bulk       |       385        |         402         | ~ 4.2%            | n/a             | n/a                 | n/a               | n/a                   |
-| read-1k-iterative    |       134        |         159         | ~ 15.7%           | n/a             | n/a                 | n/a               | n/a                   |
-| read-1k-bulk         |        7         |          9          | ~ 22.2%           | n/a             | n/a                 | n/a               | n/a                   |
-| read-100k-iterative  |      12113       |        14866        | ~ 18.5%           | n/a             | n/a                 | n/a               | n/a                   |
+| Test Case            | **control** (ms) | **experiment** (ms) | Base<br/>Overhead         | **stream** (ms) | Stream<br/>Overhead | **iterator** (ms) | Iterator<br/>Overhead |
+| :------------------- | :--------------: | :-----------------: | ------------------------- | --------------- | ------------------- | ----------------- | --------------------- |
+| write-1k-iterative   |        22        |         21          | ~ 4.5% :heavy_check_mark: | n/a             | n/a                 | n/a               | n/a                   |
+| write-1k-bulk        |        22        |         20          | ~ 9.1% :heavy_check_mark: | n/a             | n/a                 | n/a               | n/a                   |
+| write-100k-iterative |       949        |        1036         | ~ 8.4% :warning:          | n/a             | n/a                 | n/a               | n/a                   |
+| write-100k-bulk      |       1028       |        1062         | ~ 3.2% :warning:          | n/a             | n/a                 | n/a               | n/a                   |
+| read-1k-iterative    |       237        |         260         | ~ 8.8% :warning:          | n/a             | n/a                 | n/a               | n/a                   |
+| read-1k-bulk         |        7         |          9          | ~ 22.2% :warning:         | n/a             | n/a                 | n/a               | n/a                   |
+| read-100k-iterative  |      21936       |        22428        | ~ 2.2% :warning:          | n/a             | n/a                 | n/a               | n/a                   |
+| read-100k-bulk       |       323        |         356         | ~ 9.3% :warning:          | n/a             | n/a                 | n/a               | n/a                   |
 
 <!-- END-CODE: ./_reports/summary.md -->
 
