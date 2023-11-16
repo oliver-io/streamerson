@@ -246,9 +246,8 @@ export class StreamingDataSource
    * @param batchSize the number of messages to read
    */
   async readAsSingle(stream: string, cursor: string, timeout: number, batchSize = 1) {
-    return (await this.client.call(
-      'XREAD',
-      'BLOCK',
+    return (await this.client.xread(
+      'BLOCK' as any,
       timeout,
       "COUNT",
       batchSize,
@@ -276,8 +275,7 @@ export class StreamingDataSource
     groupMemberId: string,
     timeout: number
   ) {
-    return (await this.client.call(
-      'XREADGROUP',
+    return (await this.client.xreadgroup(
       'GROUP',
       groupId,
       groupMemberId,
@@ -356,8 +354,7 @@ export class StreamingDataSource
         );
         const events: MappedStreamEvent[] = [];
 
-        const streamEvents = ((await this.client.call(
-          'XREAD',
+        const streamEvents = ((await this.client.xread(
           'BLOCK',
           options.blockingTimeout ?? HOURS_TO_MS(0.5),
           'STREAMS',

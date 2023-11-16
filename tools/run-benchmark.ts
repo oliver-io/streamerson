@@ -14,7 +14,8 @@ type CLIOptions = {
   build?: boolean,
   exec?: boolean
   buildBase?: boolean,
-  target: string
+  folder: string
+  file?: string;
 } & ({ framework: true, control: false } | { control: true, framework: false });
 
 const baseImageName = 'streamerson/benchmarking:latest';
@@ -52,7 +53,7 @@ export async function runSingleBenchmark(options: CLIOptions, reportName: string
     for (const _appFile of appFiles) {
       const appFile = path.posix.resolve(_appFile);
       const directory = path.basename(path.dirname(appFile));
-      if (options.target && !options.target.includes(directory)) {
+      if (options.folder && !options.folder.includes(directory)) {
         continue;
       }
 
@@ -61,7 +62,7 @@ export async function runSingleBenchmark(options: CLIOptions, reportName: string
       const env = {
         ...process.env,
         STREAMERSON_IMAGE_TARGET,
-        STREAMERSON_BENCHMARK_TARGET: options.target,
+        STREAMERSON_BENCHMARK_TARGET: options.folder,
         STREAMERSON_BENCHMARK_DIRECTORY,
         STREAMERSON_PROJECT: directory,
         ...envExtra
@@ -100,9 +101,9 @@ export async function runSingleBenchmark(options: CLIOptions, reportName: string
 
         const executeCommands = [
           `echo "Starting benchmark for ${directory}"`,
-          `docker compose -p ${directory} -f ./build/compose.redis.yaml -f ${targetedComposeFile} up ${dockerUpOptions}`,
+          `docker compose -f ./build/compose.redis.yaml -f ${targetedComposeFile} up ${dockerUpOptions}`,
           ...(buildReport ? [
-            `docker cp ${directory}-benchmark-1:/app/benchmarking/benchmark-report.json ./_reports/${directory}/${reportName}`,
+            `docker cp build-benchmark-1:/app/benchmarking/benchmark-report.json ./_reports/${directory}/${reportName}`,
           ] : [])
         ];
 
@@ -140,9 +141,9 @@ async function runAllBenchmarks() {
         build: true,
         exec: true,
         report: true,
-        target: 'core_modules',
+        folder: 'core_modules',
       },
-      `${def.name}-${type}-report.json`,
+      `${target}-report.json`,
       target,
       {
         ...environmentForDefinition(def.name, def),
@@ -157,19 +158,10 @@ async function runAllBenchmarks() {
 async function run() {
   const args = minimist(process.argv.slice(2), {
     boolean: ['report', 'build', 'exec'],
-    string: ['target']
+    string: ['target', 'file']
   }) as unknown as CLIOptions;
 
-  if ((args.build ?? true) || (args.exec ?? true)) {
-    if (!args.target) {
-      await runAllBenchmarks();
-    } else {
-      await runSingleBenchmark({
-        ...args,
-        target: args.target
-      }, `${args.target}-report.json`);
-    }
-  }
+  await runAllBenchmarks();
 
   if (args.report) {
     execSync('yarn build:summary', {

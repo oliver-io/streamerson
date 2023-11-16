@@ -7,10 +7,27 @@ import {BenchmarkingContext} from "./contexts";
 
 export async function buildReport(ctx: BenchmarkingContext, timingEvents: Array<StepEvent>) {
   const file = path.resolve('./benchmark-report.json');
+  const body = JSON.stringify({experimentType: ctx.experimentType, timingEvents}, null, 2)
+
+  ctx.logger.info('Writing report results to disk...');
   await writeFile(
     `/app/benchmarking/benchmark-report.json`,
-    JSON.stringify({experimentType: ctx.experimentType, timingEvents}, null, 2)
+    body
   );
+
+  const url = (process.env['STREAMERSON_REPORT_PRESIGNED_URL'] ?? '').trim();
+
+  if (url) {
+    ctx.logger.info({ url }, 'Uploading report results to the presigned destination...');
+    await fetch(url, {
+      method: 'PUT',
+      headers: {
+        ["Content-Type"]: 'application/json'
+      },
+      body
+    });
+  }
+
   return file;
 }
 

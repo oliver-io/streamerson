@@ -9,12 +9,10 @@
     "import:gcp": "cd ./deploy/gcp && GOOGLE_APPLICATION_CREDENTIALS=key.gcp.json ./import import google --regions=us-central1 --projects=streamerson-benchmarks --resources=*"
   },
   "dependencies": {
-    "@streamerson/consumer": "^0.0.14",
-    "@streamerson/core": "^0.0.38",
-    "@streamerson/gateway-fastify": "^0.0.14",
     "dotenv": "^16.3.1",
     "fastify": "^4.24.0",
     "markdown-table-ts": "^1.0.3",
+    "minimist": "^1.2.8",
     "pino": "^8.16.0",
     "tslib": "^2.3.0"
   },

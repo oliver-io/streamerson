@@ -1,5 +1,10 @@
 import {execSync} from "child_process";
 import * as process from "process";
+import minimist from 'minimist';
+
+const args = minimist(process.argv.slice(2), {
+  boolean: ['publish']
+});
 
 async function build() {
   const env = {
@@ -19,13 +24,13 @@ async function build() {
     docker build -t ${redisImage}:latest ../../build -f ../../build/redis.dockerfile
   `, `
     docker build -t ${loadtestImage}:latest ../../../../ -f ../../build/app.loadtest.dockerfile
-  `, `
-    docker push ${microserviceImage}:latest
-  `, `
-    docker push ${redisImage}:latest
-  `, `
-    docker push ${loadtestImage}:latest
-  `);
+  `, ... (args.publish ? [`
+      docker push ${microserviceImage}:latest
+    `, `
+      docker push ${redisImage}:latest
+    `, `
+      docker push ${loadtestImage}:latest
+  `] : []));
 
   for (const command of commands.map(s => s.trim())) {
     execSync(command, {

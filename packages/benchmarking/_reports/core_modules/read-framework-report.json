@@ -1,0 +1,23 @@
+{
+  "experimentType": "experiment",
+  "timingEvents": [
+    {
+      "name": "timing",
+      "step": "begin"
+    },
+    {
+      "name": "read-100k-bulk",
+      "step": "start"
+    },
+    {
+      "name": "read-100k-bulk",
+      "step": "finished",
+      "duration": 390
+    },
+    {
+      "name": "timing",
+      "step": "finalized",
+      "duration": 391
+    }
+  ]
+}

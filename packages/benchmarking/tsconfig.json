@@ -22,6 +22,15 @@
   "references": [
     {
       "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "../core/tsconfig.lib.json"
+    },
+    {
+      "path": "../consumer/tsconfig.lib.json"
+    },
+    {
+      "path": "../gateway-fastify/tsconfig.lib.json"
     }
   ]
 }

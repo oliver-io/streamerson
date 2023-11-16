@@ -58,6 +58,7 @@ export async function summarizeResults(folder: string) {
 
   // gather up all the results files in the _reports directory:
   const filePaths = await glob(`**/_reports/${folder}/*.json`);
+  console.log(filePaths);
   const $readReports = filePaths.map((n: string) => path.resolve(n)).map((file) => {
     return readFile(file);
   })

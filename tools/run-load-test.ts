@@ -48,7 +48,7 @@ async function runSingleLoadTest(args: CLIOptions) {
 
   const executeCommands = [
     `echo "Initiating Dockerized loadtest for ${args.target} (${modePrefix})"`,
-    `docker compose build -p ${loadTestName} -f ./build/compose.redis.yaml -f ./build/compose.load.yaml up ${dockerUpOptions}`,
+    `docker compose -f ./build/compose.redis.yaml -f ./build/compose.load.yaml up ${dockerUpOptions}`,
   ];
 
   if (args.exec) {

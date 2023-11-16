@@ -2,7 +2,7 @@ services:
   redis:
     container_name: "streamerson-redis-${STREAMERSON_PROJECT}"
     hostname: streamerson
-    image: "redis:alpine"
+    image: "docker.dragonflydb.io/dragonflydb/dragonfly:latest"
     ports:
       - 0.0.0.0:6379:6379
     networks:
