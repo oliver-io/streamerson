@@ -31,13 +31,23 @@ function makeMarkdownTable(results: Awaited<ReturnType<typeof summarizeResults>>
         const row = results[key];
         const headers = __headers as Array<keyof typeof row>;
         const hasTiming = (row["control"] !== 'n/a' && row["experiment"] !== 'n/a');
+        const baseTime = row["control"] as number;
+        const experimentTime = row["experiment"] as number;
+        const beatBase = baseTime > experimentTime;
+        // Calculate the overhead of the experiment:
+        const baseOverhead = hasTiming ?
+          beatBase ? (
+            ((1 - (experimentTime / baseTime)) * 100).toFixed(1)
+          ) : ((1 - (baseTime / experimentTime)) * 100).toFixed(1)
+        : 'n/a';
+
         return [
           key,
           row["control"].toString(),
           row["experiment"].toString(),
           (row["control"] === 'n/a' || row["experiment"] === 'n/a') ?
             'n/a' :
-            `~ ${((1 - (row["control"] / (row["experiment"]))) * 100).toFixed(1)}%`,
+            `~ ${baseOverhead}% ${beatBase ? ":heavy_check_mark:" : ":warning:"}`,
           row["stream"].toString(),
           (row["control"] === 'n/a' || row["stream"] === 'n/a') ?
             'n/a' :

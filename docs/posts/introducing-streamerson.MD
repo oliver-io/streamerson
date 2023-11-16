@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [A *@streamerson* Preview:](#a-streamerson-preview)
+- [Sound interesting?](#sound-interesting)
+- [What Does It Do?](#what-does-it-do)
+- [A note on the platform (Redis)](#a-note-on-the-platform-redis)
+- [Further Reading](#further-reading)
+- [Where does that leave us?](#where-does-that-leave-us)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## A *@streamerson* Preview:
 
 > An upcoming Typescript framework for (actually) real-time messaging

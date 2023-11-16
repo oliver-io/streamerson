@@ -132,6 +132,7 @@ async function runAllBenchmarks() {
   const options = minimist(process.argv.slice(2)) as unknown as CLIOptions;
 
   for (const def of defs) {
+    console.log(def);
     const test: 'read' | 'write' = def.read ? 'read' : 'write';
     let type: 'client' | 'framework' = options.framework ? 'framework' : 'client';
     let isStream = false;
@@ -143,7 +144,7 @@ async function runAllBenchmarks() {
         report: true,
         folder: 'core_modules',
       },
-      `${target}-report.json`,
+      `${def.name}-${type}-report.json`,
       target,
       {
         ...environmentForDefinition(def.name, def),

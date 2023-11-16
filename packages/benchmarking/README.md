@@ -94,19 +94,19 @@ The table is presented with the following meanings:
 
 [//]: # (</summary>)
 
-<!-- BEGIN-CODE: ./_reports/summary.md -->
-[**summary.md**](./_reports/summary.md)
+<!-- BEGIN-CODE: ./_reports/core_modules/summary.md -->
+[**summary.md**](./_reports/core_modules/summary.md)
 
-| Test Case            | **control** (ms) | **experiment** (ms) | Framework Overhead |
-| :------------------- | :--------------: | :-----------------: | ------------------ |
-| write-1k-iterative   |       112        |         112         | ~ 0.0%             |
-| write-1k-bulk        |        36        |         54          | ~ 33.3%            |
-| read-1k-iterative    |       104        |         113         | ~ 8.0%             |
-| read-1k-bulk         |        7         |          9          | ~ 22.2%            |
-| write-100k-iterative |       8359       |        8654         | ~ 3.4%             |
-| write-100k-bulk      |       1061       |        2268         | ~ 53.2%            |
-| read-100k-iterative  |       8598       |        9407         | ~ 8.6%             |
-| read-100k-bulk       |       413        |         451         | ~ 8.4%             |
+| Test Case            | **control** (ms) | **experiment** (ms) | Base<br/>Overhead | **stream** (ms) | Stream<br/>Overhead | **iterator** (ms) | Iterator<br/>Overhead |
+| :------------------- | :--------------: | :-----------------: | ----------------- | --------------- | ------------------- | ----------------- | --------------------- |
+| write-100k-bulk      |       1033       |         940         | ~ -9.9%           | n/a             | n/a                 | n/a               | n/a                   |
+| write-1k-iterative   |        44        |         19          | ~ -131.6%         | n/a             | n/a                 | n/a               | n/a                   |
+| write-1k-bulk        |        35        |         20          | ~ -75.0%          | n/a             | n/a                 | n/a               | n/a                   |
+| write-100k-iterative |       1057       |         938         | ~ -12.7%          | n/a             | n/a                 | n/a               | n/a                   |
+| read-100k-bulk       |       385        |         402         | ~ 4.2%            | n/a             | n/a                 | n/a               | n/a                   |
+| read-1k-iterative    |       134        |         159         | ~ 15.7%           | n/a             | n/a                 | n/a               | n/a                   |
+| read-1k-bulk         |        7         |          9          | ~ 22.2%           | n/a             | n/a                 | n/a               | n/a                   |
+| read-100k-iterative  |      12113       |        14866        | ~ 18.5%           | n/a             | n/a                 | n/a               | n/a                   |
 
 <!-- END-CODE: ./_reports/summary.md -->
 
