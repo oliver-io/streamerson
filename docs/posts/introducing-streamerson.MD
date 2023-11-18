@@ -16,7 +16,7 @@ Yes, that's right; with `@streamerson` building stateless event-oriented archite
 - Drop-in HTTP(s) and WebSocket gateways that emit `@streamerson` events
 - Communicate in realtime between applications without HTTP(s) or WebSockets (and save some overhead in the meantime)
 - Dispense of your internal load-balancing by safely parallelizing processors with `Consumer Group` APIs
-- And maybe most importantly, do all of the above with low-code interfaces that simply work.  The `@streamerson` project contains high-level abstractions to puppet the local representation of these streams for complex use-cases.
+- And maybe most importantly, do all of the above with low-code interfaces that are familiar to Node.JS developers.  In addition to low-level interfaces (`ReadableStream`, etc), the `@streamerson` project contains high-level abstractions to puppet the local representation of these streams for complex use-cases (much like web frameworks puppet the `Request` & `Response` streams into an orchestration interface with convenience methods).
 
 :warning: A foreward: this monorepo is *upcoming* because it is lacking rigorous testing (automated and otherwise), has some known defects, and is at a sub-1.0.0 version.  There are performance issues I would like to iron out, for which recent benchmarks have been written to gauge the improvement.  If the following content interests you, I'd very much appreciate any feedback to spur me onward toward my release goals.  :warning:
 
