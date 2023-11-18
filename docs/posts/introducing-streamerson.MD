@@ -4,7 +4,7 @@
 
 *@streamerson* is a Typescript framework for orchestrating all kinds of real-time messaging and eventing patterns.  It uses the Redis protocol and the underlying `Streams` implementation to present a Node-idiomatic facade of objects that encapsulate the Redis stream data source.
 
-Yes, that's right; with `@streamerson` building stateless event-oriented architectures looks like normal procedural code again!  What you stream is what you get; the required infrastructure is only one friendly package: open-source Redis or a compatible alternative.  Using this package you can:
+Yes, that's right; with `@streamerson` building stateless event-oriented architectures looks like normal procedural code again!  It is WYSIWYG (What You Stream Is What You Get) and the required infrastructure is only one friendly piece of OSS tech-- `Redis` or a compatible alternative like Elasticache or Memorystore.  Using this package you can:
 
 - **Use stateless `ReadableStream** objects to access **serverside streams** under the hood, i.e.
   - I.e., subscribe to remote stream messages with typical syntax `stream.on('data', ...)`
