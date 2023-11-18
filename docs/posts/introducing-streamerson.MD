@@ -10,7 +10,7 @@ Yes, that's right; with `@streamerson` building stateless event-oriented archite
   - I.e., subscribe to remote stream messages with idiomatic syntax `stream.on('message', ()=> { ... })`
   - Iterate over remote streams with idiomatic syntax (`for await (const message of stream) { ... }`)
 - **Use stateless `WritableStream`** objects to write to  **remote streams** natively
-  - (And use **native `.pipe()`, `pipeline()`, `Transfer`, `Duplex`,** etc. to pipeline data through streams and processors -- there are no limits when the science is mad!)
+  - (And use **native `.pipe()`, `pipeline()`, `Transfer`, `Duplex`,** etc.) to do mad science with remote streams
 - Use streams to model `fan-out`, `fan-in`, or `once-per` delivery patterns
 - Orchestrate remote data channels with code instead of infrastructure
 - Drop-in HTTP(s) and WebSocket gateways that emit `@streamerson` events
