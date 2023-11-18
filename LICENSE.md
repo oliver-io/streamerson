@@ -1,9 +1,3 @@
-<!-- begin metadata and not license content -->
-<p align="center" justify="center">
-  <img src="./docs/images/curie.jpg">
-</p>
-<!-- end metadata and not license content -->
-
 # LOVE ALL MY CATS (LAMC) PUBLIC LICENSE
 
 > Version 1.0, March 2023
@@ -12,6 +6,12 @@
 
 Everyone is permitted to copy and distribute verbatim or modified
 copies of this license document, with restrictions specified in the below section (4 [License Reproduction]).
+
+<!-- begin metadata and not license content -->
+<p align="center" justify="center">
+  <img src="./docs/images/curie.jpg">
+</p>
+<!-- end metadata and not license content -->
 
 LOVE ALL MY CATS PUBLIC LICENSE:
 
