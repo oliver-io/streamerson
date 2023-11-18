@@ -1,6 +1,6 @@
 <!-- begin metadata and not license content -->
 <p align="center" justify="center">
-  <img src="./docs/images/curie">
+  <img src="./docs/images/curie.jpg">
 </p>
 <!-- end metadata and not license content -->
 
@@ -50,6 +50,6 @@ LOVE ALL MY CATS PUBLIC LICENSE:
 
 <!-- begin metadata and not license content -->
 <p align="center" justify="center">
-  <img src="./docs/images/anastasia">
+  <img src="./docs/images/anastasia.jpg">
 </p>
 <!-- end metadata and not license content -->
