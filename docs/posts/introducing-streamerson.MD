@@ -175,12 +175,13 @@ await apiServer.listen({
 If so, then I've got some excellent news.  Not only have I built up the above use-cases, but I've in fact abstracted upon them to build a few high-level tools to make event-oriented application-development with `@streamerson` even easier.
 
 - `@streamerson/consumer`: bidirectionally communicate between applications with an express-like interface for binding events to handlers
+- `@streamerson/consumer-group`: builds upon the `@streamerson/consumer` to implement Kafkaesque (pun partially intended) consumer groups with guaranteed `once-per` delivery.  It also has a **worker thread cluster** module which takes advantage of multicore machines to run N workers, each of which is a member of a group, each receiving different messages from the same stream (on the same machine, or many).  The cluster module uses [`Piscina`](https://github.com/piscinajs/piscina)  to actually control the threads, none of which is rolled in-house.
 - `@streamerson/gateway-fastify`: a drop-in Fastify plugin to translate HTTP to `@streamerson` messages
 - `@streamerson/gateway-wss`: a uWebSockets gateway to translate realtime events to-and-from `@streamerson` messages
 
 And some "eating of my own dogfood":
 - `@streamerson/examples`: examples, demos, and use-cases to illustrate the above packages in motion
-- `@streamerson/benchmarking`: a suite of benchmarks to evaluate my claims, your use-case, and general performance of these patterns-- maybe interesting even if you don't want to use my code
+- `@streamerson/benchmarking`: a suite of benchmarks to evaluate my claims, your use-case, and general performance of these patterns-- maybe interesting even if you don't want to use my code!  It executes locally and/or on GCP via a Terraform deployment.
 
 ## Ok, cool, but what use-case?
 
