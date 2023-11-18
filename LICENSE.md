@@ -1,10 +1,6 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [LOVE ALL MY CATS (LAMC) PUBLIC LICENSE](#love-all-my-cats-lamc-public-license)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+<!-- begin metadata and not license content -->
+![curie](docs/images/curie)
+<!-- end metadata and not license content -->
 
 # LOVE ALL MY CATS (LAMC) PUBLIC LICENSE
 
@@ -49,3 +45,7 @@ LOVE ALL MY CATS PUBLIC LICENSE:
     - 5b. You may NOT extend this license to require the Love of Animals other than Cats (here understood to mean any animal, living or dead, that at the time of its life was a member of the suborder *Feliformia* and family *Felidae*)
 
 > THIS LICENSE DIRECTLY INHERITS ITS LEGAL SPIRIT AND TERMS FROM THE DBAD PUBLIC LICENSE, ALL CREDIT TO ITS AUTHORS
+
+<!-- begin metadata and not license content -->
+![anastasia](docs/images/anastasia)
+<!-- end metadata and not license content -->
