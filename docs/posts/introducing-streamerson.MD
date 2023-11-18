@@ -57,6 +57,11 @@ stream.on('data', (event) => {
 await stream.connect();
 ```
 
+2) Run the file
+```bash
+  tsx ./reader
+```
+
 ## Example: trivially `pipe()` & write
 
 1) Create a file `writer.ts`:
@@ -77,6 +82,11 @@ await outputStream.connect();
 // message envelope per chunk). If you ran this alongside the `trivially read`
 // example, you would see the contents being read in realtime as it is written.
 inputStream.pipe(outputStream);
+```
+
+2) Run the file
+```bash
+  tsx ./writer
 ```
 
 
