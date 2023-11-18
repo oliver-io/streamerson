@@ -15,7 +15,7 @@ Yes, that's right; with `@streamerson` building stateless event-oriented archite
 - Orchestrate remote data channels with code instead of infrastructure
 - Drop-in HTTP(s) and WebSocket gateways that emit `@streamerson` events
 - Communicate in realtime between applications without HTTP(s) or WebSockets (and save some overhead in the meantime)
-- Dispense of your internal load-balancing by safely parallelizing processors with `Consumer Group` APIs (and maybe save some money, even)
+- Dispense of your internal load-balancing by safely parallelizing processors with `Consumer Group` APIs
 - And maybe most importantly, do all of the above with low-code interfaces that simply work.  The `@streamerson` project contains high-level abstractions to puppet the local representation of these streams for complex use-cases.
 
 :warning: A foreward: this monorepo is *upcoming* because it is lacking rigorous testing (automated and otherwise), has some known defects, and is at a sub-1.0.0 version.  There are performance issues I would like to iron out, for which recent benchmarks have been written to gauge the improvement.  If the following content interests you, I'd very much appreciate any feedback to spur me onward toward my release goals.  :warning:
