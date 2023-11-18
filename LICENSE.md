@@ -1,5 +1,7 @@
 <!-- begin metadata and not license content -->
-![curie](docs/images/curie)
+<p align="center" justify="center">
+  <img src="./docs/images/curie">
+</p>
 <!-- end metadata and not license content -->
 
 # LOVE ALL MY CATS (LAMC) PUBLIC LICENSE
@@ -47,5 +49,7 @@ LOVE ALL MY CATS PUBLIC LICENSE:
 > THIS LICENSE DIRECTLY INHERITS ITS LEGAL SPIRIT AND TERMS FROM THE DBAD PUBLIC LICENSE, ALL CREDIT TO ITS AUTHORS
 
 <!-- begin metadata and not license content -->
-![anastasia](docs/images/anastasia)
+<p align="center" justify="center">
+  <img src="./docs/images/anastasia">
+</p>
 <!-- end metadata and not license content -->
