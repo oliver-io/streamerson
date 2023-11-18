@@ -153,7 +153,7 @@ await apiServer.listen({
   tsx ./server
 ```
 
-5) Open a web browser to `http://localhost:3000` or follow the link in the terminal output from step (6)
+5) Open a web browser to `http://localhost:3000` or follow the link in the terminal output from step (4)
 
 
 6) Observe the results!  The HTTP `GET:/` request to the Fastify API sent a message to a Redis stream which was received in realtime by the processor application.  When it responded (along the bidirectional channel) with its payload, the Fastify API sent that back to the requesting client, and the browser displays: `ok: "received message!"`.  If you were to look at the logs from `server.ts` and `processor.ts` you will see the broadcasting of those events in realtime.
