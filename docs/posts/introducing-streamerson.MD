@@ -156,7 +156,13 @@ await apiServer.listen({
 5) Open a web browser to `http://localhost:3000` or follow the link in the terminal output from step (4)
 
 
-6) Observe the results!  The HTTP `GET:/` request to the Fastify API sent a message to a Redis stream which was received in realtime by the processor application.  When it responded (along the bidirectional channel) with its payload, the Fastify API sent that back to the requesting client, and the browser displays: `ok: "received message!"`.  If you were to look at the logs from `server.ts` and `processor.ts` you will see the broadcasting of those events in realtime.
+6) Observe the results!  It goes something like this:
+- The request is made
+  - In the Fastify API, the HTTP `GET:/` request is handled by the plugin, which sends the payload to Redis as a stream message
+  - In realtime almost simultaneously, the processor application gets the message and runs its handler.
+  - It writes the handler's output (along the bidirectional channel) back to whomever sent it
+  - The Fastify API send that response back to the requesting client, and the browser displays: `ok: "received message!"`.
+- If you were to look at the logs from `server.ts` and `processor.ts` you will see the broadcasting of those events in realtime.
 
 ### Example Notes
 
