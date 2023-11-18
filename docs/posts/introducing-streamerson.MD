@@ -6,11 +6,11 @@
 
 Yes, that's right; with `@streamerson` building stateless event-oriented architectures looks like normal procedural code again!  What you stream is what you get; the required infrastructure is only one friendly package: open-source Redis or a compatible alternative.  Using this package you can:
 
-- **Use stateless `ReadableStream` objects** to access serverside streams under the hood, i.e.
+- **Use stateless `ReadableStream** objects to access **serverside streams** under the hood, i.e.
   - I.e., subscribe to remote stream messages with typical syntax `stream.on('data', ...)`
   - Iterate over remote streams with typical syntax (`for await (const message of stream) { ... }`)
   - Pipe and transform remote streams with typical syntax (`inStream.pipe(transferStream).pipe(outStream)`)
-- **Use stateless `WritableStream`** objects to write to the remote server
+- **Use stateless `WritableStream`** objects to write to the **remote streams**
   - (And use native Node.JS `.pipe()`, `Transfer`, `Duplex`, etc. -- sky's the limit)
 - Use streams to model `fan-out`, `fan-in`, or `once-per` delivery patterns
 - Orchestrate remote data channels with code instead of infrastructure
