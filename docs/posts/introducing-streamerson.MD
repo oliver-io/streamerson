@@ -2,21 +2,21 @@
 
 > An upcoming Typescript framework for distributed application-data streaming in realtime (using native Node.JS streams)
 
-*@streamerson* is a Typescript framework for orchestrating all kinds of real-time messaging and eventing patterns.  It uses the Redis protocol and the underlying `Streams` implementation to present a Node-idiomatic facade of objects that encapsulate the Redis stream data source.
+*@streamerson* is a Typescript framework for orchestrating all kinds of real-time messaging and eventing patterns.  It uses the Redis protocol and the underlying `Streams` implementation to present a Node.JS-idiomatic facade of objects that encapsulate the Redis stream data source.
 
 Yes, that's right; with `@streamerson` building stateless event-oriented architectures looks like normal procedural code again!  It is WYSIWYG (What You Stream Is What You Get) and the required infrastructure is only one friendly piece of OSS tech-- `Redis` or a compatible alternative like Elasticache or Memorystore.  Using this package you can:
 
-- **Use stateless `ReadableStream** objects to access **serverside streams** under the hood, i.e.
+- **Use stateless `ReadableStream** objects to access serverside **remote streams** under the hood, i.e.
   - I.e., subscribe to remote stream messages with typical syntax `stream.on('data', ...)`
   - Iterate over remote streams with typical syntax (`for await (const message of stream) { ... }`)
   - Pipe and transform remote streams with typical syntax (`inStream.pipe(transferStream).pipe(outStream)`)
-- **Use stateless `WritableStream`** objects to write to the **remote streams**
-  - (And use native Node.JS `.pipe()`, `Transfer`, `Duplex`, etc. -- sky's the limit)
+- **Use stateless `WritableStream`** objects to write to  **remote streams**
+- (And use **native `.pipe()`, `pipeline()`, `Transfer`, `Duplex`,** etc. to pipeline data through streams and processors -- there are no limits when the science is mad!)
 - Use streams to model `fan-out`, `fan-in`, or `once-per` delivery patterns
 - Orchestrate remote data channels with code instead of infrastructure
 - Drop-in HTTP(s) and WebSocket gateways that emit `@streamerson` events
-- Communicate in realtime between applications without HTTP(s) or WebSockets
-- Dispense of your internal load-balancing by safely parallelizing processors with `Consumer Group` APIs
+- Communicate in realtime between applications without HTTP(s) or WebSockets (and save some overhead in the meantime)
+- Dispense of your internal load-balancing by safely parallelizing processors with `Consumer Group` APIs (and maybe save some money, even)
 - And maybe most importantly, do all of the above with low-code interfaces that simply work.  The `@streamerson` project contains high-level abstractions to puppet the local representation of these streams for complex use-cases.
 
 :warning: A foreward: this monorepo is *upcoming* because it is lacking rigorous testing (automated and otherwise), has some known defects, and is at a sub-1.0.0 version.  There are performance issues I would like to iron out, for which recent benchmarks have been written to gauge the improvement.  If the following content interests you, I'd very much appreciate any feedback to spur me onward toward my release goals.  :warning:
