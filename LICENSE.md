@@ -7,12 +7,6 @@
 Everyone is permitted to copy and distribute verbatim or modified
 copies of this license document, with restrictions specified in the below section (4 [License Reproduction]).
 
-<!-- begin metadata and not license content -->
-<p align="center" justify="center">
-  <img src="./docs/images/curie.jpg">
-</p>
-<!-- end metadata and not license content -->
-
 LOVE ALL MY CATS PUBLIC LICENSE:
 
 > TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
@@ -33,6 +27,11 @@ LOVE ALL MY CATS PUBLIC LICENSE:
 
    *By using, copying, distributing, or modifying this code, you agree to all of the above (Section 1, Subsections **1a** ... **1d**) conditions.*
 
+<!-- begin metadata and not license content -->
+<p align="center" justify="center">
+  <img src="./docs/images/curie.jpg">
+</p>
+<!-- end metadata and not license content -->
 
 2. If you become rich through modifications, related works/services, or supporting the original work,
    share the love. Only a greedy fool would use this code and not love MY CATS (the only tangible requirement of this document)
