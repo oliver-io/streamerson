@@ -5,6 +5,7 @@
     "@streamerson/consumer": "^0.0.1",
     "ioredis": "^5.0.4",
     "pino": "^7.11.0",
+    "piscina": "^4.1.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
@@ -12,6 +13,6 @@
     "pino-pretty": "^7.6.1"
   },
   "type": "commonjs",
-  "main": "./src/index.js",
+  "main": "./src/index",
   "typings": "./src/index.d.ts"
 }

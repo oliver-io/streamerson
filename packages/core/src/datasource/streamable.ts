@@ -51,9 +51,7 @@ export type GetReadStreamOptions = {
  * @constructor options {DataSourceOptions}: the options controlling streaming behavior for this source
  * @beta
  */
-export class StreamingDataSource
-
-  extends RedisDataSource
+export class StreamingDataSource extends RedisDataSource
   implements StreamableDataSource {
   streamIdMap: Record<StreamId, number> = {};
   keyEvents: EventEmitter = new EventEmitter();
@@ -203,7 +201,7 @@ export class StreamingDataSource
   }) {
     return await new Promise((resolve, reject) => {
       try {
-        this.client.xgroup("CREATE", config.stream, config.groupId, (config.cursor ?? "$") as "$", resolve)
+        this.client.xgroup("CREATE", config.stream, config.groupId, (config.cursor ?? "$") as "$", "MKSTREAM", resolve)
       } catch (err) {
         reject(err);
       }
@@ -279,9 +277,45 @@ export class StreamingDataSource
       'GROUP',
       groupId,
       groupMemberId,
+      "COUNT",
+      DEFAULT_MAX_BATCH_SIZE,
       'BLOCK',
       timeout,
-      // "COUNT", 10,
+      'NOACK',
+      'STREAMS',
+      stream,
+      cursor,
+    ) ?? []) as Array<[
+      StreamId,
+      Array<[_id: string, messaage: StreamResponseArray]>,
+    ]>;
+  }
+
+  /**
+   * Read a message or batch from a stream as a part of a consumer group
+   * which acknowledges its messages; mostly different from the non-acked
+   * form to keep the signatures light and distinct
+   * @param stream the key of the stream from which to read
+   * @param cursor the cursor from which to begin reading
+   * @param groupId the key of the group to which the member belongs
+   * @param groupMemberId the key of the member within the group
+   * @param timeout the timeout in milliseconds to wait for a message
+   */
+  async readAsAcknowledgedGroup(
+    stream: string,
+    cursor: string,
+    groupId: string,
+    groupMemberId: string,
+    timeout: number
+  ) {
+    return (await this.client.xreadgroup(
+      'GROUP',
+      groupId,
+      groupMemberId,
+      "COUNT",
+      DEFAULT_MAX_BATCH_SIZE,
+      'BLOCK',
+      timeout,
       'STREAMS',
       stream,
       cursor,
@@ -498,7 +532,7 @@ export class StreamingDataSource
     messageId: string,
     shard?: string
   ) {
-    const ack = this.client.xack(topic.consumerKey(shard), groupId, messageId)
+    const ack = (this.options.controllable ? this.control : this.client).xack(topic.consumerKey(shard), groupId, messageId)
     if (!ack) {
       throw new Error(`Failed to ack message ${messageId} for group ${groupId}`)
     }

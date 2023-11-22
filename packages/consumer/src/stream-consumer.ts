@@ -1,8 +1,8 @@
 import {Transform,} from "stream";
 import {EventEmitter} from 'events';
-import Pino from 'pino';
 import {
   ChannelTupleArray,
+  createStreamersonLogger,
   IncomingChannel,
   MappedStreamEvent,
   MessageType,
@@ -12,7 +12,7 @@ import {
   StreamersonLogger,
   StreamingDataSource,
   Topic,
-  createStreamersonLogger
+  TopicOptions
 } from "@streamerson/core";
 
 const moduleLogger = createStreamersonLogger({
@@ -51,10 +51,10 @@ export type EventMapRecord<T extends PayloadVariety, R extends PayloadVariety> =
 export type StreamConsumerOptions<EventMap extends EventMapRecord<Record<string, NullablePrimitive>, any>> = {
   logger?: StreamersonLogger,
   redisConfiguration?: {
-    port: number,
-    host: string
+    port?: number,
+    host?: string
   }
-  topic: Topic,
+  topic: Topic | TopicOptions,
   shard?: string;
   bidirectional?: boolean;
   consumerGroupInstanceConfig?: {
@@ -83,13 +83,13 @@ export class StreamConsumer<
   constructor(public options: StreamConsumerOptions<EventMap>) {
     super();
     this.streamEvents = {};
-    const consumerStream = this.options.topic.consumerKey(this.options.shard);
-    const producerStream = this.options.topic.producerKey(this.options.shard);
+    this.topic = new Topic(options.topic);
+    const consumerStream = this.topic.consumerKey(this.options.shard);
+    const producerStream = this.topic.producerKey(this.options.shard);
     this.bidirectional = options.bidirectional ?? true;
-    this.topic = options.topic ?? this.options.topic;
     this.logger = createStreamersonLogger({
       shard: this.options.shard,
-      ...this.options.topic.meta(),
+      ...this.topic.meta(),
       streamName: consumerStream,
       destination: producerStream,
     }, (options.logger ?? this.options.logger ?? moduleLogger));
@@ -242,8 +242,11 @@ export class StreamConsumer<
       this.incomingChannel.connect(),
       this.outgoingChannel ? this.outgoingChannel.connect() : Promise.resolve()
     ]);
-    this.logger.info(`Connected client for incoming channel ${this.topic.consumerKey(this.options.shard)}`);
-    this.logger.info(`Connected client for outgoing channel ${this.topic.producerKey(this.options.shard)}`);
+    this.logger.info({
+      incoming: this.topic.consumerKey(this.options.shard),
+      outgoing: this.topic.producerKey(this.options.shard),
+      ...(options?.consumerGroupInstanceConfig ?? {})
+    }, "Connecting consumer client");
 
     const setState = async (streamMessage: MappedStreamEvent) => {
       return await this.process(streamMessage);
@@ -283,12 +286,12 @@ export class StreamConsumer<
     shard?: string
   }) {
     await this.outgoingChannel?.writeToStream(
-      this.options.topic.producerKey(),
+      this.topic.producerKey(),
       undefined,
       options.messageId as MessageType,
       options.messageType,
       JSON.stringify(options.message),
-      this.options.topic.consumerKey(),
+      this.topic.consumerKey(),
       options.shard
     );
   }
