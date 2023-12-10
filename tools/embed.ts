@@ -5,7 +5,7 @@ import {green, yellow} from 'colors';
 import {glob} from 'glob';
 import minimist from 'minimist';
 const commandLineArgs = minimist(process.argv.slice(2));
-const directoryDenyList = [".yalc", "dist/**/*", "tmp/**/*", "node_modules", "deps", '**/node_modules/**/*']
+const directoryDenyList = [".yalc", "dist/**/*", "tmp/**/*", "node_modules", "deps", '**/node_modules/**/*', "**/LICENSE.md"]
 
 const supportedFileExtensions = [
     ".ts",

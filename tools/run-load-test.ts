@@ -40,7 +40,7 @@ async function runSingleLoadTest(args: CLIOptions) {
   const baseImageName = 'streamerson/benchmarking:latest';
   const baseImagePath = path.resolve('./packages/benchmarking/build/base.dockerfile');
 
-  if (args.build) {
+  if (args.build ?? true) {
     execSync(`docker build -t ${baseImageName} . -f ${baseImagePath}`, {
       stdio: 'inherit', env
     });
@@ -51,7 +51,7 @@ async function runSingleLoadTest(args: CLIOptions) {
     `docker compose -f ./build/compose.redis.yaml -f ./build/compose.load.yaml up ${dockerUpOptions}`,
   ];
 
-  if (args.exec) {
+  if (args.exec ?? true) {
     for (const cmd of executeCommands) {
       console.log(cmd);
       execSync(cmd, {

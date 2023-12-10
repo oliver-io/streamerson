@@ -131,28 +131,29 @@ const defs = Object.keys(definitions).map((d) => {
 async function runAllBenchmarks() {
   const options = minimist(process.argv.slice(2)) as unknown as CLIOptions;
 
-  for (const def of defs) {
-    console.log(def);
-    const test: 'read' | 'write' = def.read ? 'read' : 'write';
-    let type: 'client' | 'framework' = options.framework ? 'framework' : 'client';
-    let isStream = false;
-    const target = `${test}-${isStream ? 'stream-' : ''}${type}`;
-    await runSingleBenchmark({
-        ...options,
-        build: true,
-        exec: true,
-        report: true,
-        folder: 'core_modules',
-      },
-      `${def.name}-${type}-report.json`,
-      target,
-      {
-        ...environmentForDefinition(def.name, def),
-        STREAMERSON_BENCHMARK_FILE_TARGET: target,
-        STREAMERSON_BENCHMARK_DIRECTORY: 'core_modules',
-        STREAMERSON_PROJECT: 'core_modules',
+  for (const test of ["read", "write"]) {
+    for (const type of ["client","framework"]) {
+      for (const def of defs) {
+        let isStream = false;
+        const target = `${test}-${isStream ? 'stream-' : ''}${type}`;
+        await runSingleBenchmark({
+            ...options,
+            build: true,
+            exec: true,
+            report: true,
+            folder: 'core_modules',
+          },
+          `${def.name}-${type}-report.json`,
+          target,
+          {
+            ...environmentForDefinition(def.name, def),
+            STREAMERSON_BENCHMARK_FILE_TARGET: target,
+            STREAMERSON_BENCHMARK_DIRECTORY: 'core_modules',
+            STREAMERSON_PROJECT: 'core_modules',
+          }
+        );
       }
-    );
+    }
   }
 }
 
