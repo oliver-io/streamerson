@@ -20,7 +20,6 @@ The idea for the exported code of this package is essentially to achieve the fol
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
   - [Notes](#notes)
   - [Installation](#installation)
   - [Example](#example)

@@ -8,7 +8,6 @@ This package is a part of the larger [@streamerson](../../README.md) monorepo, w
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-
   - [A Foreword on Naming and Purpose](#a-foreword-on-naming-and-purpose)
   - [Installation](#installation)
   - [Example](#example)
