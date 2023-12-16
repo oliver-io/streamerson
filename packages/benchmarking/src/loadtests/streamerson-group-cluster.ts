@@ -1,6 +1,5 @@
-import {ConsumerGroupCluster} from '@streamerson/consumer-group';
+import {ConsumerGroupCluster} from '@streamerson/consumer';
 import {topic} from "../utils/topic";
-import Pino from 'pino';
 
 export async function run() {
   console.log('Starting stream consumer CLUSTER....');

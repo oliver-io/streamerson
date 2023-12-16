@@ -3,7 +3,6 @@ import queues from 'piscina';
 // @ts-ignore
 import path from 'path';
 import {ConsumerGroupConfigurator} from "./group";
-import {TopicOptions} from "@streamerson/core";
 import {ConsumerGroupConfig} from "./config";
 import {ConsumerGroupMember} from "./member";
 
@@ -20,7 +19,7 @@ export type MemberParams = {
 };
 
 export class ConsumerGroupCluster extends ConsumerGroupConfigurator {
-  running: boolean = false;
+  running = false;
   fileTarget: string;
 
   constructor(

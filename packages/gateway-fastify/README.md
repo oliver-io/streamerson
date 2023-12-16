@@ -72,7 +72,7 @@ await apiServer.listen(serverOptions);
 
 This code will create a Fastify server and load a plugin (the architecture for which you can read [here in Fastify's documentation](https://fastify.dev/docs/latest/Reference/Plugins/)).  The plugin will create an isolated route for `POST::/hello-world`, which will ship the body of the web request through the stream and optionally wait for a call-and-response signal to deliver to the requester.
 
-This allows a [consumer](../consumer/README.md) or [consumer-group](../consumer-group/README.md) to receive traffic and process it, while at no point does the HTTP layer know about any business-logic or do any CPU-constrained work beyond the parsing of incoming requests.
+This allows a [consumer](../consumer/README.md) or [consumer-group](../consumer-group/GROUP) to receive traffic and process it, while at no point does the HTTP layer know about any business-logic or do any CPU-constrained work beyond the parsing of incoming requests.
 
 <details>
     <summary>Fastify Consumer Example </summary>

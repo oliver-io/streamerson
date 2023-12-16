@@ -39,7 +39,7 @@ The reason this package is called `@streamerson/consumer` rather than `@streamer
 
 ## Installation
 
-- `yarn install @streamerson/consumer-group`
+- `yarn install @streamerson/consumer`
 
 ## Example
 
@@ -243,7 +243,7 @@ Parameters:
 
 The `@streamerson/consumer` does not support the acknowledgement of messages server-side-- i.e., the stream itself in Redis does not know who has read what, or who last read which message, and two `consumer` modules reading from the same key would get the same messages.  (If this is _disappointing_, please read on for some _appointment_)  This means that this module is appropriate for fan-in streams, event-broadcasting use-cases, etc.
 
-So if you want to have a sort of once-only processing architecture (in which one or many readers each operate on different stream messages), this particular package is not it...  the [`@streamerson/consumer-group`](../consumer-group/README.md) package :star: **is** :star: though, so you're in luck!
+So if you want to have a sort of once-only processing architecture (in which one or many readers each operate on different stream messages), this particular package is not it...  the [`@streamerson/consumer`](../consumer-group/GROUP) package :star: **is** :star: though, so you're in luck!
 
 If you found yourself in this section because you are wondering about _**acknowledgement**_, then you might be looking for a consumer-group of one member (or more), which "automagically" checks each message back in using the `XACK` Redis protocol, meaning that its consumer-group is message-processed aware.  `@streamerson/consumer` instances are stream-position aware using a cursor, but they do not acknowledge a message as "complete" in Redis.
 
@@ -251,7 +251,7 @@ If you found yourself in this section because you are wondering about _**acknowl
 
 TLDR:
 - This consumer deliberately does not mark a message "processed" -- after all, there could be other readers in a fanout or broadcast scenario.  This also makes the whole process faster.
-- If you want a stateless, once-only delivery of messages to a single consumer that marks its messages as processed in Redis when complete, look at the [`@streamerson/consumer-group`](../consumer-group/README.md) package.
+- If you want a stateless, once-only delivery of messages to a single consumer that marks its messages as processed in Redis when complete, look at the [`@streamerson/consumer`](../consumer-group/GROUP) package.
 
 ## Stream Recovery / Cursor Iteration
 
@@ -263,4 +263,4 @@ If you want to implement recovery at the process-level such that a reader can di
 
 This key specifies at which key in Redis to store the iterators for a given client-- meaning that in a multi-reader scenario, to have per-reader recovery, you would want to give each of these readers a unique `recoveryKey` driven by environment or build configuration.
 
-If this seems like a pain, it's potentially because you are crossing over the threshold from a `consumer` to a `consumer-group` when you begin caring about tracking the state of individual readers on a given stream.  Much of that process is handled out-of-the-box for us by Redis when we utilize the `consumer group` API, which is implemented in the [`@streamerson/consumer-group`](../consumer-group/README.md) module.  A richer explanation of this difference can be found [above](#message-acknowledgement--tracking).
+If this seems like a pain, it's potentially because you are crossing over the threshold from a `consumer` to a `consumer-group` when you begin caring about tracking the state of individual readers on a given stream.  Much of that process is handled out-of-the-box for us by Redis when we utilize the `consumer group` API, which is implemented in the [`@streamerson/consumer`](../consumer-group/GROUP) module.  A richer explanation of this difference can be found [above](#message-acknowledgement--tracking).

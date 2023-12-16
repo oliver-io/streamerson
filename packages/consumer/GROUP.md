@@ -1,4 +1,4 @@
-# @streamerson/consumer-group
+# @streamerson/consumer
 
 > Redis stream "consumer groups" as bidi Typescript Read/Writables
 
@@ -15,7 +15,7 @@ Part of a larger monorepo, this package provides a Typescript implementation for
 
 ## Installation
 
-- `yarn install @streamerson/consumer-group`
+- `yarn install @streamerson/consumer`
 
 ## Example
 
@@ -27,7 +27,7 @@ This example binds an event handler to `"my-event"`, which means that if the con
 [**consumer-group-readable.ts**](../examples/consumers/groups/consumer-group-readable.ts)
 ```typescript
 import { Topic } from '@streamerson/core';
-import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer-group';
+import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer';
 
 const topic = new Topic('my-stream-topic');
 

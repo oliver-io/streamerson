@@ -31,7 +31,7 @@ And lastly,
 
 - [`@streamerson/core`](./packages/core/README.md): a collection of core low-level implementations and utilities
 - [`@streamerson/consumer`](./packages/consumer/README.md): an event consumer/producer for Redis streams
-- [`@streamerson/consumer-group`](./packages/consumer-group/README.md): kafkaesqe groups of consumer/producers with only-once delivery
+- [`@streamerson/consumer`](./packages/consumer-group/GROUP): kafkaesqe groups of consumer/producers with only-once delivery
 - [`@streamerson/gateway-fastify`](./packages/gateway-fastify/README.md): a Fastify plugin shifting RESTful traffic to stream consumers
 - [`@streamerson/gateway-wss`](./packages/gateway-wss/README.md): a Websocket server shifting WSS traffic to stream consumers
 - [`@streamerson/state-machine`](./packages/state-machine/README.md) :warning: **WIP/Unfinished:** :warning: a distributed state(less)-machine made of a
@@ -109,7 +109,7 @@ In the above example, we listen for events and write down the bidirectional chan
   - :heavy_check_mark: Supports a declarative way to consume `@streamerson` streams and bind events to message types
   - :heavy_check_mark: Supports bidirectional streaming patterns for consumer/producers to write to other stream(s) given an input from the first
   - :heavy_check_mark: Provides extensible pattern for modeling consumer flows
-- [The Consumer Group API `@streamerson/consumer-group`](./packages/consumer-group/README.md) extends the `@streamerson/consumer` API to provide consumer-group functionality, which allows a set of consumers to operate atomically on a single stream with messages promised to be delivered to a single of the multi-consumers.  This pattern (implemented in Redis but consumed by these modules) allows for parallelizing the workers on a stream without duplicating the messages received between any listeners.
+- [The Consumer Group API `@streamerson/consumer`](./packages/consumer-group/GROUP) extends the `@streamerson/consumer` API to provide consumer-group functionality, which allows a set of consumers to operate atomically on a single stream with messages promised to be delivered to a single of the multi-consumers.  This pattern (implemented in Redis but consumed by these modules) allows for parallelizing the workers on a stream without duplicating the messages received between any listeners.
   - :heavy_check_mark: Implements the Redis Consumer Group API for horizontal scaling of a single stream
   - :heavy_check_mark: Allows for recovery on crash of a given consumer within a group
 - [Examples `@streamerson/examples`](./packages/examples/README.md) for examples of the code, and the underlying modules, in action.
