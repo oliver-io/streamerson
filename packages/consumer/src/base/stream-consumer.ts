@@ -242,6 +242,15 @@ export class StreamConsumer<
       this.incomingChannel.connect(),
       this.outgoingChannel ? this.outgoingChannel.connect() : Promise.resolve()
     ]);
+
+    console.log('Wat.  Debug.  Connecting the client?')
+    console.log({
+      incoming: this.topic.consumerKey(this.options.shard),
+      outgoing: this.topic.producerKey(this.options.shard),
+      ...(options?.consumerGroupInstanceConfig ?? {})
+    });
+    console.log('\r\n.....')
+
     this.logger.info({
       incoming: this.topic.consumerKey(this.options.shard),
       outgoing: this.topic.producerKey(this.options.shard),

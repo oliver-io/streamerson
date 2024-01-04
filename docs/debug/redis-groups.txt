@@ -1,0 +1,10 @@
+ docker exec -it streamerson-redis-1 redis-cli
+
+xgroup create teststream wat $ MKSTREAM
+xreadgroup GROUP wat wat-0 COUNT 10 BLOCK 80000 NOACK STREAMS teststream >
+xadd teststream * messageId wat
+
+xreadgroup GROUP wat wat-0 COUNT 10 BLOCK 80000 NOACK STREAMS default-stream-topic::DEFAULT::CONSUMER_INCOMING >
+xadd default-stream-topic::DEFAULT::CONSUMER_INCOMING * messageId wat
+
+STREAM / GROUP 0 BULLSHIT

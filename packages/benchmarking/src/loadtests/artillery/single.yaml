@@ -1,0 +1,15 @@
+config:
+  # This is a test server run by team Artillery
+  # It's designed to be highly scalable
+  target: "{{ $processEnvironment.STREAMERSON_GATEWAY_HOST }}"
+  phases:
+    - duration: 1
+      arrivalRate: 1
+      rampTo: 1
+      name: Make Request
+scenarios:
+  - flow:
+      - loop:
+          - get:
+              url: "/bench"
+        count: 1

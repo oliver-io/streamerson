@@ -28,11 +28,14 @@ export class ConsumerGroupConfigurator extends ConsumerGroupMember<any> {
     // if we want to check for the existence of a group before we try to create it;
     // in long-running applications, this would only technically really need done once,
     // but it make stable to do it every time with an optimized check quick for exist
-    await this.incomingChannel.createConsumerGroup({
+    console.log('Creating GROUP stream configuration in Redis');
+    const consumerGroupResponse = await this.incomingChannel.createConsumerGroup({
       stream: this.topic.consumerKey(shard),
       groupId: this.groupOptions.name,
       cursor
     });
+
+    console.log('Consumer GROUP stream configuration creation response: ', consumerGroupResponse);
   }
 
   instanceConfig(groupMemberId: string) {

@@ -1,7 +1,8 @@
 import {StreamingDataSource, StreamersonLogger } from '@streamerson/core';
 import {config} from '../config';
 import { Redis } from 'ioredis';
-import pino from 'pino';
+import pino, { Logger } from 'pino';
+
 import {ExperimentType} from "../../tools/summarizeResults";
 
 interface BaseContext {
@@ -23,7 +24,7 @@ export type BenchmarkingContext = FrameworkBenchmarkingContext | ClientBenchmark
 
 export async function getClientContext(options?: { connect?: boolean }):Promise<ClientBenchmarkingContext> {
   const connect = options?.connect ?? true;
-  const logger = pino();
+  const logger = pino() as Logger<any>;
   if (connect) {
     const datasource = new Redis(config.redisPort ?? 6379, config.redisHost ?? 'localhost', {
       lazyConnect: true
@@ -52,7 +53,7 @@ export async function getFrameworkContext(options?: { connect?: boolean, experim
   const datasource = new StreamingDataSource({
     controllable: true,
     logger: pino({
-      level: 'warn'
+      level: 'debug'
     }) as unknown as StreamersonLogger,
     host: config.redisHost,
     port: config.redisPort,

@@ -17,10 +17,10 @@ export async function run() {
     bidirectional: true,
     eventMap: {
       resp: (e) => {
-        throw new Error("WAT!?")
-        // return {
-        //   hello: "world"
-        // }
+        // throw new Error("WAT!?")
+        return {
+          hello: "world"
+        }
       }
     }
   });

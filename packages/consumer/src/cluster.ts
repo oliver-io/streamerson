@@ -1,4 +1,3 @@
-// @ts-ignore
 import queues from 'piscina';
 // @ts-ignore
 import path from 'path';

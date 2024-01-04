@@ -36,7 +36,7 @@ async function runSingleLoadTest(args: CLIOptions) {
     STREAMERSON_BENCHMARK_DIRECTORY,
     STREAMERSON_BENCHMARK_GATEWAY_FILE_TARGET: `${modePrefix}-gateway`,
     STREAMERSON_BENCHMARK_MICROSERVICE_FILE_TARGET: args.cluster ? `${modePrefix}-group-cluster` : `${modePrefix}-microservice`,
-    STREAMERSON_BENCHMARK_REPORT_PATH: `loadtest/${modePrefix}-${args.target}-report.json`,
+    STREAMERSON_BENCHMARK_REPORT_PATH: `${modePrefix}-${args.target}-report.json`,
     STREAMERSON_BENCHMARK_TARGET: args.target
   };
 
