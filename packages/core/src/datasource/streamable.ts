@@ -5,7 +5,7 @@ import {
   type MappedStreamEvent,
   MaybeConsumerGroupInstanceConfig,
   type MessageId,
-  MessageType,
+  MessageType, NullablePrimitive,
   type StreamableDataSource,
   type StreamEventData,
   type StreamId,
@@ -35,7 +35,7 @@ enum KeyEvents {
   CANCEL = 'abort'
 }
 
-const DEFAULT_BLOCKING_TIMEOUT = HOURS_TO_MS(0.5);
+const DEFAULT_BLOCKING_TIMEOUT = 100; //HOURS_TO_MS(0.5);
 const DEFAULT_MAX_BATCH_SIZE = 10;
 
 export type GetReadStreamOptions = {
@@ -87,17 +87,17 @@ export class StreamingDataSource extends RedisDataSource
         sourceId,
         shard
       }, 'Dispatching message to stream');
-      const result = this.client.xadd(
+      const result = this.client.xAdd(
         shardDecorator({ key: outgoingStream, shard }),
-        '*',
-        messageId, // MessageId
-        this.responseType ?? messageType,
-        incomingStream ?? '', // MessageDestination
-        'nil', // Message headers
-        'json', // Label for caution and pack type
-        sourceId,
-        'UnoccupiedField',
-        message // Payload
+        '*', { // odd message packing:
+          streamMessageId: messageId,
+          messageType: this.responseType ?? messageType,
+          incomingStream: incomingStream ?? '',
+          messageHeaders: 'nil',
+          messageProtocol: 'json',
+          messageSourceId: sourceId,
+          payload: message
+        }
       );
       return await result;
     } catch (err) {
@@ -148,6 +148,21 @@ export class StreamingDataSource extends RedisDataSource
    * @param _streamTitle the title of the stream from whence the message came
    * @private
    */
+
+  private deserializeMessageObject(
+    rawEvent: Record<string, NullablePrimitive>,
+    _streamTitle: string
+  ) {
+    this.logger.debug(rawEvent, 'Raw object stream event!');
+    rawEvent['streamId'] = _streamTitle;
+    if (rawEvent['messagePayloadFormat'] === 'json') {
+      rawEvent['payload'] = JSON.parse(rawEvent['payload'] as string)
+    }
+
+    return rawEvent as unknown as MappedStreamEvent;
+  }
+
+
   private deserializeMessageArray(
     rawEvent: StreamEventData,
     _streamTitle: string
@@ -207,7 +222,7 @@ export class StreamingDataSource extends RedisDataSource
     groupId: string,
     cursor?: string
   }) {
-    return await this.client.call('XGROUP', 'CREATE', config.stream, config.groupId, (config.cursor ?? '$') as '$', 'MKSTREAM');
+    return await this.client.xGroupCreate(config.stream, config.groupId, (config.cursor ?? '$') as '$', { MKSTREAM: true });
   }
 
   /**
@@ -230,13 +245,7 @@ export class StreamingDataSource extends RedisDataSource
     // This needs to be executed if we want to do consumer group reads from a stream without data in it already
     // consider doing some `INFO` operations on the stream?
     // we might want to throw errors if we try to read from a stream without data that hasn't called this fn
-    return await new Promise((resolve, reject) => {
-      try {
-        this.client.xgroup('CREATECONSUMER', config.stream, config.groupId, config.groupMemberId, resolve);
-      } catch (err) {
-        reject(err);
-      }
-    });
+    return await this.client.xGroupCreateConsumer(config.stream, config.groupId, config.groupMemberId);
   }
 
   /**
@@ -247,18 +256,14 @@ export class StreamingDataSource extends RedisDataSource
    * @param batchSize the number of messages to read
    */
   async readAsSingle(stream: string, cursor: string, timeout: number, batchSize = 1) {
-    return (await this.client.xread(
-      'BLOCK' as any,
-      timeout,
-      'COUNT',
-      batchSize,
-      'STREAMS',
-      stream,
-      cursor
-    ) ?? []) as Array<[
-      StreamId,
-      Array<[_id: string, message: StreamResponseArray]>,
-    ]>;
+    return await this.client.xRead({
+        key: stream,
+        id: cursor
+      }, {
+        BLOCK: timeout,
+        COUNT: batchSize
+      }
+    );
   }
 
   /**
@@ -276,70 +281,124 @@ export class StreamingDataSource extends RedisDataSource
     groupMemberId: string,
     timeout: number
   ) {
-    console.log('Reading as group........ Parameters:\r\n')
-    console.log([
-      'GROUP',
-      groupId,
-      groupMemberId,
-      'COUNT',
-      DEFAULT_MAX_BATCH_SIZE,
-      'BLOCK',
-      timeout,
-      'NOACK',
-      'STREAMS',
-      stream,
-      cursor]);
-    return (await this.client.xreadgroup(
-      'GROUP',
-      groupId,
-      groupMemberId,
-      'COUNT',
-      DEFAULT_MAX_BATCH_SIZE,
-      'BLOCK',
-      timeout,
-      'NOACK',
-      'STREAMS',
-      stream,
-      cursor
-    ) ?? []) as Array<[
-      StreamId,
-      Array<[_id: string, messaage: StreamResponseArray]>,
-    ]>;
+    return await this.client.xReadGroup(groupId, groupMemberId, {
+      id: stream,
+      key: cursor
+    }, {
+      BLOCK: timeout,
+      COUNT: DEFAULT_MAX_BATCH_SIZE,
+      NOACK: true
+    });
   }
+    //
+    // console.log('Reading as group........ oh doinks!:\r\n');
+    // const pong = await this.client.ping();
+    // console.log('Fucking pong? ', pong);
+    // try {
+    //   console.log('wat.... Making da thing');
+    //   await this.client.call(
+    //     'XGROUP',
+    //     'CREATE',
+    //     'teststream',
+    //     'watgroup',
+    //     '$',
+    //     'MKSTREAM',
+    //     () => {
+    //       console.error('No fuckin way');
+    //     }
+    //   );
+    // } catch (err) {
+    //   console.warn(err);
+    // }
+    // console.log('Attempting second pong?');
+    // const pdong = await this.client.ping();
+    // console.log('Fucking pdddong? ', pdong);
+    // await new Promise((resolve, reject) => {
+    //   this.client.xreadgroup(
+    //     'GROUP',
+    //     'watgroup',
+    //     'watmember',
+    //     'BLOCK',
+    //     100,
+    //     'STREAMS',
+    //     'teststream',
+    //     '>',
+    //     (err, res) => {
+    //       console.log('WHAT THE FUCK', err, res);
+    //       if (err) {
+    //         reject(err);
+    //       } else {
+    //         resolve(res);
+    //       }
+    //     }
+    //   );
+    // });
 
-  /**
-   * Read a message or batch from a stream as a part of a consumer group
-   * which acknowledges its messages; mostly different from the non-acked
-   * form to keep the signatures light and distinct
-   * @param stream the key of the stream from which to read
-   * @param cursor the cursor from which to begin reading
-   * @param groupId the key of the group to which the member belongs
-   * @param groupMemberId the key of the member within the group
-   * @param timeout the timeout in milliseconds to wait for a message
-   */
-  async readAsAcknowledgedGroup(
-    stream: string,
-    cursor: string,
-    groupId: string,
-    groupMemberId: string,
-    timeout: number
-  ) {
-    return (await this.client.xreadgroup(
-      'GROUP',
-      groupId,
-      groupMemberId,
-      'COUNT',
-      DEFAULT_MAX_BATCH_SIZE,
-      'BLOCK',
-      timeout,
-      'STREAMS',
-      stream,
-      cursor
-    ) ?? []) as Array<[
-      StreamId,
-      Array<[_id: string, messaage: StreamResponseArray]>,
-    ]>;
-  }
+    // const debuggy = await new Promise((resolve, reject) => {
+    //   this.client.call(
+    //     'XREADGROUP',
+    //     'GROUP',
+    //     groupId,
+    //     groupMemberId,
+    //     'BLOCK',
+    //     100,
+    //     'NOACK',
+    //     'STREAMS',
+    //     stream,
+    //     cursor,
+    //     (err, data)=>{
+    //       console.log('12312312312')
+    //       if (err) {
+    //         reject(err)
+    //       } else {
+    //         resolve(data ?? []);
+    //       }
+    //     }
+    //   );
+    // });
+  //
+  //   const debuggy: any = [];
+  //   console.log('DEBUGGY RETRIEVED');
+  //   console.log(debuggy);
+  //   return debuggy as Array<[
+  //     StreamId,
+  //     Array<[_id: string, messaage: StreamResponseArray]>,
+  //   ]>;
+  // }
+
+  // /**
+  //  * Read a message or batch from a stream as a part of a consumer group
+  //  * which acknowledges its messages; mostly different from the non-acked
+  //  * form to keep the signatures light and distinct
+  //  * @param stream the key of the stream from which to read
+  //  * @param cursor the cursor from which to begin reading
+  //  * @param groupId the key of the group to which the member belongs
+  //  * @param groupMemberId the key of the member within the group
+  //  * @param timeout the timeout in milliseconds to wait for a message
+  //  */
+  // async readAsAcknowledgedGroup(
+  //   stream: string,
+  //   cursor: string,
+  //   groupId: string,
+  //   groupMemberId: string,
+  //   timeout: number
+  // ) {
+  //   return (await this.client.xreadgroup(
+  //     'GROUP',
+  //     groupId,
+  //     groupMemberId,
+  //     'COUNT',
+  //     DEFAULT_MAX_BATCH_SIZE,
+  //     'BLOCK',
+  //     timeout,
+  //     'STREAMS',
+  //     stream,
+  //     cursor
+  //   ) ?? []) as Array<[
+  //     StreamId,
+  //     Array<[_id: string, messaage: StreamResponseArray]>,
+  //   ]>;
+  // }
 
   /**
    * Dispatch a blocking request for a stream message[s], and receive the messages as MappedStreamEvents
@@ -375,10 +434,10 @@ export class StreamingDataSource extends RedisDataSource
             )
         );
 
-        for (const [_streamTitle, entries] of streamEvents ?? []) {
-          for (const rawEvent of entries) {
-            events.push(this.deserializeMessageArray(rawEvent, _streamTitle));
-            cursor = rawEvent[0];
+        for (const {messages, name} of streamEvents ?? []) {
+          for (const { id, message } of messages) {
+            events.push(this.deserializeMessageObject(message, name));
+            cursor = id;
           }
         }
 
@@ -405,20 +464,17 @@ export class StreamingDataSource extends RedisDataSource
         );
         const events: MappedStreamEvent[] = [];
 
-        const streamEvents = ((await this.client.xread(
-          'BLOCK',
-          options.blockingTimeout ?? HOURS_TO_MS(0.5),
-          'STREAMS',
-          ...streamsWithCursors
-        )) ?? []) as Array<[
-          StreamId,
-          Array<[_id: string, messaage: StreamResponseArray]>,
-        ]>;
+        const streamEvents = await this.client.xRead(
+          streamsWithCursors.map(([key, id])=>({ key, id })),
+          {
+            BLOCK: options.blockingTimeout ?? HOURS_TO_MS(0.5)
+          }
+        );
 
-        for (const [_streamTitle, entries] of streamEvents ?? []) {
-          for (const rawEvent of entries) {
-            events.push(this.deserializeMessageArray(rawEvent, _streamTitle));
-            cursor[_streamTitle] = rawEvent[0];
+        for (const {messages, name} of streamEvents ?? []) {
+          for (const { id, message } of messages) {
+            events.push(this.deserializeMessageObject(message, name));
+            cursor[name] = id;
           }
         }
 
@@ -549,7 +605,7 @@ export class StreamingDataSource extends RedisDataSource
     messageId: string,
     shard?: string
   ) {
-    const ack = (this.options.controllable ? this.control : this.client).xack(topic.consumerKey(shard), groupId, messageId);
+    const ack = (this.options.controllable ? this.control : this.client).xAck(topic.consumerKey(shard), groupId, messageId);
     if (!ack) {
       throw new Error(`Failed to ack message ${messageId} for group ${groupId}`);
     }
@@ -573,7 +629,7 @@ export class StreamingDataSource extends RedisDataSource
     requestedBatchSize?: number;
     blockingTimeout?: number;
   }) {
-    console.log('\r\n\r\nSTREAM ITERATION BEGINNING')
+    console.log('\r\n\r\nSTREAM ITERATION BEGINNING');
     let hasNewStreams = false;
     const args = {
       ...options,

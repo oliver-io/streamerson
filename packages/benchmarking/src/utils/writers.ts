@@ -1,5 +1,5 @@
 import {MessageType, StreamingDataSource} from '@streamerson/core';
-import { Redis } from 'ioredis';
+import { RedisClientType as Redis } from 'redis';
 
 // const bigObject:Record<string, number> = {};
 // for (let i = 0; i < 1000; i++) {

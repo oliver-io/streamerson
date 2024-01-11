@@ -1,6 +1,6 @@
 import {type Logger} from 'pino';
 import {type Readable, type Writable} from 'stream';
-import {type Redis as RedisClient} from 'ioredis';
+import {type RedisClientType as RedisClient} from 'redis';
 import {type StreamingDataSource} from './datasource/streamable';
 
 // For clarity in signatures:

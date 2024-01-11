@@ -31,8 +31,8 @@ export async function run() {
       port: parseInt(process.env['STREAMERSON_REDIS_PORT'] || '0') || 6379,
     }
   }, {
-    max: 3,
-    min: 3,
+    max: 1,
+    min: 1,
     name: 'wat',
     processingTimeout: 1000,
     idleTimeout: 0

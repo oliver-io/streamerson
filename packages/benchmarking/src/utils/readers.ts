@@ -1,5 +1,5 @@
 import {StreamingDataSource} from '@streamerson/core';
-import {Redis} from 'ioredis';
+import {RedisClientType as Redis} from 'redis';
 
 export function createFrameworkReader(dataSource: StreamingDataSource, stream: string, options: {
   stopAt: number,

@@ -1,6 +1,6 @@
 import {StreamingDataSource, StreamersonLogger } from '@streamerson/core';
 import {config} from '../config';
-import { Redis } from 'ioredis';
+import { RedisClientType as Redis } from 'redis';
 import pino, { Logger } from 'pino';
 
 import {ExperimentType} from "../../tools/summarizeResults";

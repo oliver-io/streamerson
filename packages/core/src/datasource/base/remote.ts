@@ -1,7 +1,8 @@
-import Redis from 'ioredis';
+import { createClient, RedisClientType as Redis } from 'redis';
 import {type DataSourceOptions, type ConnectableDataSource, StreamersonLogger} from '../../types';
 import {environmentValueFor} from "../../utils/environment";
 import {createStreamersonLogger} from "../../utils/logger";
+import { ClientKillFilters } from '@redis/client/dist/lib/commands/CLIENT_KILL';
 
 process.env['LOG_LEVEL'] = 'debug'
 process.env['PINO_LOG_LEVEL'] = 'debug';
@@ -56,12 +57,9 @@ export class RedisDataSource implements ConnectableDataSource {
 
   async abort(error?: boolean) {
     if (this._control && this.clientId) {
-      await this._control.call(
-        'CLIENT',
-        'UNBLOCK',
-        this.clientId,
-        error ? 'ERROR' : 'TIMEOUT',
-      );
+      // await this._client?.clientKill({
+      //   id: this.clientId
+      // });
     } /*else {
       throw new Error(
         `Cannot abort a non-controllable connection (controllable=${this.options.controllable}, clientId=${this.clientId})`,
@@ -72,10 +70,10 @@ export class RedisDataSource implements ConnectableDataSource {
   async disconnect() {
     if (this.options.controllable) {
       await this.abort();
-      this.control.disconnect();
+      await this.control.disconnect();
       this._control = undefined;
     }
-    this.client.disconnect();
+    await this.client.disconnect();
     this._client = undefined;
   }
 
@@ -83,7 +81,7 @@ export class RedisDataSource implements ConnectableDataSource {
     if (times < 3) {
       return 5000;
     } else {
-      return null;
+      return false;
     }
   }
 
@@ -130,14 +128,21 @@ export class RedisDataSource implements ConnectableDataSource {
         this._control = this.options.getConnection();
       }
     } else {
-      this._client = new Redis(this.options.port ?? DEFAULT_PORT, this.options.host ?? DEFAULT_HOST, {
-        retryStrategy: this.retry.bind(this),
-        enableAutoPipelining: true,
-        autoPipeliningIgnoredCommands: ["xread", "xreadgroup"]
+      this._client = createClient({
+        // port: this.options.port ?? DEFAULT_PORT,
+        url: this.options.host ?? DEFAULT_HOST,
+        socket: {
+          reconnectStrategy: this.retry.bind(this)
+        },
+
       });
       if (this.options.controllable) {
-        this._control = new Redis(this.options.port ?? DEFAULT_PORT, this.options.host ?? DEFAULT_HOST, {
-          retryStrategy: this.retry.bind(this),
+        this._control = createClient({
+          // port: this.options.port ?? DEFAULT_PORT,
+          url: this.options.host ?? DEFAULT_HOST,
+          socket: {
+            reconnectStrategy: this.retry.bind(this)
+          },
         });
       }
     }

@@ -4,7 +4,17 @@ xgroup create teststream wat $ MKSTREAM
 xreadgroup GROUP wat wat-0 COUNT 10 BLOCK 80000 NOACK STREAMS teststream >
 xadd teststream * messageId wat
 
+
+
+xgroup create default-stream-topic::DEFAULT::CONSUMER_INCOMING wat $ MKSTREAM
 xreadgroup GROUP wat wat-0 COUNT 10 BLOCK 80000 NOACK STREAMS default-stream-topic::DEFAULT::CONSUMER_INCOMING >
+XREADGROUP GROUP wat wat-0 COUNT 10 BLOCK 80000 NOACK STREAMS default-stream-topic::DEFAULT::CONSUMER_INCOMING >
+
 xadd default-stream-topic::DEFAULT::CONSUMER_INCOMING * messageId wat
 
 STREAM / GROUP 0 BULLSHIT
+
+
+
+"XREADGROUP" "GROUP" "wat" "wat-2" "COUNT" "10" "BLOCK" "18000" "NOACK" "STREAMS" "default-stream-topic::DEFAULT::CONSUMER_INCOMING" ">"
+"XREADGROUP" "GROUP" "wat" "wat-0" "COUNT" "10" "BLOCK" "80000" "NOACK" "STREAMS" "default-stream-topic::DEFAULT::CONSUMER_INCOMING" ">"
