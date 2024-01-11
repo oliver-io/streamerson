@@ -1,10 +1,13 @@
-import {mockLogger} from '@streamerson/test-utils';
+import {mockLogger as mockLogging} from '@streamerson/test-utils';
 import {MessageType} from '../../../src/types';
 import {Readable} from 'stream';
 import {streamAwaiter, StreamingDataSource} from '../../../src';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {describe, mock, test} from 'node:test';
 import * as assert from 'node:assert';
 import {ids} from '../../../src/utils/ids';
+
+const mockLogger:any = mockLogging;
 
 const uuidSpy = mock.method(ids, 'guuid');
 

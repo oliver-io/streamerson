@@ -15,13 +15,15 @@ async function run() {
 
   try {
     return await connection.xGroupCreate(
-      'teststream',
-      'watgroup',
+      'default-stream-topic::DEFAULT::CONSUMER_INCOMING',
+      'wat',
       '$',
       { MKSTREAM: true }
     );
   } catch(err) {
-    console.warn(err);
+    if (err.message && !err.message.includes('BUSYGROUP')) {
+      console.error(err, 'Unrecognized error');
+    }
   }
 
   const xreadParams = [
@@ -30,7 +32,7 @@ async function run() {
     'watgroup',
     'watmember',
     'BLOCK',
-    1,
+    1000,
     'STREAMS',
     'teststream',
     '>'
@@ -38,10 +40,10 @@ async function run() {
 
   console.log(`Issuing XREADGROUP command equivalent: "${xreadParams.join(' ')}"`);
   const xReadGroupResult = await connection.xReadGroup(
-    'watgroup',
-    'watmember',
-    {  key: 'teststream', id: '>' },
-    { BLOCK: 100, NOACK: true, COUNT: 10 }
+    'wat',
+    'wat-0',
+    {  key: 'default-stream-topic::DEFAULT::CONSUMER_INCOMING', id: '>' },
+    { BLOCK: 1000, NOACK: true, COUNT: 10 }
   );
 
   console.log('Received XREADGROUP response...')

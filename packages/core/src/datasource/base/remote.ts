@@ -130,7 +130,7 @@ export class RedisDataSource implements ConnectableDataSource {
     } else {
       this._client = createClient({
         // port: this.options.port ?? DEFAULT_PORT,
-        url: this.options.host ?? DEFAULT_HOST,
+        url: `redis://${this.options.host ?? DEFAULT_HOST}:${this.options.port ?? DEFAULT_PORT}`,
         socket: {
           reconnectStrategy: this.retry.bind(this)
         },
@@ -169,6 +169,7 @@ export class RedisDataSource implements ConnectableDataSource {
             reject(err);
           }
         });
+        void this.client.connect();
       },
     );
 
@@ -196,6 +197,7 @@ export class RedisDataSource implements ConnectableDataSource {
             reject(err);
           }
         });
+        void this.control.connect();
       });
     }
 

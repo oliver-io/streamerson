@@ -282,8 +282,8 @@ export class StreamingDataSource extends RedisDataSource
     timeout: number
   ) {
     return await this.client.xReadGroup(groupId, groupMemberId, {
-      id: stream,
-      key: cursor
+      id: cursor,
+      key: stream
     }, {
       BLOCK: timeout,
       COUNT: DEFAULT_MAX_BATCH_SIZE,
@@ -416,6 +416,7 @@ export class StreamingDataSource extends RedisDataSource
           shard: options.shard
         });
         const events: MappedStreamEvent[] = [];
+        // check if we are getting into the group or single api??  redis monitor suggests group
         const streamEvents = await (options.consumerGroupInstanceConfig ?
             this.readAsGroup(
               stream,

@@ -1,13 +1,19 @@
 import {StreamMessageFlowModes} from '@streamerson/core';
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import {test} from 'node:test';
-import {ConsumerGroupTopic} from "../src/group";
+import {ConsumerGroupConfigurator} from "../src/group";
 
 test('a consumer group can be created', async () => {
-    const consumerGroup = new ConsumerGroupTopic({
+    const consumerGroup = new ConsumerGroupConfigurator({
+      topic: {
+        topic: 'test',
+        namespace: 'test'
+      },
+    }, {
         topic: 'test',
         namespace: 'test',
         mode: 'ORDERED' as StreamMessageFlowModes
-    }, {
+    },{
         name: 'test',
         min: 1,
         max: 1,
