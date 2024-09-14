@@ -93,6 +93,11 @@ export function CreateGatewayPlugin(options: {
               {
                 trackers: streamStateTrackers,
                 index: trackerIndex,
+                message: {
+                  body: JSON.stringify(request.body ?? {}),
+                  messageType: route.messageType as MessageType,
+                  sourceId: request.sourceId
+                }
               },
               'Freakin debug.....',
               err

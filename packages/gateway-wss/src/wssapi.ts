@@ -16,16 +16,16 @@ const moduleLogger = Pino({
     base: {
         module: 'stremerson_gateway_wss'
     },
-});
+}) as unknown as StreamersonLogger;
 
-export type StreamSocket = WebSocket<{}>;
+export type StreamSocket = WebSocket<Record<string, any>>;
 
 export type WebsocketResponse = Record<string, NullablePrimitive>;
 export class WebSocketServer<Response extends WebsocketResponse> {
     static deserializeWebsocketMessageToStreamEvent(message: ArrayBuffer, messageType: string, messageDestination?: string) {
         try {
-            let uintArray = new DataView(message);
-            let messageText = new TextDecoder("utf-8").decode(uintArray);
+            const uintArray = new DataView(message);
+            const messageText = new TextDecoder("utf-8").decode(uintArray);
             const messageJson = JSON.parse(messageText);
             const { token } = messageJson;
             delete messageJson['token'];

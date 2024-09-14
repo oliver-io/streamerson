@@ -80,6 +80,7 @@ export class StreamingDataSource
     shard?: string,
   ) {
     try {
+      console.info({outgoingStream, incomingStream, messageType, messageId, message, sourceId, shard}, 'Dispatching message to stream')
       this.logger.debug({outgoingStream, incomingStream, messageType, messageId, message, sourceId, shard}, 'Dispatching message to stream')
       const result = this.client.xadd(
         shardDecorator({key: outgoingStream, shard}),

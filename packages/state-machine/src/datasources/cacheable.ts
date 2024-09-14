@@ -1,4 +1,4 @@
-import LRUCache from 'lru-cache'
+import * as LRUCache from 'lru-cache'
 import {DataSourceOptions, KeyOptions, RedisDataSource, SECONDS_TO_MS, shardDecorator} from "@streamerson/core";
 import {StateConfiguration} from "@streamerson/state-machine";
 
@@ -43,7 +43,7 @@ export class CacheableDataSource extends RedisDataSource {
                 // Channel where we don't receive LOOP invalidation:
                 if (owner) { // We've already made the change here:
                     this.cachedChannel.client[type](cacheKey).then(() => { }).catch((err: any) => {
-                        this.options.logger.error(err, 'Failure to replicate cache while INCR:');
+                        this.options?.logger?.error(err, 'Failure to replicate cache while INCR:');
                     });
                     return value;
                 } else {
@@ -161,7 +161,7 @@ export class CacheableDataSource extends RedisDataSource {
                 // Channel where we don't receive LOOP invalidation:
                 if (owner) {
                     this.cachedChannel.client.set(cacheKey, value).then(() => { }).catch((err: any) => {
-                        this.options.logger.error(err, 'Failure to replicate cache during SET');
+                        this.options?.logger?.error(err, 'Failure to replicate cache during SET');
                     });
                     return true;
                 } else {
@@ -203,7 +203,7 @@ export class CacheableDataSource extends RedisDataSource {
                 // Channel where we don't receive LOOP invalidation:
                 if (owner || replicated) {
                     this.cachedChannel.client.hset(cacheKey, ...hashFlattened).then(() => { }).catch((err: any) => {
-                        this.options.logger.error({ err, assignedRecord, hashCurrent, hashRecord }, 'Failure to replicate cache during HASH SET');
+                        this.options?.logger?.error({ err, assignedRecord, hashCurrent, hashRecord }, 'Failure to replicate cache during HASH SET');
                     });
                 } else {
                     // For these, we will need to await the next GET:
@@ -240,7 +240,7 @@ export class CacheableDataSource extends RedisDataSource {
 
     invalidateCache(...args: any[]) {
         if (args[0]) {
-            this.options.logger.warn({ args}, `Received invalidation message for ${args[0]}`);
+            this.options?.logger?.warn({ args}, `Received invalidation message for ${args[0]}`);
             const invalidationKey = args[1] as string;
             if (invalidationKey === '1') {
                 return;
@@ -264,7 +264,7 @@ export class CacheableDataSource extends RedisDataSource {
     //     const id = (await this.invalidationChannel.client.call("CLIENT ID")) as string;
     //     this.options.logger.info('CLIENT ID RESP: ', id);
     //     if (await this.cachedChannel.client.call('CLIENT TRACKING off') !== 'OK') {
-    //         this.options.logger.error(Error("Cannot disable client tracking"));
+    //         this.options?.logger?.error(Error("Cannot disable client tracking"));
     //     }
     // }
 }

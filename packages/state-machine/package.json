@@ -1,6 +1,10 @@
 {
   "name": "@streamerson/state-machine",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "public": true,
+  "scripts": {
+    "release": "npm version && npm publish && git push --follow-tags"
+  },
   "dependencies": {
     "tslib": "^2.3.0"
   },

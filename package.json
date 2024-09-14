@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "./tools/cleanup.sh",
     "postclean": "yarn && yarn build",
-    "build": "nx run-many -t build --all --exclude=state-machine",
+    "build": "nx run-many -t build --all",
     "build:clean": "yarn clean && yarn build",
     "test": "nx run-many -t test --all --exclude=state-machine",
     "docgen": "tsx ./tools/embed -w --summary",

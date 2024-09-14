@@ -1,21 +1,21 @@
 import { ApplicationState } from "./types";
 import { CacheableDataSource } from "./datasources/cacheable";
-import Pino, { Logger } from 'pino';
-import {KeyOptions} from "@streamerson/core";
+import Pino from 'pino';
+import { KeyOptions, StreamersonLogger } from '@streamerson/core';
 
 const moduleLogger = Pino({
     base: {
         module: 'streamerson_state_cache'
     },
-});
+}) as unknown as StreamersonLogger;
 
 
 export class StateCache<AState> {
     stateConfigurations: ApplicationState<AState>
     autoCache: CacheableDataSource;
     constructor({ stateConfigurations, redisConfiguration, logger }: {
-        logger: Logger,
-        stateConfigurations: ApplicationState<AState>, 
+        logger: StreamersonLogger,
+        stateConfigurations: ApplicationState<AState>,
         redisConfiguration?: {
             host: string,
             port: number,
@@ -43,16 +43,16 @@ export class StateCache<AState> {
     }
 
     getHash(
-        type: keyof AState, 
+        type: keyof AState,
         key: KeyOptions
     ) {
         return this.autoCache.getHash(key, this.stateConfigurations[type]);
     }
     setHash(
-        type: keyof AState, 
+        type: keyof AState,
         key: KeyOptions,
-        valueOrKey: string | {},
-        value?: {} | null
+        valueOrKey: string | Record<string, any>,
+        value?: Record<string, any> | null
     ) {
         return this.autoCache.setHash(key, valueOrKey, value ?? null, this.stateConfigurations[type]);
     }
