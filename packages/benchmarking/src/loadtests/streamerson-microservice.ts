@@ -8,7 +8,7 @@ export async function run() {
   const consumer = new StreamConsumer({
     logger: pino({
       level: 'warn'
-    }) as unknown as StreamersonLogger,
+    }) as any,
     topic,
     redisConfiguration: {
       host: process.env['STREAMERSON_REDIS_HOST'] || 'localhost',
@@ -17,10 +17,10 @@ export async function run() {
     bidirectional: true,
     eventMap: {
       resp: (e) => {
-        throw new Error("WAT!?")
-        // return {
-        //   hello: "world"
-        // }
+        // throw new Error("WAT!?")
+        return {
+          hello: "world"
+        }
       }
     }
   });

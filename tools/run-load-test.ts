@@ -7,6 +7,7 @@ type CLIOptions = {
   report?: boolean,
   build?: boolean,
   exec?: boolean
+  cluster?: boolean;
   target: string
 } & ({ framework: true, control: false } | { control: true, framework: false });
 
@@ -16,7 +17,9 @@ async function runSingleLoadTest(args: CLIOptions) {
   const loadTestingDirectory = './packages/benchmarking/src/loadtests';
   const targetFile = path.resolve(`${loadTestingDirectory}/artillery/${args.target}.yaml`);
   const modePrefix = args.framework ? 'streamerson' : 'fastify';
-  const microserviceFile = path.resolve(`${loadTestingDirectory}/${modePrefix}-microservice.ts`);
+  const microserviceFile = args.cluster ?
+    path.resolve(`${loadTestingDirectory}/streamerson-group-cluster.ts`) :
+    path.resolve(`${loadTestingDirectory}/${modePrefix}-microservice.ts`);
   const gatewayFile = path.resolve(`${loadTestingDirectory}/${modePrefix}-gateway.ts`);
   if (!await stat(microserviceFile)) {
     throw new Error(`No gateway file for load test (${microserviceFile})`);
@@ -32,8 +35,8 @@ async function runSingleLoadTest(args: CLIOptions) {
     ...process.env,
     STREAMERSON_BENCHMARK_DIRECTORY,
     STREAMERSON_BENCHMARK_GATEWAY_FILE_TARGET: `${modePrefix}-gateway`,
-    STREAMERSON_BENCHMARK_MICROSERVICE_FILE_TARGET: `${modePrefix}-microservice`,
-    STREAMERSON_BENCHMARK_REPORT_PATH: `loadtest/${modePrefix}-${args.target}-report.json`,
+    STREAMERSON_BENCHMARK_MICROSERVICE_FILE_TARGET: args.cluster ? `${modePrefix}-group-cluster` : `${modePrefix}-microservice`,
+    STREAMERSON_BENCHMARK_REPORT_PATH: `${modePrefix}-${args.target}-report.json`,
     STREAMERSON_BENCHMARK_TARGET: args.target
   };
 
@@ -62,10 +65,10 @@ async function runSingleLoadTest(args: CLIOptions) {
 }
 
 async function run() {
-  const args = minimist(process.argv.slice(2), {
+  const args = minimist<CLIOptions>(process.argv.slice(2), {
     string: ['target'],
-    boolean: ['framework', 'control']
-  }) as unknown as CLIOptions;
+    boolean: ['framework', 'control', 'cluster']
+  });
 
   if (!args.framework && !args.control) {
     throw new Error("No benchmark specified; must be one or both of --framework or --control");

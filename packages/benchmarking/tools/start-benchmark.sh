@@ -14,7 +14,6 @@ DIR=$(find . -type d -name $TARGET)
 ## if the directory exists, run the benchmark:
 if [ -d "$DIR" ]; then
     echo "Running benchmark for $TARGET (\"$RUNNER $DIR/$SCRIPT\") ..."
-    set STREAMERSON_LOG_LEVEL=warn
     $RUNNER $DIR/$SCRIPT
     # if the cloud param is not empty, upload the results:
     if [ -n "$CLOUD" ]; then

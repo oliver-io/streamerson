@@ -1,5 +1,5 @@
-import {StreamingDataSource} from '@streamerson/core';
-import {Redis} from 'ioredis';
+import { StreamingDataSource } from '@streamerson/core';
+import { RedisClientType as Redis } from 'redis';
 
 export function createFrameworkReader(dataSource: StreamingDataSource, stream: string, options: {
   stopAt: number,
@@ -9,7 +9,7 @@ export function createFrameworkReader(dataSource: StreamingDataSource, stream: s
   batchSize?: number
 }) {
   return async () => {
-    let last = '0'
+    let last = '0';
     let eventCount = 0;
     do {
       const { cursor, events } = await dataSource.blockingStreamBatchMap({
@@ -19,7 +19,7 @@ export function createFrameworkReader(dataSource: StreamingDataSource, stream: s
       });
       eventCount += events.length;
       last = cursor as string;
-    } while(last && eventCount < options.stopAt);
+    } while (last && eventCount < options.stopAt);
 
     if (
       (options.failIfFewerRead && (eventCount < options.stopAt)) ||
@@ -27,7 +27,7 @@ export function createFrameworkReader(dataSource: StreamingDataSource, stream: s
     ) {
       throw new Error(`Expected ${options.stopAt} messages, but only read ${eventCount}`);
     }
-  }
+  };
 }
 
 
@@ -51,8 +51,8 @@ export function createFrameworkStreamer(dataSource: StreamingDataSource, stream:
     let timeout: NodeJS.Timeout | null = null;
 
     await Promise.race([
-      new Promise<void>((resolve, reject) =>{
-        readStream.on('data', (e)=> {
+      new Promise<void>((resolve, reject) => {
+        readStream.on('data', (e) => {
           dataSource.logger.info(e);
           eventCount++;
           if (eventCount >= stopAt) {
@@ -70,7 +70,7 @@ export function createFrameworkStreamer(dataSource: StreamingDataSource, stream:
     if (timeout) {
       clearTimeout(timeout);
     }
-  }
+  };
 }
 
 export function createClientReader(client: Redis, stream: string, config: {
@@ -88,20 +88,17 @@ export function createClientReader(client: Redis, stream: string, config: {
     try {
       while (true) {
         iterations++;
-        const result = (await client.call(
-          'XREAD',
-          'BLOCK',
-          1000,
-          "COUNT",
-          batchSize,
-          'STREAMS',
-          stream,
-          cursor,
-        ) ?? []) as [streamId: string, batch: [messageId: string, properties: [k: string, v: string]]];
+        const result = await this.client.xRead({
+          key: stream,
+          id: cursor
+        }, {
+          BLOCK: 1000,
+          COUNT: batchSize
+        });
 
         const initialCount = messageCount;
 
-        for (const page of result) {
+        for (const page of result.messages) {
           // const streamId = page[0];
           // const messageBatch = page[1];
           messageCount += page[1].length;
@@ -129,6 +126,6 @@ export function createClientReader(client: Redis, stream: string, config: {
     return {
       iterations,
       messageCount
-    }
-  }
+    };
+  };
 }

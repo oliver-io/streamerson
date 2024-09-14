@@ -17,7 +17,6 @@
     "paths": {
       "@streamerson/benchmarking": ["packages/benchmarking/src/index.ts"],
       "@streamerson/consumer": ["packages/consumer/src/index.ts"],
-      "@streamerson/consumer-group": ["packages/consumer-group/src/index.ts"],
       "@streamerson/core": ["packages/core/src/index.ts"],
       "@streamerson/examples": ["packages/examples/src/index.ts"],
       "@streamerson/gateway-fastify": ["packages/gateway-fastify/src/index.ts"],

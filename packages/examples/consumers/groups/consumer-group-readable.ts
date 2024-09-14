@@ -1,5 +1,5 @@
 import { Topic } from '@streamerson/core';
-import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer-group';
+import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer';
 
 const topic = new Topic('my-stream-topic');
 

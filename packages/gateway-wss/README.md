@@ -52,7 +52,7 @@ await wssServer.listen();
 
 (See: [app-websockets example](../examples/app-websockets/README.md))).
 
-This server will create an instance of a websocket server (driven by `uWebSockets.js`), which will listen for incoming socket traffic and write it to a corresponding stream as a producer.  When an application listens on that stream (see: [Consumer](../consumer/README.md) or [Consumer Groups](../consumer-group/README.md)), the data will be transferred back to the websocket-server and written to the corresponding websocket for the originating user.
+This server will create an instance of a websocket server (driven by `uWebSockets.js`), which will listen for incoming socket traffic and write it to a corresponding stream as a producer.  When an application listens on that stream (see: [Consumer](../consumer/README.md) or [Consumer Groups](../consumer-group/GROUP)), the data will be transferred back to the websocket-server and written to the corresponding websocket for the originating user.
 
 Essentially, this server acts as a proxy between a websocket client and a stream, allowing the client to send and receive messages to/from a consumer.
 
