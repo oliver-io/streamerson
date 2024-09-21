@@ -1,6 +1,6 @@
 {
   "name": "@streamerson/state-machine",
-  "version": "0.0.2",
+  "version": "0.0.16",
   "public": true,
   "scripts": {
     "release": "npm version && npm publish && git push --follow-tags"

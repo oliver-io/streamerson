@@ -40,7 +40,7 @@ export async function spyForConsumerGroupMessage(
     const id = Math.random().toString();
 
     groupMember.registerStreamEvent(id, hasBeenCalled);
-    await groupMember._channel.writeToStream(...message);
+    await groupMember._channel.writeToStream(message);
     return hasBeenCalled;
 }
 

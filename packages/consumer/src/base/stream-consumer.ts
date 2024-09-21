@@ -1,5 +1,5 @@
-import {Transform,} from "stream";
-import {EventEmitter} from 'events';
+import { Transform } from 'stream';
+import { EventEmitter } from 'events';
 import {
   ChannelTupleArray,
   createStreamersonLogger,
@@ -13,13 +13,13 @@ import {
   StreamingDataSource,
   Topic,
   TopicOptions
-} from "@streamerson/core";
+} from '@streamerson/core';
 
 const moduleLogger = createStreamersonLogger({
   module: 'streamerson_consumer'
 });
 
-type PayloadVariety = Record<string, NullablePrimitive>;
+export type PayloadVariety = Record<string, NullablePrimitive>;
 
 type StreamHandlerEvent<
   T extends PayloadVariety
@@ -29,22 +29,6 @@ type HandlerLogicFunction<
   T extends PayloadVariety,
   R extends (PayloadVariety | void)
 > = (e: StreamHandlerEvent<T>) => Promise<R> | R;
-
-type Handler<
-  R extends PayloadVariety
-> = (e: MappedStreamEvent) => StreamHandlerEvent<R> | Promise<StreamHandlerEvent<R>>;
-
-function handler<
-  T extends PayloadVariety = any,
-  R extends PayloadVariety = any
->(h: HandlerLogicFunction<T, R>): Handler<R> {
-  return async function (e) {
-    return ({
-      ...e,
-      payload: await h(e as any)
-    })
-  }
-}
 
 export type EventMapRecord<T extends PayloadVariety, R extends PayloadVariety> = Record<string, HandlerLogicFunction<T, R>>;
 
@@ -76,7 +60,7 @@ export class StreamConsumer<
   incomingStream: IncomingChannel;
   outgoingChannel?: StreamingDataSource;
   outgoingStream?: OutgoingChannel;
-  streamEvents: Partial<Record<keyof EventMap, (e: MappedStreamEvent) => MappedStreamEvent | Promise<MappedStreamEvent>>>;
+  streamEvents: Partial<Record<keyof EventMap, (e: MappedStreamEvent) => Promise<PayloadVariety>>>;
   bidirectional?: boolean;
   public logger: StreamersonLogger;
 
@@ -91,7 +75,7 @@ export class StreamConsumer<
       shard: this.options.shard,
       ...this.topic.meta(),
       streamName: consumerStream,
-      destination: producerStream,
+      destination: producerStream
     }, (options.logger ?? this.options.logger ?? moduleLogger));
 
     this.incomingChannel = new StreamingDataSource({
@@ -138,19 +122,19 @@ export class StreamConsumer<
         if (!channel.listenerCount('error')) {
           channel.on('error', (error: Error) => {
             this._optionallyRouteMessage(error, `${label}Error`, 'error', 'error');
-          })
+          });
         }
 
         if (!channel.listenerCount('end')) {
           channel.on('end', () => {
             this._optionallyRouteMessage('incoming stream ending', `${label}End`, 'end', 'info');
-          })
+          });
         }
 
         if (!channel.listenerCount('close')) {
           channel.on('close', () => {
             this._optionallyRouteMessage('incoming stream closed', `${label}Close`, 'close', 'warn');
-          })
+          });
         }
       }
     }
@@ -174,7 +158,7 @@ export class StreamConsumer<
     typeKey: keyof EventMap,
     handle: HandlerLogicFunction<T, R>
   ) {
-    this.streamEvents[typeKey] = handler<T>(handle) as typeof this.streamEvents[keyof EventMap];
+    this.streamEvents[typeKey] = (handle as unknown as typeof this.streamEvents[keyof EventMap]);
   }
 
   deregisterStreamEvent(typeKey: keyof EventMap) {
@@ -182,7 +166,7 @@ export class StreamConsumer<
   };
 
   addStream(key: string) {
-    this.logger.info({key}, 'Adding stream to listening channel');
+    this.logger.info({ key }, 'Adding stream to listening channel');
     this.incomingChannel.addStreamId(key);
   };
 
@@ -198,14 +182,34 @@ export class StreamConsumer<
     return {
       key: cacheKey,
       shard: this.options.shard ?? undefined
-    }
+    };
   };
+
+  get _handle_message() {
+    return (async (streamMessage: MappedStreamEvent): Promise<MappedStreamEvent> => {
+      return {
+        ...streamMessage,
+        messageType: 'resp' as MessageType,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        payload: await this.streamEvents[streamMessage.messageType]!(
+          {
+            ...streamMessage,
+            payload:
+              typeof streamMessage.payload === 'object' ?
+                streamMessage.payload :
+                JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
+          }
+        )
+      };
+    })
+  }
 
   async process(streamMessage: MappedStreamEvent) {
     if (!this.streamEvents[streamMessage.messageType]) {
-      const error = new Error("No handler registered for message type: " +
+      const error = new Error('No handler registered for message type: ' +
         streamMessage.messageType +
-        " for stream processing " +
+        ' for stream processing ' +
         this.topic.consumerKey(this.options.shard)
       );
       this.logger.error(error);
@@ -213,16 +217,7 @@ export class StreamConsumer<
       return error;
     }
 
-    const processLevelReturnValue = await this.streamEvents[(streamMessage.messageType as keyof EventMap)]!(
-      {
-        ...streamMessage,
-        payload:
-          typeof streamMessage.payload === 'object' ?
-            streamMessage.payload :
-            JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
-      }
-    );
-    return processLevelReturnValue;
+    return await this._handle_message(streamMessage);
   }
 
   async disconnect() {
@@ -243,31 +238,35 @@ export class StreamConsumer<
       this.outgoingChannel ? this.outgoingChannel.connect() : Promise.resolve()
     ]);
 
-    console.log('Wat.  Debug.  Connecting the client?')
-    console.log({
-      incoming: this.topic.consumerKey(this.options.shard),
-      outgoing: this.topic.producerKey(this.options.shard),
-      ...(options?.consumerGroupInstanceConfig ?? {})
-    });
-    console.log('\r\n.....')
+    // console.log('Wat.  Debug.  Connecting the client?');
+    // console.log({
+    //   incoming: this.topic.consumerKey(this.options.shard),
+    //   outgoing: this.topic.producerKey(this.options.shard),
+    //   ...(options?.consumerGroupInstanceConfig ?? {})
+    // });
+    // console.log('\r\n.....');
 
     this.logger.info({
       incoming: this.topic.consumerKey(this.options.shard),
       outgoing: this.topic.producerKey(this.options.shard),
       ...(options?.consumerGroupInstanceConfig ?? {})
-    }, "Connecting consumer client");
+    }, 'Connecting consumer client');
 
     const setState = async (streamMessage: MappedStreamEvent) => {
-      return await this.process(streamMessage);
-    }
+      console.info("Pre SET STATE: ", streamMessage)
+      const post = await this.process(streamMessage);
+      console.info("Post SET STATE: ",post)
+      return post
+    };
 
     const logger = this.logger;
 
     const incomingPipe = this.incomingStream.pipe(new Transform({
-      transform: function (object, _, callback) {
+      transform: function(object, _, callback) {
         try {
           if (object) {
             setState(object).then((message) => {
+              // console.log("PUSHING MESSAGE TO STREAM PIPE: ", message)
               this.push(message);
               callback();
             }).catch(err => {
@@ -294,15 +293,15 @@ export class StreamConsumer<
     sourceId: string,
     shard?: string
   }) {
-    await this.outgoingChannel?.writeToStream(
-      this.topic.producerKey(),
-      undefined,
-      options.messageId as MessageType,
-      options.messageType,
-      JSON.stringify(options.message),
-      this.topic.consumerKey(),
-      options.shard
-    );
+    await this.outgoingChannel?.writeToStream({
+      outgoingStream: this.topic.producerKey(),
+      incomingStream: undefined,
+      messageType: options.messageType as MessageType,
+      messageId: options.messageId,
+      message: JSON.stringify(options.message),
+      sourceId: this.topic.consumerKey(),
+      shard: options.shard
+    });
   }
 
   private _optionallyRouteMessage(event: any, primaryEvent: string, fallbackEvent: string, logClass: 'error' | 'info' | 'warn') {

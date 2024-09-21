@@ -1,4 +1,4 @@
-import {RouteOptions} from 'fastify';
+import { RouteOptions } from 'fastify';
 import {
   createStreamersonLogger, DEFAULT_TIMEOUT,
   MessageType,
@@ -6,12 +6,12 @@ import {
   StreamersonLogger,
   StreamingDataSource,
   StreamOptions,
-  Topic,
+  Topic
 } from '@streamerson/core';
 import fp from 'fastify-plugin';
 
 const moduleLogger = createStreamersonLogger({
-  module: 'streamerson_gateway_fastify',
+  module: 'streamerson_gateway_fastify'
 });
 
 declare module 'fastify' {
@@ -25,6 +25,7 @@ type StreamersonRouteOptions = {
   url: string;
   messageType: string;
   timeout?: number;
+  topic?: Topic
 } & Partial<StreamOptions> &
   Partial<RouteOptions>;
 
@@ -35,53 +36,75 @@ export function CreateGatewayPlugin(options: {
   routes: StreamersonRouteOptions | StreamersonRouteOptions[],
   timeout?: number
 }) {
-  const streamStateTrackers: ReturnType<typeof streamAwaiter>[] = [];
-  const {routes} = options;
-  return fp(async (fastify) => {
-    fastify.decorateRequest('sourceId', '');
-    for (const route of Array.isArray(routes) ? routes : [routes]) {
-      if (!route) {
-        continue;
-      }
-      const defaultedRoute = {...options.topic.meta(), ...route};
+  const inOutRecord: Record<string, ReturnType<typeof streamAwaiter>> = {};
+
+  async function getStreamAwaiter(inStream: string, outStream: string) {
+    const binding = `${inStream}:${outStream}`;
+    console.log(`Checking bindings for ${binding}... (${Object.keys(inOutRecord)})`);
+    let existingAwaiter = inOutRecord[binding];
+    if (!existingAwaiter) {
+      console.log('Binding does not exist yet....');
       const [readChannel, writeChannel] = [
         new StreamingDataSource({
           logger: options.logger as any,
           controllable: true,
           host: options.streamOptions?.redisConfiguration?.host,
-          port: options.streamOptions?.redisConfiguration?.port,
+          port: options.streamOptions?.redisConfiguration?.port
         }),
         new StreamingDataSource({
           logger: options.logger as any,
           controllable: true,
           host: options.streamOptions?.redisConfiguration?.host,
-          port: options.streamOptions?.redisConfiguration?.port,
+          port: options.streamOptions?.redisConfiguration?.port
         })
       ];
 
       await Promise.all([
         readChannel.connect(),
-        writeChannel.connect(),
+        writeChannel.connect()
       ]);
 
-      const messageStream = options.topic.consumerKey();
-      const responseStream = options.topic.producerKey();
-
-      const streamStateTracker = streamAwaiter({
+      existingAwaiter = streamAwaiter({
         logger: (options.logger ?? moduleLogger) as any,
         readChannel,
         writeChannel,
-        incomingStream: responseStream,
-        outgoingStream: messageStream,
+        incomingStream: inStream,
+        outgoingStream: outStream,
         timeout: options.timeout
       });
+      inOutRecord[binding] = existingAwaiter;
+      streamStateTrackers.push(existingAwaiter);
+    } else {
+      console.log('Binding already exists...');
+    }
 
-      const trackerIndex = streamStateTrackers.push(streamStateTracker) - 1;
+    return existingAwaiter;
+  }
+
+  const streamStateTrackers: ReturnType<typeof streamAwaiter>[] = [];
+  const { routes } = options;
+  return fp(async (fastify) => {
+    fastify.decorateRequest('sourceId', '');
+    for (const route of Array.isArray(routes) ? routes : [routes]) {
+
+      if (!route) {
+        console.error('Ignoring route');
+        continue;
+      }
+
+      const defaultedRoute = { ...(route?.topic ?? options.topic).meta(), ...route };
+      const messageStream = (route?.topic ?? options.topic).consumerKey();
+      const responseStream = (route?.topic ?? options.topic).producerKey();
+
+      const streamStateTracker = await getStreamAwaiter(responseStream, messageStream);
+
+
       fastify.route({
         ...defaultedRoute,
         handler: async (request, reply) => {
           try {
-            const response = await streamStateTrackers[trackerIndex].dispatch(
+            console.log(`Dispatching to streamAwaiter.... source id: ${request.sourceId}`);
+            const response = await streamStateTracker.dispatch(
               JSON.stringify(request.body ?? {}),
               route.messageType as MessageType,
               request.sourceId
@@ -91,8 +114,7 @@ export function CreateGatewayPlugin(options: {
           } catch (err) {
             console.warn(
               {
-                trackers: streamStateTrackers,
-                index: trackerIndex,
+                tracker: streamStateTracker,
                 message: {
                   body: JSON.stringify(request.body ?? {}),
                   messageType: route.messageType as MessageType,
@@ -104,16 +126,17 @@ export function CreateGatewayPlugin(options: {
             );
             throw err;
           }
-        },
+        }
       });
-
       fastify.log.info(`... Sending incoming messages to ${messageStream}`);
       fastify.log.info(`... Listening for responses from ${responseStream}`);
-      for (const stateTracker in streamStateTrackers) {
-        streamStateTrackers[stateTracker].readResponseStream().catch(err => {
-          throw err;
-        });
-      }
+    }
+
+    for (const stateTracker of streamStateTrackers) {
+      console.log('Reading response stream....');
+      stateTracker.readResponseStream().catch(err => {
+        throw err;
+      });
     }
   }, {});
 }

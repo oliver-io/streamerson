@@ -1,18 +1,31 @@
 #!/usr/bin/env bash
 set -e
 
-TARGET="${1:-core}"
+# Default to "core" if no arguments are provided
+TARGETS=("${@:-core}")
 
-## execute a build sos to not continue on anything broken:
-yarn build
+# Execute a build to ensure nothing is broken
+npm run build
 
-## cd into the dir:
-cd packages/$TARGET && yarn version --patch --no-git-tag-version
+for TARGET in "${TARGETS[@]}"; do
+    # cd into the dir and update version
+    cd "packages/$TARGET" && npm version patch --no-git-tag-version
+    cd ../..
+done
 
-## rebuild:
-cd ../../
-yarn clean
+# Rebuild after updating versions
+npm run build
 
-## publish:
-cd dist/packages/$TARGET
-yarn publish --access public --non-interactive
+# Publish each target
+for TARGET in "${TARGETS[@]}"; do
+    cd "dist/packages/$TARGET"
+    npm publish --access public --non-interactive
+    cd ../../..
+done
+
+# Display the new versions
+echo "Published versions installation:"
+for TARGET in "${TARGETS[@]}"; do
+    VERSION=$(node -p "require('./packages/$TARGET/package.json').version")
+    echo "npm install $TARGET@$VERSION"
+done

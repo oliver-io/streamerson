@@ -115,7 +115,7 @@ export class CacheableDataSource extends RedisDataSource {
                 this.cache.set(cacheKey, "caching in progress");
             }
 
-            const result = await (cacheable ? this.cachedChannel.client : this.client).hgetall(cacheKey);
+            const result = await (cacheable ? this.cachedChannel.client : this.client).hGetAll(cacheKey);
 
             if (cacheable) {
                 if (result) {
@@ -202,12 +202,12 @@ export class CacheableDataSource extends RedisDataSource {
                 const hashFlattened = Object.entries(assignedRecord).flat();
                 // Channel where we don't receive LOOP invalidation:
                 if (owner || replicated) {
-                    this.cachedChannel.client.hset(cacheKey, ...hashFlattened).then(() => { }).catch((err: any) => {
+                    this.cachedChannel.client.hSet(cacheKey, hashFlattened).then(() => { }).catch((err: any) => {
                         this.options?.logger?.error({ err, assignedRecord, hashCurrent, hashRecord }, 'Failure to replicate cache during HASH SET');
                     });
                 } else {
                     // For these, we will need to await the next GET:
-                    await this.client.hset(cacheKey, ...hashFlattened);
+                    await this.client.hSet(cacheKey, hashFlattened);
                 }
             }
 
@@ -253,7 +253,7 @@ export class CacheableDataSource extends RedisDataSource {
 
     // These commands only work on redis protocol versions higher than supported:
     async enableCache(id: number) {
-        if (await this.cachedChannel.client.client("TRACKING", "on", "REDIRECT", id) !== 'OK') {
+        if (await this.cachedChannel.client.clientTracking(true, { REDIRECT: id }) !== 'OK') {
             this.logger.error(Error("Cannot enable client tracking"));
         } else {
             this.logger.info(`Enabled client tracking for ID ${id}`);

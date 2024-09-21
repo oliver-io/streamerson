@@ -17,8 +17,8 @@ export class StateCache<AState> {
         logger: StreamersonLogger,
         stateConfigurations: ApplicationState<AState>,
         redisConfiguration?: {
-            host: string,
-            port: number,
+            host?: string,
+            port?: number,
             logger?: typeof moduleLogger
         }
     }) {

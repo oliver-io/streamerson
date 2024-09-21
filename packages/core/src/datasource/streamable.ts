@@ -35,7 +35,7 @@ enum KeyEvents {
   CANCEL = 'abort'
 }
 
-const DEFAULT_BLOCKING_TIMEOUT = 100; //HOURS_TO_MS(0.5);
+const DEFAULT_BLOCKING_TIMEOUT = 100 //HOURS_TO_MS(0.5);
 const DEFAULT_MAX_BATCH_SIZE = 10;
 
 export type GetReadStreamOptions = {
@@ -68,7 +68,7 @@ export class StreamingDataSource extends RedisDataSource
    @param sourceId The ID of the source
    @param shard Maybe, the shard to target
    */
-  public async writeToStream(
+  public async writeToStream({ outgoingStream, incomingStream, messageType, messageId, message, sourceId, shard }: {
     outgoingStream: StreamId,
     incomingStream: StreamId | undefined,
     messageType: MessageType,
@@ -76,7 +76,7 @@ export class StreamingDataSource extends RedisDataSource
     message: string,
     sourceId: string,
     shard?: string
-  ) {
+  }) {
     try {
       this.logger.debug({
         outgoingStream,
@@ -90,8 +90,8 @@ export class StreamingDataSource extends RedisDataSource
       const result = this.client.xAdd(
         shardDecorator({ key: outgoingStream, shard }),
         '*', { // odd message packing:
-          streamMessageId: messageId,
-          messageType: this.responseType ?? messageType,
+          messageId: messageId,
+          messageType: messageType ?? this.responseType,
           incomingStream: incomingStream ?? '',
           messageHeaders: 'nil',
           messageProtocol: 'json',
@@ -156,7 +156,7 @@ export class StreamingDataSource extends RedisDataSource
     this.logger.debug(rawEvent, 'Raw object stream event!');
     rawEvent['streamId'] = _streamTitle;
     if (rawEvent['messagePayloadFormat'] === 'json') {
-      rawEvent['payload'] = JSON.parse(rawEvent['payload'] as string)
+      rawEvent['payload'] = JSON.parse(rawEvent['payload'] as string);
     }
 
     return rawEvent as unknown as MappedStreamEvent;
@@ -290,72 +290,73 @@ export class StreamingDataSource extends RedisDataSource
       NOACK: true
     });
   }
-    //
-    // console.log('Reading as group........ oh doinks!:\r\n');
-    // const pong = await this.client.ping();
-    // console.log('Fucking pong? ', pong);
-    // try {
-    //   console.log('wat.... Making da thing');
-    //   await this.client.call(
-    //     'XGROUP',
-    //     'CREATE',
-    //     'teststream',
-    //     'watgroup',
-    //     '$',
-    //     'MKSTREAM',
-    //     () => {
-    //       console.error('No fuckin way');
-    //     }
-    //   );
-    // } catch (err) {
-    //   console.warn(err);
-    // }
-    // console.log('Attempting second pong?');
-    // const pdong = await this.client.ping();
-    // console.log('Fucking pdddong? ', pdong);
-    // await new Promise((resolve, reject) => {
-    //   this.client.xreadgroup(
-    //     'GROUP',
-    //     'watgroup',
-    //     'watmember',
-    //     'BLOCK',
-    //     100,
-    //     'STREAMS',
-    //     'teststream',
-    //     '>',
-    //     (err, res) => {
-    //       console.log('WHAT THE FUCK', err, res);
-    //       if (err) {
-    //         reject(err);
-    //       } else {
-    //         resolve(res);
-    //       }
-    //     }
-    //   );
-    // });
 
-    // const debuggy = await new Promise((resolve, reject) => {
-    //   this.client.call(
-    //     'XREADGROUP',
-    //     'GROUP',
-    //     groupId,
-    //     groupMemberId,
-    //     'BLOCK',
-    //     100,
-    //     'NOACK',
-    //     'STREAMS',
-    //     stream,
-    //     cursor,
-    //     (err, data)=>{
-    //       console.log('12312312312')
-    //       if (err) {
-    //         reject(err)
-    //       } else {
-    //         resolve(data ?? []);
-    //       }
-    //     }
-    //   );
-    // });
+  //
+  // console.log('Reading as group........ oh doinks!:\r\n');
+  // const pong = await this.client.ping();
+  // console.log('Fucking pong? ', pong);
+  // try {
+  //   console.log('wat.... Making da thing');
+  //   await this.client.call(
+  //     'XGROUP',
+  //     'CREATE',
+  //     'teststream',
+  //     'watgroup',
+  //     '$',
+  //     'MKSTREAM',
+  //     () => {
+  //       console.error('No fuckin way');
+  //     }
+  //   );
+  // } catch (err) {
+  //   console.warn(err);
+  // }
+  // console.log('Attempting second pong?');
+  // const pdong = await this.client.ping();
+  // console.log('Fucking pdddong? ', pdong);
+  // await new Promise((resolve, reject) => {
+  //   this.client.xreadgroup(
+  //     'GROUP',
+  //     'watgroup',
+  //     'watmember',
+  //     'BLOCK',
+  //     100,
+  //     'STREAMS',
+  //     'teststream',
+  //     '>',
+  //     (err, res) => {
+  //       console.log('WHAT THE FUCK', err, res);
+  //       if (err) {
+  //         reject(err);
+  //       } else {
+  //         resolve(res);
+  //       }
+  //     }
+  //   );
+  // });
+
+  // const debuggy = await new Promise((resolve, reject) => {
+  //   this.client.call(
+  //     'XREADGROUP',
+  //     'GROUP',
+  //     groupId,
+  //     groupMemberId,
+  //     'BLOCK',
+  //     100,
+  //     'NOACK',
+  //     'STREAMS',
+  //     stream,
+  //     cursor,
+  //     (err, data)=>{
+  //       console.log('12312312312')
+  //       if (err) {
+  //         reject(err)
+  //       } else {
+  //         resolve(data ?? []);
+  //       }
+  //     }
+  //   );
+  // });
   //
   //   const debuggy: any = [];
   //   console.log('DEBUGGY RETRIEVED');
@@ -408,7 +409,7 @@ export class StreamingDataSource extends RedisDataSource
   async blockingStreamBatchMap(options: BlockingStreamBatchMapOptions) {
     const logger = this.logger;
     try {
-      console.log('\r\nBATCH MAP BEGINNING...');
+      // console.log('\r\nBATCH MAP BEGINNING...');
       if (options.stream && typeof options.last === 'string') {
         let cursor = options.last || '$';
         const stream = shardDecorator({
@@ -435,11 +436,11 @@ export class StreamingDataSource extends RedisDataSource
             )
         );
 
-        for (const {messages, name} of streamEvents ?? []) {
+        for (const { messages, name } of streamEvents ?? []) {
           for (const { id, message } of messages) {
             events.push(this.deserializeMessageObject(message, name));
             cursor = id;
-          }
+          }``
         }
 
         return {
@@ -466,13 +467,13 @@ export class StreamingDataSource extends RedisDataSource
         const events: MappedStreamEvent[] = [];
 
         const streamEvents = await this.client.xRead(
-          streamsWithCursors.map(([key, id])=>({ key, id })),
+          streamsWithCursors.map(([key, id]) => ({ key, id })),
           {
             BLOCK: options.blockingTimeout ?? HOURS_TO_MS(0.5)
           }
         );
 
-        for (const {messages, name} of streamEvents ?? []) {
+        for (const { messages, name } of streamEvents ?? []) {
           for (const { id, message } of messages) {
             events.push(this.deserializeMessageObject(message, name));
             cursor[name] = id;
@@ -488,6 +489,7 @@ export class StreamingDataSource extends RedisDataSource
       throw new Error('Unrecognized control flow for blockingStreamBatchMap');
     } catch (err) {
       logger.error(err);
+      console.error('Options', options);
       throw new Error(
         `Failed attempt to WOT call XREAD [key=${options.stream},shard=${options.shard}]`
       );
@@ -503,9 +505,14 @@ export class StreamingDataSource extends RedisDataSource
    */
   getReadStream(options: { topic: Topic, shard?: string } | GetReadStreamOptions) {
     this.addStreamId('topic' in options ? options.topic.consumerKey(options.shard) : options.stream);
-    return Readable.from(this.iterateStream(options), {
-      objectMode: true
-    }) as Readable & { readableObjectMode: true };
+    console.log('Getting a read stream....', options);
+    return Readable.from(this.iterateStream(('topic' in options ?
+        { ...options, stream: options.topic.consumerKey() }
+        : options)
+      ),
+      {
+        objectMode: true
+      }) as Readable & { readableObjectMode: true };
   }
 
   /**
@@ -519,10 +526,17 @@ export class StreamingDataSource extends RedisDataSource
   }): Writable & { writableObjectMode: true } {
     return new Writable({
       objectMode: true,
-      write: async (chunk: MappedStreamEvent, _, callback) => {
+      write: async (_chunk: MappedStreamEvent, _, callback) => {
+        let chunk = JSON.parse(JSON.stringify(_chunk));
+        /*        if (typeof _chunk === "string") {
+                  chunk = JSON.parse(_chunk)
+                }*/
+
+        // console.info('INTERCEPTED WRITING TO STREAM.  CHUNK: ', chunk);
+
         if (!chunk.messageId || !chunk.payload) {
           this.logger.warn(
-            `Dropping message with no messageId or payload: ${chunk}`
+            `Dropping message (${typeof _chunk}, ${typeof chunk}) with no streamMessageId or payload: ${JSON.stringify(chunk)}`
           );
           return;
         }
@@ -531,15 +545,15 @@ export class StreamingDataSource extends RedisDataSource
         const outgoingStreamName = 'topic' in options ? options.topic.producerKey(options.shard) : options.responseChannel;
 
         const { messageId, payload } = chunk;
-        await this.writeToStream(
-          incomingStreamName,
-          outgoingStreamName,
-          MessageType.RESPONSE,
-          messageId,
-          JSON.stringify(payload),
-          chunk.messageSourceId,
-          options.shard
-        );
+        await this.writeToStream({
+          outgoingStream: incomingStreamName,
+          incomingStream: outgoingStreamName,
+          messageType: chunk.messageType,
+          messageId: messageId,
+          message: JSON.stringify(payload),
+          sourceId: chunk.messageSourceId,
+          shard: options.shard
+        });
         callback();
       }
     }) as Writable & { writableObjectMode: true };
@@ -630,7 +644,7 @@ export class StreamingDataSource extends RedisDataSource
     requestedBatchSize?: number;
     blockingTimeout?: number;
   }) {
-    console.log('\r\n\r\nSTREAM ITERATION BEGINNING');
+    // console.log('STREAM ITERATION BEGINNING');
     let hasNewStreams = false;
     const args = {
       ...options,
@@ -638,6 +652,7 @@ export class StreamingDataSource extends RedisDataSource
     };
 
     const refreshStreams = () => {
+      console.log("Refreshing stream list...")
       hasNewStreams = true;
     };
 

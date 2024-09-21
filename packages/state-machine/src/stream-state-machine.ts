@@ -5,104 +5,34 @@ import { ApplicationState, StateConfiguration, StateTransformer, StateTransforme
 import { StateCache } from './state-cache';
 import {
   buildStreamConfiguration, ChannelTupleArray, ids, IncomingChannel,
-  KeyOptions, MappedStreamEvent, MessageType, NullablePrimitive, OutgoingChannel,
+  KeyOptions, MappedStreamEvent, MessageType, NonNullablePrimitive, NullablePrimitive, OutgoingChannel,
   shardDecorator,
   streamAwaiter, StreamersonLogger,
   StreamingDataSource, StreamMeta, Topic
 } from '@streamerson/core';
-
-const moduleLogger = Pino({
-  base: {
-    module: 'streamerson_state_machine'
-  }
-});
+import { StreamConsumer, StreamConsumerOptions } from '@streamerson/consumer';
 
 type UserRecord = {
   id: string
 }
 
-type EventHandler<AState, T = any> = (state: StateTransformerMap<AState>, event: MappedStreamEvent<any, T>) => Promise<string | Record<string, any> | null | undefined | void>
+type EventHandler<AState, T = any> = (state: StateTransformerMap<AState>, event: MappedStreamEvent<any, T>, metadata: Record<string, any>) => Promise<string | Record<string, any> | null | undefined | void>
 
 export class StreamStateMachine<
   AState extends Record<string, NullablePrimitive | { [key: string]: any }>
-> extends EventEmitter {
+> extends StreamConsumer<any> {
   stateCache: StateCache<AState>;
-  incomingStream: IncomingChannel;
-  outgoingStream: OutgoingChannel;
-  incomingStreamName: string;
-  outgoingStreamName: string;
-  incomingChannel: StreamingDataSource;
-  outgoingChannel?: StreamingDataSource;
   transferChannel: ReturnType<typeof streamAwaiter>;
-  streamEvents: Record<string, { handle: EventHandler<AState> }>;
-  public logger: StreamersonLogger;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //@ts-ignore
+  override streamEvents: Record<string, EventHandler<AState>>;
   public stateTransformers: StateTransformerMap<AState>;
 
-  constructor(public options: {
-    logger?: StreamersonLogger,
-    stateConfigurations: ApplicationState<AState>,
-    redisConfiguration?: {
-      port: number,
-      host: string
-    }
-    ingestionSource: string,
-    meta: StreamMeta,
-    shard?: string;
-    destination?: string;
-  }) {
-    super();
-
-    this.logger = (options.logger ?? moduleLogger.child({
-      shard: options.shard,
-      meta: options.meta,
-      streamName: options.ingestionSource,
-      destination: options.destination
-    }) as unknown as StreamersonLogger);
-
-    const topic = new Topic(options.meta);
-
-    // a weird little hackarino to get the worker processing the output of the other fella
-    const {
-      incomingStream: incomingStream,
-      outgoingStream: defaultOutgoingStream,
-      readChannel,
-      writeChannel
-    } = buildStreamConfiguration(topic, {
-      logger: this.logger,
-      streamKey: options.ingestionSource,
-      redisConfiguration: options.redisConfiguration ?? {},
-      channels: {
-        readChannel: new StreamingDataSource(options.redisConfiguration ? {
-          ...options.redisConfiguration,
-          logger: this.logger,
-          controllable: true
-        } : undefined),
-        writeChannel: new StreamingDataSource(options.redisConfiguration ? {
-          ...options.redisConfiguration,
-          logger: this.logger
-        } : undefined)
-      }
-    });
-
-    const destinationStream = options.destination ? buildStreamConfiguration(topic, {
-      logger: this.logger,
-      meta: options.meta,
-      streamKey: options.destination,
-      redisConfiguration: {},
-      channels: {
-        readChannel,
-        writeChannel
-      }
-    }).outgoingStream : defaultOutgoingStream;
-
-    this.incomingChannel = readChannel;
-    this.outgoingChannel = writeChannel;
-    this.incomingStreamName = incomingStream;
-    this.outgoingStreamName = destinationStream;
-    this.streamEvents = {};
+  constructor(public override options: StreamConsumerOptions<any> & { stateConfigurations: any }) {
+    super(options);
     this.stateCache = new StateCache({
       ...options,
-      logger: this.logger
+      logger: this.logger as any
     });
     this.transferChannel = streamAwaiter({
       readChannel: new StreamingDataSource(options.redisConfiguration ? {
@@ -113,33 +43,11 @@ export class StreamStateMachine<
         ...options.redisConfiguration,
         logger: this.logger
       } : undefined),
-      incomingStream: `${shardDecorator({ key: incomingStream, shard: options.shard })}::incoming_state_transfer`
+      incomingStream: `${shardDecorator({
+        key: this.topic.consumerKey(),
+        shard: options.shard
+      })}::incoming_state_transfer`
     });
-
-    this.incomingStream = this.incomingChannel.getReadStream({
-      stream: incomingStream,
-      shard: options.shard
-    });
-
-    this.outgoingStream = this.outgoingChannel.getWriteStream({
-      stream: destinationStream,
-      shard: options.shard
-    });
-
-    // create `on${streamName || label} event bindings:
-    for (const [channel, label] of [
-      [this.incomingStream, incomingStream],
-      [this.outgoingStream, destinationStream]
-    ] as ChannelTupleArray) {
-      channel.on('error', (error: Error) => {
-        this._optionallyRouteMessage(error, `${label}Error`, 'error', 'error');
-      }).on('end', () => {
-        this._optionallyRouteMessage('incoming stream ending', `${label}End`, 'end', 'info');
-      }).on('close', () => {
-        this._optionallyRouteMessage('incoming stream closed', `${label}Close`, 'close', 'warn');
-      });
-    }
-
     this.stateTransformers = Object.keys(options.stateConfigurations).reduce((mappedTransformers, stateKey: keyof AState) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore because apparently typescript don't work too good
@@ -147,57 +55,6 @@ export class StreamStateMachine<
       return mappedTransformers;
     }, { getClient: () => this.stateCache.autoCache.client } as unknown as StateTransformerMap<AState>);
   }
-
-  setOutgoingChannel(channel: StreamingDataSource | null) {
-    this.outgoingChannel = channel ?? undefined;
-  }
-
-  registerStreamEvent<T>(
-    typeKey: string,
-    handle: EventHandler<AState, T>
-  ) {
-    this.streamEvents[typeKey] = { handle };
-  }
-
-  deregisterStreamEvent(typeKey: string) {
-    delete this.streamEvents[typeKey];
-  };
-
-  addStream(key: string) {
-    this.logger.info({ key }, 'ADDING STREAM TO LISTENING CHANNEL');
-    this.incomingChannel.addStreamId(key);
-  };
-
-  hasStream(key: string) {
-    return this.incomingChannel.hasStreamId(key);
-  }
-
-  removeStream(key: string) {
-    this.incomingChannel.removeStreamId(key);
-  };
-
-  cacheComposite(cacheKey: string) {
-    return {
-      key: cacheKey,
-      shard: this.options.shard ?? undefined
-    };
-  };
-
-  async getRaw(propertyTarget: string, value?: string, useShard = true) {
-    return await this.stateCache.get(
-      propertyTarget,
-      useShard ? this.cacheComposite(value ?? propertyTarget) :
-        { key: value ?? propertyTarget }
-    );
-  };
-
-  async setRaw(propertyTarget: string, value: string | number, user?: { id: string }, useShard = true) {
-    return await this.stateCache.set(
-      propertyTarget,
-      useShard ? this.cacheComposite(propertyTarget ?? propertyTarget) : { key: propertyTarget },
-      value
-    );
-  };
 
   getStateTransformers(stateTarget: keyof AState): StateTransformer {
     const stateConf: StateConfiguration = this.options.stateConfigurations[stateTarget];
@@ -255,14 +112,14 @@ export class StreamStateMachine<
         }
       },
       broadcast: async (toStream, payload, sourceId) => {
-        await this.outgoingChannel?.writeToStream(
-          toStream,
-          undefined,
-          'BROADCAST' as MessageType.BROADCAST,
-          ids.guuid(),
-          JSON.stringify(payload),
-          sourceId
-        );
+        await this.outgoingChannel?.writeToStream({
+          outgoingStream: toStream,
+          incomingStream: undefined,
+          messageType: 'BROADCAST' as MessageType.BROADCAST,
+          messageId: ids.guuid(),
+          message: JSON.stringify(payload),
+          sourceId: sourceId
+        });
       }
     };
   }
@@ -275,86 +132,64 @@ export class StreamStateMachine<
     return await this.stateCache.decr(stateTarget, keyOptions);
   }
 
-  async process(streamMessage: MappedStreamEvent) {
-    if (!this.streamEvents[streamMessage.messageType]) {
-      const error = new Error('No handler registered for message type: ' +
-        streamMessage.messageType +
-        ' for stream processing ' +
-        this.incomingStreamName
-      );
-      this.logger.error(error);
-      return error;
-    }
-    ;
-    return await this.streamEvents[streamMessage.messageType].handle(
-      this.stateTransformers,
-      {
-        ...streamMessage,
-        payload:
-          typeof streamMessage.payload === 'object' ?
-            streamMessage.payload :
-            JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
-      }
-    );
-  }
-
-  async disconnect() {
-    this.logger.warn(`DISCONNECTING client for incoming channel ${this.incomingStreamName}`);
-    this.logger.warn(`DISCONNECTING client for outgoing channel ${this.outgoingStreamName}`);
-    this.stateCache.disconnect();
-    this.incomingChannel.disconnect();
-    this.outgoingChannel ? this.outgoingChannel.disconnect() : null;
-  }
-
-  async connectAndListen() {
-    await Promise.all([
-      this.stateCache.connect(),
-      this.incomingChannel.connect(),
-      this.outgoingChannel ? this.outgoingChannel.connect() : Promise.resolve()
-    ]);
-    this.logger.info(`Connected client for incoming channel ${this.incomingStreamName}`);
-    this.logger.info(`Connected client for outgoing channel ${this.outgoingStreamName}`);
-
-    const setState = async (streamMessage: MappedStreamEvent) => {
-      return await this.process(streamMessage);
-    };
-
-    const logger = this.logger;
-
-    const incomingPipe = this.incomingStream.pipe(new Transform({
-      transform: function(object, _, callback) {
-        try {
-          if (object) {
-            setState(object).then((message) => {
-              this.push({
-                messageId: object.messageId,
-                payload: message
-              });
-              callback();
-            }).catch(err => {
-              logger.error(err, 'Cannot transform state in stream');
-            });
-          }
-        } catch (err) {
-          this.push('Generic Error Response');
-          callback();
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  override async registerStreamEvent<
+    T extends Record<string, any>,
+    R extends (Record<string, NullablePrimitive> | void) = Record<string, NonNullablePrimitive>
+  >(
+    eventKey: keyof typeof this.streamEvents,
+    handler: (state: StateTransformerMap<AState>, message: T, meta: {
+      sourceId: string
+    }) => Promise<R>
+  ): Promise<void> {
+    super.registerStreamEvent(eventKey, (async (state: StateTransformerMap<any>, _args: any, meta: any) => {
+      let args = _args
+      if(typeof args === 'string') {
+        args = JSON.parse(_args)
+        if(typeof args === 'string') {
+          args = JSON.parse(args)
         }
-      },
-      objectMode: true
-    }));
-
-    if (this.outgoingChannel) {
-      incomingPipe.pipe(this.outgoingStream);
-    }
+      }
+      const output = await handler(state, args, meta)
+      return output
+    }) as any);
   }
 
-  private _optionallyRouteMessage(event: any, primaryEvent: string, fallbackEvent: string, logClass: 'error' | 'info' | 'warn') {
-    if (this.listeners(primaryEvent).length) {
-      this.emit(primaryEvent, event);
-    } else if (this.listeners(fallbackEvent).length) {
-      this.emit(fallbackEvent, event);
-    } else {
-      this.logger[logClass](event);
-    }
+  override get _handle_message() {
+    return (async (streamMessage: MappedStreamEvent): Promise<MappedStreamEvent<any, any, any>> => {
+      const handler = this.streamEvents[streamMessage.messageType];
+      console.info(`Handling state transformer event for message (${typeof streamMessage.payload}): `, streamMessage);
+      const response = await handler(
+        this.stateTransformers,
+        streamMessage.payload as any,
+        {
+          sourceId: streamMessage.messageSourceId
+        }
+        // typeof streamMessage.payload === 'object' ?
+        //   streamMessage.payload :
+        //   JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
+      );
+      console.info('Got response for handler: ', response);
+      return {
+        ...streamMessage,
+        messageType: 'resp' as MessageType,
+        payload: response
+      };
+    });
+  }
+
+  override async disconnect() {
+    await Promise.all([
+      super.disconnect(),
+      this.stateCache.disconnect()
+    ]);
+  }
+
+  override async connectAndListen() {
+    await Promise.all([
+      super.connectAndListen(),
+      this.stateCache.connect()
+    ]);
   }
 }

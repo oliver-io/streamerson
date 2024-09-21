@@ -15,15 +15,15 @@ export function createFrameworkWriter(
 ) {
   return async () => {
     for (let i = 0; i < MSG_COUNT; i++) {
-      let str = 'message' + i;
-      await dataSource.writeToStream(
-        stream,
-        undefined,
-        'test' as any,
-        str,
-        JSON.stringify(payload ?? bigObject),
-        'test'
-      );
+      const str = 'message' + i;
+      await dataSource.writeToStream({
+        outgoingStream: stream,
+        incomingStream: undefined,
+        messageType: 'test' as any,
+        messageId: str,
+        message: JSON.stringify(payload ?? bigObject),
+        sourceId: 'test'
+      });
     }
   };
 }
@@ -33,20 +33,20 @@ export function createBulkFrameworkWriter(
   stream: string,
   MSG_COUNT: number,
   payload?: any,
-  _batchSize: number = 1000
+  _batchSize = 1000
 ) {
   const batchSize = Math.min(MSG_COUNT, _batchSize);
   return async () => {
     let processed = 0;
     const writer = async (_: any, i: number) => {
-      return datasource.writeToStream(
-        stream,
-        undefined,
-        'test' as MessageType,
-        'message' + i,
-        JSON.stringify(payload ?? bigObject),
-        'test'
-      );
+      return datasource.writeToStream({
+        outgoingStream: stream,
+        incomingStream: undefined,
+        messageType: 'test' as MessageType,
+        messageId: 'message' +i,
+        message: JSON.stringify(payload ?? bigObject),
+        sourceId: 'test'
+      });
     };
 
     while (processed < MSG_COUNT) {

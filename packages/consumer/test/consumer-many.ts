@@ -90,9 +90,9 @@ test('a consumer group of three should get one message each', async () => {
     ]);
 
     // Write our test data to the streams, which should get picked up by our consumer group:\
-    await consumerGroup._channel.writeToStream(...t1);
-    await consumerGroup._channel.writeToStream(...t2);
-    await consumerGroup._channel.writeToStream(...t3);
+    await consumerGroup._channel.writeToStream(t1);
+    await consumerGroup._channel.writeToStream(t2);
+    await consumerGroup._channel.writeToStream(t3);
 
     // TODO: Let's think about some kind of 'onData' event to .once on in the underlying layers,
     // to avoid waiting around for an arbitrary amount of time:
