@@ -1,0 +1,18 @@
+{
+  "name": "@streamerson/emitter",
+  "version": "0.0.1",
+  "repository": "https://github.com/oliver-io/streamerson.git",
+  "author": "oliver-io <oliver.l.carrillo@gmail.com>",
+  "license": "LAMC",
+  "private": false,
+  "scripts": {
+    "release": "npm version && npm publish && git push --follow-tags",
+    "test": "node --test --experimental-test-coverage --require ts-node/register ./tests/*test.ts"
+  },
+  "type": "commonjs",
+  "main": "./src/emitter",
+  "typings": "./src/emitter",
+  "devDependencies": {
+    "@types/uuid": "^9.0.5"
+  }
+}

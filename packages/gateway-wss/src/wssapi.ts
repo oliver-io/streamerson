@@ -74,7 +74,7 @@ export class WebSocketServer<Response extends WebsocketResponse> {
         logger?: StreamersonLogger,
         onMessage?: (ws: StreamSocket, message: ArrayBuffer) => void
     }) {
-        this.logger = options?.logger ?? moduleLogger;
+        this.logger = (options?.logger ?? moduleLogger) as any;
         this.server = options?.server ?? App({
             /* There are more SSL options, cut for brevity */
             // key_file_name: 'misc/key.pem',

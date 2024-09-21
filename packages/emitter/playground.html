@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ObservableObject Playground</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/4.9.5/typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/eventemitter3/5.0.1/index.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+    #editor, #output { width: 100%; height: 300px; margin-bottom: 20px; }
+    button { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+<h1>ObservableObject Playground</h1>
+<textarea id="editor" placeholder="Write your TypeScript code here..."></textarea>
+<button onclick="runCode()">Run Code</button>
+<pre id="output"></pre>
+
+<script>
+  let libraryCode = '';
+
+  // Function to fetch the library code from GitHub
+  async function fetchLibraryCode() {
+    const repoUrl = 'https://api.github.com/repos/oliver-io/streamerson/packages/emitter/emitter.ts';
+    try {
+      const response = await fetch(repoUrl);
+      const data = await response.json();
+      libraryCode = atob(data.content); // Decode base64 content
+      console.log('Library code loaded successfully');
+    } catch (error) {
+      console.error('Error fetching library code:', error);
+      libraryCode = 'console.error("Failed to load library code");';
+    }
+  }
+
+  // Function to run the code
+  async function runCode() {
+    if (!libraryCode) {
+      await fetchLibraryCode();
+    }
+
+    const userCode = document.getElementById('editor').value;
+    const fullCode = `
+// Remove any export statements from the library code
+${libraryCode.replace(/export /g, '')}
+
+// User code
+${userCode}
+`;
+
+    try {
+      const jsCode = ts.transpile(fullCode, {
+        target: ts.ScriptTarget.ES2015,
+        module: ts.ModuleKind.None,
+        experimentalDecorators: true,
+        removeComments: true,
+        strict: false
+      });
+
+      // Create a new function to run the code in a separate scope
+      const runInScope = new Function('EventEmitter', jsCode);
+
+      // Capture console.log output
+      const logs = [];
+      const originalLog = console.log;
+      console.log = (...args) => {
+        logs.push(args.map(arg => JSON.stringify(arg)).join(' '));
+      };
+
+      // Run the code
+      runInScope(EventEmitter);
+
+      // Restore original console.log
+      console.log = originalLog;
+
+      // Display the output
+      document.getElementById('output').textContent = logs.join('\n');
+    } catch (error) {
+      document.getElementById('output').textContent = `Error: ${error.message}`;
+    }
+  }
+
+  // Example code to populate the editor
+  document.getElementById('editor').value = `
+// Create an instance of ObservableObject
+const user = new ObservableObject<{name: string, age: number}>({ name: 'John', age: 30 });
+
+// Subscribe to changes
+user.subscribe('name', (newValue, oldValue) => {
+    console.log(\`Name changed from \${oldValue} to \${newValue}\`);
+});
+
+user.subscribe('*', (newState, oldState) => {
+    console.log('State changed:', newState);
+});
+
+// Update the state
+user.update({ name: 'Jane', age: 31 });
+
+// Get a value
+console.log('Current age:', user.get('age'));
+`;
+
+  // Fetch the library code when the page loads
+  fetchLibraryCode();
+</script>
+</body>
+</html>

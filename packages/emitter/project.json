@@ -1,0 +1,33 @@
+{
+  "name": "emitter",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/emitter/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/emitter",
+        "main": "packages/emitter/src/index.ts",
+        "tsConfig": "packages/emitter/tsconfig.lib.json",
+        "assets": ["packages/emitter/*.md"]
+      }
+    },
+    "publish": {
+      "command": "node tools/scripts/publish.mjs emitter {args.ver} {args.tag}",
+      "dependsOn": ["build"]
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "packages/emitter/**/*.ts",
+          "packages/emitter/package.json"
+        ]
+      }
+    }
+  },
+  "tags": []
+}
