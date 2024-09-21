@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-4.5%2B-blue)
 
-A powerful TypeScript library that provides an observable state object with event-based subscriptions to changes at any nested path within the object, using [`eventemitter3`](https://github.com/primus/eventemitter3).
+A TypeScript library that provides an observable state object with event-based subscriptions to changes at any nested path within the object, using [`eventemitter3`](https://github.com/primus/eventemitter3).
 
 ## 🌟 Features
 
@@ -200,15 +200,7 @@ Contributions are welcome and appreciated! Here's how you can contribute:
 
 Please ensure your code adheres to the existing style and all tests pass before submitting a PR.
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgements
 
 - [eventemitter3](https://github.com/primus/eventemitter3) for providing the high-performance event emitter.
 - All the contributors who have helped shape and improve this project.
-
----
-
-Made with ❤️ by the @streamerson team
