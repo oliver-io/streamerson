@@ -121,27 +121,42 @@ Subscribe to changes on any path using lodash-like syntax:
 ```typescript
 // Subscribe to changes on 'user.name'
 const unsubscribe = state.subscribe('user.name', (newValue, oldValue) => {
-  console.log(`User name changed from ${oldValue} to ${newValue}`);
+  console.log(`User name changed from ${oldValue} to ${newValue}`); // One event for the single string
 });
 
 // Subscribe to changes in the entire user object
 state.subscribe('user', (newUser, oldUser) => {
-  console.log('User object changed:', newUser);
+  console.log('User object changed:', newUser); // One event for the whole object
 });
 
 // Subscribe to changes in an array
 state.subscribe('user.hobbies', (newHobbies, oldHobbies) => {
-  console.log('Hobbies updated:', newHobbies);
+  console.log('Hobbies updated:', newHobbies); // One event for the whole array
+});
+
+// Subscribe to changes to all array elements
+state.subscribe('user.hobbies.*', (newHobbies, oldHobbies) => {
+  console.log('Hobby updated:', newHobby); // one event for any child path affected
+});
+
+// Subscribe to changes to all array elements
+state.subscribe('user.hobbies[3]', (newHobbies, oldHobbies) => {
+  console.log('Hobby 3 updated:', newHobby); // one event if the whole array updates
+});
+
+// Subscribe to changes in an object index
+state.subscribe('user.hobbies.*.name', (newHobbies, oldHobbies) => {
+  console.log('Hobby name updated:', newHobby); // one event for each key update
 });
 
 // Subscribe to any change in the state
 state.subscribe('*', (newState, oldState) => {
-  console.log('State changed:', newState);
+  console.log('State changed:', newState); // Emits once for every change to every path
 });
 
 // Subscribe to changes in the state, excluding specific paths
-state.subscribe('*', (newState, oldState) => {
-  console.log('State changed (excluding user.age):', newState);
+state.subscribe('user.*', (newState, oldState) => {
+  console.log('State changed (excluding user.age):', newState); // Never emits user.age changes
 }, { exclude: ['user.age'] });
 
 // Unsubscribe when no longer needed
