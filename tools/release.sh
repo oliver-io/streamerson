@@ -27,5 +27,5 @@ done
 echo "Published versions installation:"
 for TARGET in "${TARGETS[@]}"; do
     VERSION=$(node -p "require('./packages/$TARGET/package.json').version")
-    echo "npm install $TARGET@$VERSION"
+    echo "npm install @streamerson/$TARGET@$VERSION"
 done
