@@ -153,10 +153,16 @@ export class StateEmitter<T extends object> extends EventEmitter {
     }
   }
 
-  update(_partialState: DeepPartial<T> | string): void {
+  update(_partialState: DeepPartial<T> | string, options: {
+    merge: boolean
+  } = { merge: true }): void {
     const partialState = this.valueFromUpdate(_partialState);
     const oldState = { ...this.state };
-    this.state = this.deepMerge(this.state, partialState);
+    if(options?.merge) {
+      this.state = this.deepMerge(this.state, partialState)
+    } else {
+      Object.assign(this.state, partialState)
+    }
     this.emitChanges(oldState);
   }
 
