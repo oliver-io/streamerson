@@ -44,7 +44,10 @@ state.subscribe('user.name', (newValue, oldValue) => {
   console.log(`Name changed: ${oldValue} -> ${newValue}`);
 });
 
-// Update the state
+// Update the state via JSON Text
+state.update('{ "user": { "name": "Bob" } }');
+
+// Update the state via JSON:
 state.update({ user: { name: 'Bob' } });
 ```
 
@@ -75,6 +78,15 @@ const state = new ObservableObject({
 });
 ```
 
+### Text versus JSON API
+
+The update methods accept text and JSON. Text is probably the more blessed path because:
+
+- It guarantees no circularity errors, which will be thrown on objects with circular references
+- To guarantee the above, we text-serialize and reparse all incoming objects.
+  - This has negative performance implications for large objects, so updating from text is safer
+  - This lets you avoid serializing messages if they are safe to merge into client states
+
 ### Subscribing to Changes
 
 Subscribe to changes on any path using lodash-like syntax:
@@ -99,6 +111,12 @@ state.subscribe('user.hobbies', (newHobbies, oldHobbies) => {
 state.subscribe('*', (newState) => {
   console.log('State changed:', newState);
 });
+
+
+// Subscribe to some change in the state, with exclusions
+state.subscribe('*', (newState) => {
+  console.log('State changed:', newState);
+}, { exclude: ['some.path'] });
 ```
 
 ### Updating the State
@@ -129,6 +147,20 @@ state.set({
 });
 ```
 
+## Deleting the state:
+
+To delete records from the state, you should use `null`, not undefined. Namely, this is because not all platforms handle the serialization of `undefined` the same and many will strip it from the JSON of a sent record.
+
+If you send `undefined`, for compatibility, we will entirely ignore it.  `null` however will remove the object from the tracked state.
+
+```typescript
+state.update({ abc: 123 })
+state.update({ abc: undefined })
+state.get('abc') === 123 // true
+state.update({ abc: null })
+state.get('abc') === undefined // true
+```
+
 ### Retrieving State Values
 
 Use the `get` method to retrieve values from the state:
@@ -148,30 +180,33 @@ console.log('User hobbies:', userHobbies);
 #### Constructor
 
 ```typescript
-new ObservableObject<T>(initialState: T)
+new ObservableObject<T>(initialState
+:
+T
+)
 ```
 
 - `initialState`: The initial state object.
 
 #### Methods
 
-| Method | Description |
-|--------|-------------|
-| `subscribe(path: string, listener: (newValue: any, oldValue?: any) => void): void` | Subscribes to changes at a specific path. |
-| `update(partialState: Partial<T>): void` | Partially updates the state object. |
-| `set(newState: T): void` | Replaces the entire state object. |
-| `get(path: string): any` | Retrieves the value at the specified path. |
+| Method                                                                             | Description                                |
+|------------------------------------------------------------------------------------|--------------------------------------------|
+| `subscribe(path: string, listener: (newValue: any, oldValue?: any) => void): void` | Subscribes to changes at a specific path.  |
+| `update(partialState: Partial<T>): void`                                           | Partially updates the state object.        |
+| `set(newState: T): void`                                                           | Replaces the entire state object.          |
+| `get(path: string): any`                                                           | Retrieves the value at the specified path. |
 
 #### EventEmitter Methods
 
 `ObservableObject` extends `EventEmitter` from `eventemitter3`, providing these additional methods:
 
-| Method | Description |
-|--------|-------------|
-| `on(event: string \| symbol, listener: Function): this` | Adds a listener for the event. |
-| `off(event: string \| symbol, listener: Function): this` | Removes a listener for the event. |
-| `once(event: string \| symbol, listener: Function): this` | Adds a one-time listener for the event. |
-| `emit(event: string \| symbol, ...args: any[]): boolean` | Triggers all listeners for the specified event. |
+| Method                                                    | Description                                     |
+|-----------------------------------------------------------|-------------------------------------------------|
+| `on(event: string \| symbol, listener: Function): this`   | Adds a listener for the event.                  |
+| `off(event: string \| symbol, listener: Function): this`  | Removes a listener for the event.               |
+| `once(event: string \| symbol, listener: Function): this` | Adds a one-time listener for the event.         |
+| `emit(event: string \| symbol, ...args: any[]): boolean`  | Triggers all listeners for the specified event. |
 
 ## 🧪 Testing
 
@@ -188,19 +223,21 @@ tsx --test ./tests/emitter.happy.test.ts
 tsx --test ./tests/emitter.sad.test.ts
 ```
 
+## TODO: 
+- I'd like to get AJV (or the like) in as a schematized option for verified state data
+- Needs some more tests
+- Other Stuff
+
 ## 🤝 Contributing
 
 Contributions are welcome and appreciated! Here's how you can contribute:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Fork & PR
 
 Please ensure your code adheres to the existing style and all tests pass before submitting a PR.
 
 ## 🙏 Acknowledgements
 
-- [eventemitter3](https://github.com/primus/eventemitter3) for providing the high-performance event emitter.
-- All the contributors who have helped shape and improve this project.
+- [eventemitter3](https://github.com/primus/eventemitter3)
+- [My Cat, Curie](../../docs/images/curie.jpg)
+- [My Cat, Anastasia](../../docs/images/anastasia.jpg)

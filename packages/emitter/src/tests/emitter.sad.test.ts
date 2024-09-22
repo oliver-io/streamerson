@@ -29,19 +29,19 @@ test('StateEmitter Sad Path Tests', async (t) => {
     assert.deepStrictEqual(state.get('*'), initialState);
   });
 
-  await t.test('update with non-object values', () => {
+  await t.test('update with undefined values', () => {
     const state = new StateEmitter({ value: 'initial' });
-    state.update({ value: 42 } as any);
-    assert.strictEqual(state.get('value'), 42);
-
-    state.update({ value: null } as any);
-    assert.strictEqual(state.get('value'), null);
-
     state.update({ value: undefined } as any);
-    assert.strictEqual(state.get('value'), undefined);
+    assert.strictEqual(state.get('value'), 'initial');
   });
 
-  await t.test('set with non-object state', () => {
+  await t.test('set throws with non-object state', () => {
+    assert.throws(() => {
+      new StateEmitter([]);
+    }, TypeError);
+  });
+
+  await t.test('update throws with non-object state', () => {
     const state = new StateEmitter({ value: 'initial' });
     assert.throws(() => {
       (state as any).set('not an object');
@@ -72,7 +72,7 @@ test('StateEmitter Sad Path Tests', async (t) => {
 
   await t.test('unsubscribe non-existent listener', () => {
     const state = new StateEmitter({ value: 'initial' });
-    const listener = () => {};
+    const listener = () => { return; };
 
     // This should not throw an error
     state.off('change:value', listener);
