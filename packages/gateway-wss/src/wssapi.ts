@@ -110,7 +110,7 @@ export class WebSocketServer<Response extends WebsocketResponse> {
         });
 
         const incomingStream = write.getReadStream({
-            topic
+            topic: topic.loopback()
         });
 
         incomingStream.on('data', event=>{

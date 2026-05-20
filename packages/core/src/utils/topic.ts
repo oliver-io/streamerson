@@ -38,6 +38,15 @@ export class Topic {
     }
   }
 
+  loopback() {
+    const loopback = new Topic(this)
+    const oldConsumerKey = loopback.consumerKey.bind(loopback)
+    const oldProducerKey = loopback.producerKey.bind(loopback);
+    loopback.consumerKey = oldProducerKey;
+    loopback.producerKey = oldConsumerKey;
+    return loopback;
+  }
+
   consumerKey(shard?: string): string {
     return consumerProducerDecorator({
       consumerOrProducer: 'CONSUMER',

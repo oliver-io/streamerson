@@ -90,20 +90,21 @@ export class StreamingDataSource extends RedisDataSource
       const result = this.client.xAdd(
         shardDecorator({ key: outgoingStream, shard }),
         '*', { // odd message packing:
+          // sanity: "true"
           messageId: messageId,
           messageType: messageType ?? this.responseType,
           incomingStream: incomingStream ?? '',
           messageHeaders: 'nil',
           messageProtocol: 'json',
-          messageSourceId: sourceId,
+          messageSourceId: sourceId ?? '',
           payload: message
-        }
+        } as any
       );
       return await result;
     } catch (err) {
       this.logger.error(err);
       throw new Error(
-        `Failed attempt to call XADD [key=${outgoingStream},response=${incomingStream}, shard=${shard}, message=${message}]`
+        `Failed with sanity attempt to call XADD [key=${outgoingStream},response=${incomingStream}, shard=${shard}, message=${message}, err=${(err as any).message}]`
       );
     }
   }

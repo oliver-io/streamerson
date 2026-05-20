@@ -67,7 +67,7 @@ export class StreamConsumer<
   constructor(public options: StreamConsumerOptions<EventMap>) {
     super();
     this.streamEvents = {};
-    this.topic = new Topic(options.topic);
+    this.topic = options.topic instanceof(Topic) ? options.topic : new Topic(options.topic);
     const consumerStream = this.topic.consumerKey(this.options.shard);
     const producerStream = this.topic.producerKey(this.options.shard);
     this.bidirectional = options.bidirectional ?? true;
