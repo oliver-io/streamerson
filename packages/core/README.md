@@ -20,6 +20,7 @@ The idea for the exported code of this package is essentially to achieve the fol
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
   - [Notes](#notes)
   - [Installation](#installation)
   - [Example](#example)
@@ -61,7 +62,7 @@ Some quick notes:
 - Install the core SDK in your package of choice:
 
 ```bash
-yarn add @streamerson/core
+bun add @streamerson/core
 ```
 
 - Import some stuff, get streamin'. The following example will connect to Redis and begin listening for events with a
@@ -151,6 +152,22 @@ for await (const event of readChannel.getReadStream({
 
 <!-- BEGIN-CODE: ./src/datasource/_API.md -->
 [**_API.md**](./src/datasource/_API.md)
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [:factory: StreamingDataSource](#factory-streamingdatasource)
+  - [Methods](#methods)
+    - [:gear: writeToStream](#gear-writetostream)
+    - [:gear: setResponseType](#gear-setresponsetype)
+    - [:gear: addStreamId](#gear-addstreamid)
+    - [:gear: hasStreamId](#gear-hasstreamid)
+    - [:gear: removeStreamId](#gear-removestreamid)
+    - [:gear: getReadStream](#gear-getreadstream)
+    - [:gear: getWriteStream](#gear-getwritestream)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## :factory: StreamingDataSource
 

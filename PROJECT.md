@@ -54,7 +54,7 @@ Severity: 🔴 blocks core promise · 🟠 serious · 🟡 cleanup. "Remediation
 
 ### 🔴 B. No stream trimming → unbounded Redis growth
 `xAdd` uses `*` with no `MAXLEN`/`TRIM`; no `XTRIM` anywhere. Every request and response is appended forever → eventual Redis OOM for the intended workload.
-**Fix:** capped/approximate trim on write (node-redis `xAdd(..., { TRIM: { strategy: 'MAXLEN', strategyModifier: '~', threshold } })`), configurable per topic; decide a retention story. **Remediation:** none.
+**Fix (decided):** add native `MAXLEN ~` trim on write as an **opt-in, off-by-default, length-configurable** backstop — *not* the retention strategy. The real plan is **reverse-streamers** that drain a stream from the tail and persist to SQL before deletion; non-persisting drainers may flip on this native-trim backstop. **Remediation:** none yet.
 
 ### 🟠 C. At-most-once delivery, contradicting the docs
 The group read uses `NOACK: true` (at-most-once: a crash mid-process loses in-flight messages). The acknowledged-read variant is now **fully commented out**, and `markProcessedByGroup` (`xAck`) is gated on `acknowledgeProcessed` but is a no-op against NOACK reads. READMEs still claim "guaranteed once-only delivery."
@@ -107,7 +107,7 @@ Piscina is a request/response task pool, but it hosts long-lived listeners: a wo
 - **Package manager: Yarn or npm?** Pick one; the split state is a footgun.
 - **Is `emitter` a permanent first-class package** or a vendored extraction from the game? Affects whether it gets its own release/test rigor.
 - **Cluster workers: detach-and-return, or block-for-life?** The load-bearing ambiguity in the Piscina design.
-- **Stream retention: deliberate audit log (offloaded to tiering) or just not-done-yet?** Determines whether B is "add MAXLEN" or "add MAXLEN + an archival path."
+- **Stream retention (decided):** the strategy is **reverse-streamers** — processors that drain a stream from the tail, optionally persisting to SQL before deletion (don't delete unflushed data). Native `MAXLEN` trim stays an opt-in, off-by-default backstop. Open sub-question: the reverse-streamer design itself (ordering, SQL schema, persistence guarantees).
 
 ## Updating this doc
 

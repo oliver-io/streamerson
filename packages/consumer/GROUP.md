@@ -8,6 +8,7 @@ Part of a larger monorepo, this package provides a Typescript implementation for
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [Installation](#installation)
 - [Example](#example)
 
@@ -15,7 +16,7 @@ Part of a larger monorepo, this package provides a Typescript implementation for
 
 ## Installation
 
-- `yarn install @streamerson/consumer`
+- `bun add @streamerson/consumer`
 
 ## Example
 
@@ -27,29 +28,32 @@ This example binds an event handler to `"my-event"`, which means that if the con
 [**consumer-group-readable.ts**](../examples/consumers/groups/consumer-group-readable.ts)
 ```typescript
 import { Topic } from '@streamerson/core';
-import { ConsumerGroupTopic, ConsumerGroupMember } from '@streamerson/consumer';
+import { ConsumerGroupConfigurator, ConsumerGroupMember } from '@streamerson/consumer';
 
 const topic = new Topic('my-stream-topic');
+const redisConfiguration = { host: 'localhost', port: 6379 };
 
-const consumerGroup = new ConsumerGroupTopic(topic, {
-    name: 'some-consumer-group',
-    max: 1
+// Create the consumer group server-side (idempotent: XGROUP CREATE … MKSTREAM).
+const group = new ConsumerGroupConfigurator(
+    { topic, redisConfiguration },
+    topic,
+    { name: 'some-consumer-group', max: 1 },
+);
+await group.connectAndListen();
+await group.create();
+
+// Attach a member. Members of the same group are each delivered *different*
+// messages (once-only delivery), guaranteed by Redis consumer groups.
+const member = new ConsumerGroupMember(
+    { topic, redisConfiguration },
+    { groupId: 'some-consumer-group', groupMemberId: 'consumer-1', acknowledgeProcessed: true },
+);
+
+member.registerStreamEvent('my-event', (event) => {
+    console.log('An event with type "my-event" was received:', event.payload);
 });
 
-await consumerGroup.connect();
-await consumerGroup.create();
-
-const consumerGroupMember = new ConsumerGroupMember({
-    topic: consumerGroup,
-    groupMemberId: 'consumer-1'
-});
-
-consumerGroupMember.registerStreamEvent('my-event', (data) => {
-    console.log('An event with type "my-event" was received:')
-    console.log(data);
-});
-
-await consumerGroupMember.connectAndListen();
+await member.connectAndListen();
 
 ```
 <!-- END-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->

@@ -28,7 +28,6 @@ export class ConsumerGroupCluster extends ConsumerGroupConfigurator {
   ) {
     super(connectionOptions, connectionOptions.topic, groupOptions);
     this.fileTarget = fileTarget;
-    console.log('Starting worker against ', this.fileTarget);
   }
 
   createMemberOptions(memberId: string): MemberParams {

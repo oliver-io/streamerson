@@ -2,10 +2,10 @@ import {mockLogger} from '@streamerson/test-utils';
 import * as uuid from 'uuid';
 import {ids, streamAwaiter, StreamingDataSource} from '../../../src';
 import {MessageType} from '../../../src/types';
-import {describe, mock, test} from 'node:test';
+import { describe, test, spyOn } from "bun:test";
 import * as assert from 'node:assert';
 
-const uuidSpy = mock.method(ids, 'guuid');
+const uuidSpy = spyOn(ids, 'guuid');
 
 const mockReadChannel = new StreamingDataSource({
 	port: 1024,
@@ -29,7 +29,7 @@ void describe('when interceding as the stream directly', async () => {
 			outgoingStream: 'TEST_STREAM_OUTGOING',
 		});
 
-		mock.method(mockWriteChannel, 'writeToStream').mock.mockImplementationOnce(() => true);
+		spyOn(mockWriteChannel, 'writeToStream').mockImplementationOnce((() => true) as any);
 
 		// (mockWriteChannel.writeToStream as ReturnType<typeof mock.fn>).mockReturnValueOnce(true);
 		// (mockReadChannel.getReadStream as ReturnType<typeof jest.fn>).mockReturnValueOnce(
@@ -44,7 +44,7 @@ void describe('when interceding as the stream directly', async () => {
 		// );
 
 		const testMessageId = 'abc-123';
-		uuidSpy.mock.mockImplementationOnce(() => testMessageId);
+		uuidSpy.mockImplementationOnce(() => testMessageId);
 		const $dispatched = awaiter.dispatch('wat', MessageType.LOGIN);
 		const testEventResponse = {
 			messageId: testMessageId,

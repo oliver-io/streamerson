@@ -4,7 +4,6 @@
   "dependencies": {
     "fastify": "^4.23.2",
     "fastify-plugin": "^4.5.1",
-    "ioredis": "^5.0.4",
     "pino": "^7.11.0",
     "tslib": "^2.3.0",
     "uuid": "^8.3.2"
@@ -16,5 +15,8 @@
   },
   "type": "commonjs",
   "main": "./src/index",
-  "typings": "./src/index.d.ts"
+  "typings": "./src/index.d.ts",
+  "scripts": {
+    "build": "tsc -b tsconfig.lib.json"
+  }
 }

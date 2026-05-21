@@ -1,24 +1,29 @@
-import { createClient, RedisClientType as Redis } from 'redis';
-import {type DataSourceOptions, type ConnectableDataSource, StreamersonLogger} from '../../types';
-import {environmentValueFor} from "../../utils/environment";
-import {createStreamersonLogger} from "../../utils/logger";
-import { ClientKillFilters } from '@redis/client/dist/lib/commands/CLIENT_KILL';
-
-process.env['LOG_LEVEL'] = 'debug'
-process.env['PINO_LOG_LEVEL'] = 'debug';
+import { RedisClient } from 'bun';
+import { type DataSourceOptions, type ConnectableDataSource, StreamersonLogger } from '../../types';
+import { environmentValueFor } from '../../utils/environment';
+import { createStreamersonLogger } from '../../utils/logger';
 
 const DEFAULT_PORT = parseInt(environmentValueFor('STREAMERSON_REDIS_PORT'));
-const DEFAULT_HOST = environmentValueFor('STREAMERSON_REDIS_HOST')
+const DEFAULT_HOST = environmentValueFor('STREAMERSON_REDIS_HOST');
 
 const moduleLogger = createStreamersonLogger({
-  module: 'datasource'
+  module: 'datasource',
 });
 
+/**
+ * Base Redis connection wrapper over Bun's native `RedisClient`.
+ *
+ * Owns a primary data connection and, when `controllable`, a separate `control`
+ * connection used for out-of-band commands (e.g. XACK) while the data
+ * connection is parked in a blocking read. Stream commands are issued via
+ * `client.send(...)` in the StreamingDataSource subclass — Bun's client has no
+ * typed Streams API, so we drive streams through the raw command escape hatch.
+ */
 export class RedisDataSource implements ConnectableDataSource {
-  public _client: Redis | undefined = undefined;
-  public _control: Redis | undefined = undefined;
-  private clientId: number | undefined;
+  public _client: RedisClient | undefined = undefined;
+  public _control: RedisClient | undefined = undefined;
   public logger: StreamersonLogger;
+  protected closing = false;
 
   constructor(
     public options: DataSourceOptions = {
@@ -28,22 +33,25 @@ export class RedisDataSource implements ConnectableDataSource {
       logger: moduleLogger,
     },
   ) {
-    this.logger = options.logger ?? moduleLogger
-    // Hack: DragonflyDB does not support CLIENT INFO
-    this.options.controllable = false;
+    this.logger = options.logger ?? moduleLogger;
   }
 
-  async debugPing() {
-    return this.client.ping();
+  private redisUrl() {
+    const host = this.options.host ?? DEFAULT_HOST ?? 'localhost';
+    const port = this.options.port ?? (Number.isFinite(DEFAULT_PORT) ? DEFAULT_PORT : 6379);
+    return `redis://${host}:${port}`;
+  }
+
+  private make(): RedisClient {
+    return this.options.getConnection
+      ? this.options.getConnection()
+      : new RedisClient(this.redisUrl(), { idleTimeout: 0 });
   }
 
   get client() {
     if (!this._client) {
-      throw new Error(
-        'StreamingDataSource client called before initialization',
-      );
+      throw new Error('StreamingDataSource client called before initialization');
     }
-
     return this._client;
   }
 
@@ -51,157 +59,59 @@ export class RedisDataSource implements ConnectableDataSource {
     if (!this.options.controllable || !this._control) {
       throw new Error('Error getting control connection');
     }
-
     return this._control;
   }
 
-  async abort(error?: boolean) {
-    if (this._control && this.clientId) {
-      // await this._client?.clientKill({
-      //   id: this.clientId
-      // });
-    } /*else {
-      throw new Error(
-        `Cannot abort a non-controllable connection (controllable=${this.options.controllable}, clientId=${this.clientId})`,
-      );
-    }*/
+  async debugPing() {
+    return this.client.send('PING', []);
   }
 
+  /**
+   * No-op: blocking reads are bounded by a short BLOCK timeout (see
+   * StreamingDataSource), so there is no parked connection to forcibly unblock.
+   */
+  async abort(_error?: boolean) {}
+
   async disconnect() {
-    if (this.options.controllable) {
-      await this.abort();
-      await this.control.disconnect();
-      this._control = undefined;
-    }
-    await this.client.disconnect();
+    this.closing = true;
+    // Stop any read loop (subclasses override abort to cancel iteration) before
+    // closing, so an interrupted read isn't reported as an error.
+    await this.abort();
+    // Closing is best-effort and non-blocking: Bun's close() can return a
+    // promise that settles late when a connection is parked in a blocking read,
+    // so we fire it and swallow any (sync or async) "Connection closed" rejection.
+    this.safeClose(this._control);
+    this._control = undefined;
+    this.safeClose(this._client);
     this._client = undefined;
   }
 
-  retry(times: number) {
-    if (times < 3) {
-      return 5000;
-    } else {
-      return false;
-    }
-  }
-
-  dataError(error: Error | string | null, clientContext: string) {
-    const message = 'Redis data connection emitted unhandled error';
-    if (error) {
-      if (typeof error === 'string') {
-        this.logger.error({
-          message: error
-        }, message);
-      } else {
-        this.logger.error(error, message);
+  private safeClose(connection?: RedisClient) {
+    try {
+      const closed = connection?.close() as unknown;
+      if (closed && typeof (closed as { catch?: unknown }).catch === 'function') {
+        (closed as Promise<unknown>).catch(() => { /* intentional close */ });
       }
-    } else {
-      this.logger.error({
-        message: 'Unknown error from data connection'
-      }, message);
-    }
-  }
-
-  controlError(error: Error | string | null, clientContext: string) {
-    const message = 'Redis control connection emitted unhandled error';
-    if (error) {
-      if (typeof error === 'string') {
-        this.logger.error({
-          message: error
-        }, message);
-      } else {
-        this.logger.error(error, message);
-      }
-    } else {
-      this.logger.error({
-        message: 'Unknown error from control connection'
-      }, message);
-    }
+    } catch { /* intentional close */ }
   }
 
   async connect() {
-    if (this.options.getConnection) {
-      // Multiple wrappers perhaps using one connection:
-      this._client = this.options.getConnection();
-      if (this.options.controllable) {
-        // Multiple wrappers perhaps using one connection:
-        this._control = this.options.getConnection();
-      }
-    } else {
-      this._client = createClient({
-        // port: this.options.port ?? DEFAULT_PORT,
-        url: `redis://${this.options.host ?? DEFAULT_HOST}:${this.options.port ?? DEFAULT_PORT}`,
-        socket: {
-          reconnectStrategy: this.retry.bind(this)
-        },
-
-      });
-      if (this.options.controllable) {
-        this._control = createClient({
-          // port: this.options.port ?? DEFAULT_PORT,
-          url: this.options.host ?? DEFAULT_HOST,
-          socket: {
-            reconnectStrategy: this.retry.bind(this)
-          },
-        });
-      }
+    this._client = this.make();
+    this._client.onclose = (err: unknown) => { if (!this.closing) this.logger.error(err, 'Remote data connection closed'); };
+    await this._client.connect();
+    if ((await this._client.send('PING', [])) !== 'PONG') {
+      throw new Error('Connection established but unable to complete PINGPONG');
     }
-
-    const connectionPromise = new Promise<void>(
-      (resolve, reject) => {
-        this.logger.info('Connecting data channel to Redis...');
-        this.client.on('error', this.dataError.bind(this));
-        this.client.on('end', (error: Error | unknown) => {
-          this.logger.error(error, 'Remote connection ended...');
-        });
-        this.client.on('connect', async () => {
-          try {
-            const pong = await this.client.ping();
-            if (pong !== 'PONG') {
-              throw new Error(
-                'Connection established but unable to complete PINGPONG',
-              );
-            }
-
-            // this.clientId = await this.client.client('ID');
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        });
-        void this.client.connect();
-      },
-    );
-
-    let controlPromise: Promise<void> | undefined;
 
     if (this.options.controllable) {
-      controlPromise = new Promise<void>((resolve, reject) => {
-        this.logger.info('Connecting control channel to Redis...');
-        this.control.on('error', this.controlError.bind(this));
-        this.control.on('end', (error: Error | unknown) => {
-          this.logger.error(error, 'Control connection ended...');
-        });
-        this.control.on('connect', async () => {
-          try {
-            const pong = await this.control.ping();
-            if (pong !== 'PONG') {
-              throw new Error(
-                'Control connection established but unable to complete PINGPONG',
-              );
-            }
-
-            // This.controlClientId = await this.control.client('ID');
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        });
-        void this.control.connect();
-      });
+      this._control = this.make();
+      this._control.onclose = (err: unknown) => { if (!this.closing) this.logger.error(err, 'Remote control connection closed'); };
+      await this._control.connect();
+      if ((await this._control.send('PING', [])) !== 'PONG') {
+        throw new Error('Control connection established but unable to complete PINGPONG');
+      }
     }
 
-    await Promise.all([connectionPromise, controlPromise]);
     return this;
   }
 }

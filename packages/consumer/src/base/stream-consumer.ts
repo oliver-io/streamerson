@@ -238,14 +238,6 @@ export class StreamConsumer<
       this.outgoingChannel ? this.outgoingChannel.connect() : Promise.resolve()
     ]);
 
-    // console.log('Wat.  Debug.  Connecting the client?');
-    // console.log({
-    //   incoming: this.topic.consumerKey(this.options.shard),
-    //   outgoing: this.topic.producerKey(this.options.shard),
-    //   ...(options?.consumerGroupInstanceConfig ?? {})
-    // });
-    // console.log('\r\n.....');
-
     this.logger.info({
       incoming: this.topic.consumerKey(this.options.shard),
       outgoing: this.topic.producerKey(this.options.shard),
@@ -253,9 +245,7 @@ export class StreamConsumer<
     }, 'Connecting consumer client');
 
     const setState = async (streamMessage: MappedStreamEvent) => {
-      console.info("Pre SET STATE: ", streamMessage)
       const post = await this.process(streamMessage);
-      console.info("Post SET STATE: ",post)
       return post
     };
 
@@ -266,7 +256,6 @@ export class StreamConsumer<
         try {
           if (object) {
             setState(object).then((message) => {
-              // console.log("PUSHING MESSAGE TO STREAM PIPE: ", message)
               this.push(message);
               callback();
             }).catch(err => {

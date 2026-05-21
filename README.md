@@ -45,6 +45,7 @@ And lastly,
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [Installation](#installation)
 - [Example:](#example)
   - [Foreword on Monorepo Packages](#foreword-on-monorepo-packages)
@@ -63,7 +64,7 @@ And lastly,
 
 # Installation
 
-- yarn: `yarn add @streamerson/core @streamerson/consumer`
+- yarn: `bun add @streamerson/core @streamerson/consumer`
 - npm: `npm install @streamerson/core @streamerson/consumer`
 
 # Example:
@@ -185,15 +186,19 @@ The requisite protocol of `@streamerson` is defined as an ordered array of the f
 <!-- BEGIN-CODE: ./docs/PROTOCOL.md -->
 [**PROTOCOL.md**](./docs/PROTOCOL.md)
 
-| Field           | type             | Meaning                                                  |
-|-----------------|------------------|----------------------------------------------------------|
-| streamId        | string           | the GUUID of the message                                 |
-| messageType     | string           | the event type                                           |
-| streamHeaders   | JSON string      | a map of header values for routing                       |
-| messageProtocol | `text` or `json` | some encoding (maybe future support for BSON/GRPC _etc_) |
-| sourceId        | GUUID            | the source of the message                                |
-| UnoccupiedField | nil              | [currently unused]                                       |
-| payload         | `text` or `JSON` | the message payload                                      |
+The `@streamerson` stream-message protocol is a fixed set of **named fields** written to each Redis stream entry (via `XADD`). The Redis client returns them as a field→value map, so there is no positional decoding.
+
+| Field             | Type                  | Meaning                                                        |
+|-------------------|-----------------------|----------------------------------------------------------------|
+| `messageId`       | string (GUUID)        | id of the message; correlates a response with its request      |
+| `messageType`     | string                | the event type — routed to a registered handler                |
+| `incomingStream`  | string                | the stream to reply on (response destination), or empty        |
+| `messageHeaders`  | JSON string or `nil`  | optional header map for routing                                |
+| `messageProtocol` | `json` (or `text`)    | payload encoding                                               |
+| `messageSourceId` | string                | id of the source/origin                                        |
+| `payload`         | JSON or text          | the message payload, encoded per `messageProtocol`             |
+
+> **Historical note:** earlier versions packed these positionally into the Redis key/value slots to halve the field count. The current implementation writes explicit named fields — simpler, and what the Redis client returns directly — so the positional scheme is no longer used.
 
 
 <!-- END-CODE: ./docs/PROTOCOL.md -->

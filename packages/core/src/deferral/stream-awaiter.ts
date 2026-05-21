@@ -99,7 +99,6 @@ export const streamAwaiter = <T extends MappedStreamEvent>(
       }
 
       const id = ids.guuid();
-      console.warn('We should see this message: ', messageType, id, messageSourceId);
       let $expectedResponse = (stateTracker.promise<T>(id) as ReturnType<typeof stateTracker.promise<T>> | null);
       await writeChannel.writeToStream({
         outgoingStream: target,
@@ -123,7 +122,6 @@ export const streamAwaiter = <T extends MappedStreamEvent>(
       });
 
       stream.on('data', (e) => {
-        console.info("Stream received data...? ", )
         stateTracker.emit('response', e);
       });
 

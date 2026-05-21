@@ -2,10 +2,9 @@
   "name": "@streamerson/examples",
   "version": "0.0.1",
   "scripts": {
-    "start:crud-app": "docker compose up -d && tsx --watch ./crud-app/api | pino-pretty",
-    "build": "tsc && yalc publish --private",
-    "pretest": "yarn build",
-    "test": "node --test"
+    "start:crud-app": "docker compose up -d && bun --watch ./crud-app/api | pino-pretty",
+    "build": "tsc -b tsconfig.lib.json",
+    "test": "bun test"
   },
   "dependencies": {
     "@streamerson/consumer": "^0.0.1",

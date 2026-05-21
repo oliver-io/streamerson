@@ -59,7 +59,7 @@ benchmarking, test-utils ── tooling/support
 | `packages/consumer` | The consumer/producer layer: `StreamConsumer` (bind a handler to a message type), plus consumer-**group** support (`ConsumerGroupMember`, `Configurator`) and a Piscina worker-thread **cluster**. (This package absorbed the former `consumer-group` package.) |
 | `packages/emitter` | `@streamerson/emitter` — `StateEmitter`, a standalone observable-state library: subscribe to changes at any deep (lodash) path of a state object. Independent of the streaming layers; extracted from the game dogfooding. |
 | `packages/gateway-fastify` | Fastify plugin: REST request ⇄ stream correlation. |
-| `packages/gateway-wss` | uWebSockets server: WebSocket ⇄ stream adapter (routes responses to the right socket by source token). |
+| `packages/gateway-wss` | `Bun.serve` WebSocket server: WebSocket ⇄ stream adapter (routes responses to the right socket by source token; no native addon). |
 | `packages/state-machine` | WIP — distributed in-memory state machine over a stream. |
 | `packages/examples` | Runnable apps (`app-basic-crud`, `app-hello-world`, `app-websockets`) and smaller snippets. README code blocks are embedded from here (see Docs). |
 | `packages/benchmarking` | Artillery load tests + Terraform deploy (GCP/AWS) to measure overhead. |
@@ -76,33 +76,32 @@ benchmarking, test-utils ── tooling/support
 
 ## Toolchain
 
-- **Yarn workspaces** (`packages/*`) + **Nx** as task runner (Nx Cloud caching). Lerna present for releases. **Note:** mid-migration from Yarn to npm — a `package-lock.json` is committed while scripts still invoke `yarn`. Prefer matching whatever the lockfile in the tree implies.
-- **Node v20+**, **TypeScript ~5.1**, **CommonJS** modules. TS runs directly via **`tsx`** for tools/examples/load tests.
-- **Redis** runs locally via Docker Compose (`redis:alpine` on `6379`). The code targets Redis-compatible servers (DragonflyDB has been a consideration — see PROJECT.md).
+- **Bun** is the runtime, package manager, and test runner. **Bun workspaces** (`packages/*`); the lockfile is `bun.lock`. Nx has been removed.
+- **Node v20+ compatible**, **TypeScript ~5.1**, **CommonJS** modules. Bun runs TypeScript directly — no compile step is needed for dev or test.
+- **Redis** runs locally via Docker Compose (`redis:alpine` on `6379`). `core` talks to Redis through Bun's built-in client (`RedisClient`); stream commands go via its raw `send()` escape hatch (Bun has no typed Streams API).
 
 ## Commands
 
 ```bash
-yarn                 # install (workspaces)
-yarn start:redis     # bring up local Redis (docker compose); stop:redis / restart:redis
-yarn build           # build all packages (nx run-many -t build --all)
-yarn test            # nx run-many -t test (see caveat below)
-yarn docgen          # regenerate README embedded code blocks
-yarn benchmark       # dockerized benchmarks
-yarn loadtest        # dockerized artillery load tests
-yarn clean           # clean, then reinstall + rebuild
+bun install              # install workspace deps
+bun run start:redis      # local Redis via docker compose; stop:redis / restart:redis
+bun run build            # type-check all packages (tsc --noEmit; excludes WIP state-machine)
+bun test                 # run tests (bun:test)
+bun run docgen           # regenerate README embedded code blocks
+bun run benchmark        # dockerized benchmarks
+bun run loadtest         # dockerized artillery load tests
 
-# Per project (use the unscoped name: core, consumer, emitter, gateway-fastify, ...)
-nx build <project>
-nx test <project>
-nx lint <project>
+# Per package
+cd packages/<name> && bun run build   # type-check that package
+bun test packages/<name>              # test that package
 ```
+> `build` type-checks only; emitting publishable JS+types to `dist` is a separate task (Bun runs source directly for dev/test). `state-machine` is excluded from the default build (mid-Bun-port).
 
 ## Conventions & gotchas
 
-- **`yarn test` currently exercises little.** Test *files* exist (core, consumer, gateways, emitter), but `project.json` files don't define `test` targets, so the Nx run finds almost nothing. Run a package's tests directly if you need them, and see PROJECT.md.
-- **Integration tests need Redis up** (`yarn start:redis`).
-- **Expect WIP debug output** in current code (`console.*` logging, including profanity, lives in shipped `core`/`consumer`). Don't mistake it for intentional behavior; see PROJECT.md.
-- **READMEs are partly generated.** Code fenced between `<!-- BEGIN-CODE: path -->` / `<!-- END-CODE -->` is injected by `yarn docgen`. Edit the **source file**, then regenerate.
-- **Shell scripts in `tools/` (`*.sh`) assume a POSIX shell.** On Windows use Git Bash/WSL; the `tsx`-based tools are cross-platform.
+- **`bun test` is the runner.** The core datasource integration test passes; many legacy tests still use `node:test` (with nested tests Bun doesn't support) and are mid-migration to `bun:test` — see PROJECT.md.
+- **Integration tests need Redis up** (`bun run start:redis`).
+- **Some WIP debug `console.*` remains** in the correlation layer (`core` deferral/awaiter) and `gateway-fastify`; `core`'s datasource has been cleaned. Don't mistake leftover logging for intentional behavior; see PROJECT.md.
+- **READMEs are partly generated.** Code fenced between `<!-- BEGIN-CODE: path -->` / `<!-- END-CODE -->` is injected by `bun run docgen`. Edit the **source file**, then regenerate.
+- **Shell scripts in `tools/` (`*.sh`) assume a POSIX shell.** On Windows use Git Bash/WSL; the TypeScript tools run under Bun and are cross-platform.
 - Respect the layering: new cross-package code depends downward toward `core`, never upward. `emitter` stays standalone.

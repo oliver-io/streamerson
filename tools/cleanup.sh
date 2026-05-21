@@ -1,6 +1,6 @@
-lerna exec 'rm -rf node_modules yarn.lock'
-nx reset
-docker rm --force $(docker ps --all -q)
-docker rmi --force $(docker images --all -q)
-docker system prune --volumes -a -f
-rm -rf node_modules tmp dist
+#!/usr/bin/env bash
+# Project-scoped clean for the Bun toolchain. `postclean` re-runs `bun install && bun run build`.
+# (Intentionally does NOT touch unrelated Docker containers/images or the bun.lock.)
+set -e
+docker compose down -v 2>/dev/null || true
+rm -rf node_modules tmp dist packages/*/node_modules

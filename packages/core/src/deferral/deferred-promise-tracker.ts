@@ -54,15 +54,12 @@ export class DeferralTracker extends EventEmitter {
 		try {
 			const {messageId} = event;
 			if (this.promises[messageId]) {
-        console.log("Recognized promise in queue! ", messageId)
 				// Happy Path: the message was pending
 				this.promises[messageId].resolve(event);
 				if (this.promises[messageId].timeout) {
 					clearTimeout(this.promises[messageId].timeout);
 				}
 			} else {
-        console.log("Unrecognized promise in queue: ", messageId)
-        // throw new Error("Race condition encountered?")
 				// Less happy path: we hear a response before deferral:
 				// -- avoid Racies:
 				this.promises[messageId] = {
@@ -94,8 +91,6 @@ export class DeferralTracker extends EventEmitter {
 		if (this.promises[id]) {
 			if (this.promises[id].timeout) {
 				clearTimeout(this.promises[id].timeout);
-			} else {
-				console.log('CANNOT FIND TIMEOUT TO CLEAR');
 			}
 
 			this.promises[id].reject(
@@ -152,7 +147,6 @@ export class DeferralTracker extends EventEmitter {
         */
 
 		if (this.promises[id] !== undefined) {
-      console.warn("FUCK WHAT THE FUCK!?!?!?")
 			return this.promises[id].self;
 		}
 
@@ -170,7 +164,6 @@ export class DeferralTracker extends EventEmitter {
 			timeout: global.setTimeout(() => reject!(this.staticTimeoutError), this.timeout) as unknown as NodeJS.Timeout,
 		};
 
-    console.info(`Pending for promise: ${id}`)
 
 		return this.promises[id].self as Promise<T>;
 	}

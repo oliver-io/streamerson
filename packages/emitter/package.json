@@ -7,7 +7,8 @@
   "private": false,
   "scripts": {
     "release": "npm version && npm publish && git push --follow-tags",
-    "test": "node --test --experimental-test-coverage --require ts-node/register src/tests/*test.ts"
+    "test": "bun test",
+    "build": "tsc -b tsconfig.lib.json"
   },
   "type": "commonjs",
   "main": "./src/index",

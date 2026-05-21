@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { describe, test } from "bun:test";
 import assert from 'node:assert/strict';
 import { StateEmitter } from '../emitter';
 
@@ -7,38 +7,38 @@ interface SomeUserRecord {
   isLoggedIn?: boolean
 }
 
-test('StateEmitter Happy Path Tests', async (t) => {
-  await t.test('constructor initializes with given state', () => {
+describe('StateEmitter Happy Path Tests', () => {
+  test('constructor initializes with given state', () => {
     const initialState = { user: { name: 'Alice', age: 30 }, isLoggedIn: false };
     const state = new StateEmitter<SomeUserRecord>(initialState);
     assert.deepStrictEqual(state.get('*'), initialState);
   });
 
-  await t.test('get retrieves nested values correctly', () => {
+  test('get retrieves nested values correctly', () => {
     const state = new StateEmitter<SomeUserRecord>({ user: { name: 'Alice', age: 30 } });
     assert.strictEqual(state.get('user.name'), 'Alice');
     assert.strictEqual(state.get('user.age'), 30);
   });
 
-  await t.test('update with string API updates state correctly', () => {
+  test('update with string API updates state correctly', () => {
     const state = new StateEmitter<SomeUserRecord>({ user: { name: 'Alice', age: 30 }, isLoggedIn: false });
     state.update('{"user": {"name": "Charlie"}, "isLoggedIn": true}');
     assert.deepStrictEqual(state.get('*'), { user: { name: 'Charlie', age: 30 }, isLoggedIn: true });
   });
 
-  await t.test('update partially updates state', () => {
+  test('update partially updates state', () => {
     const state = new StateEmitter<SomeUserRecord>({ user: { name: 'Alice', age: 30 }, isLoggedIn: false });
     state.update({ user: { name: 'Bob' } });
     assert.deepStrictEqual(state.get('*'), { user: { name: 'Bob', age: 30 }, isLoggedIn: false });
   });
 
-  await t.test('set replaces entire state', () => {
+  test('set replaces entire state', () => {
     const state = new StateEmitter<SomeUserRecord>({ user: { name: 'Alice', age: 30 }, isLoggedIn: false });
     state.set({ user: { name: 'Charlie', age: 25 }, isLoggedIn: true });
     assert.deepStrictEqual(state.get('*'), { user: { name: 'Charlie', age: 25 }, isLoggedIn: true });
   });
 
-  await t.test('array state functions as expected', () => {
+  test('array state functions as expected', () => {
     const state = new StateEmitter<{ list: Array<number> }>({
       list: [3, 4, 5]
     });
@@ -47,19 +47,19 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.deepStrictEqual(state.get('*'), { list: [3, 4] });
   });
 
-  await t.test('null deletes values', () => {
+  test('null deletes values', () => {
     const state = new StateEmitter({ value: 'initial' });
     state.update({ value: null });
     assert.strictEqual(state.get('value'), undefined);
   });
 
-  await t.test('the string null deletes values', () => {
+  test('the string null deletes values', () => {
     const state = new StateEmitter({ value: 'initial' });
     state.update({ value: 'null' });
     assert.strictEqual(state.get('value'), undefined);
   });
 
-  await t.test('no event on a functional non-change', async () => {
+  test('no event on a functional non-change', async () => {
     const initialStateJsonString = JSON.stringify({ user: { name: 'Alice', age: 30 }, isLoggedIn: false });
     let notified = false;
     const state = new StateEmitter<SomeUserRecord>(
@@ -76,7 +76,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(notified, false);
   });
 
-  await t.test('subscribe to specific path notifies of changes', async () => {
+  test('subscribe to specific path notifies of changes', async () => {
     const state = new StateEmitter<SomeUserRecord>({ user: { name: 'Alice', age: 30 } });
     let notified = false;
 
@@ -93,7 +93,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(notified, true);
   });
 
-  await t.test('subscribe to root path notifies of changes', async () => {
+  test('subscribe to root path notifies of changes', async () => {
     const state = new StateEmitter<SomeUserRecord>({
       user: { name: 'Alice', age: 30 },
       isLoggedIn: false
@@ -112,7 +112,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(notified, true);
   });
 
-  await t.test('multiple subscriptions are notified', async () => {
+  test('multiple subscriptions are notified', async () => {
     const state = new StateEmitter<{
       user: { name: string, age: number },
       isLoggedIn: boolean
@@ -138,7 +138,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(count, 2);
   });
 
-  await t.test('unsubscribe removes listener', async () => {
+  test('unsubscribe removes listener', async () => {
     const state = new StateEmitter({ value: 0 });
     let callCount = 0;
 
@@ -161,7 +161,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(callCount, 1);
   });
 
-  await t.test('subscribe to a key before it exists', async () => {
+  test('subscribe to a key before it exists', async () => {
     const state = new StateEmitter<{
       existingKey: string,
       newKey?: string
@@ -184,7 +184,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(state.get('newKey'), 'new value', 'New key should be added to the state');
   });
 
-  await t.test('exclude single path', async (t) => {
+  describe('exclude single path', () => {
     const state = new StateEmitter({ user: { name: 'Alice', age: 30 } });
     let callCount = 0;
 
@@ -199,7 +199,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(callCount, 1, 'Listener should not be called for age change');
   });
 
-  await t.test('exclude multiple paths', async (t) => {
+  describe('exclude multiple paths', () => {
     const state = new StateEmitter({
       user: { name: 'Alice', age: 30, address: { city: 'New York', country: 'USA' } }
     });
@@ -222,7 +222,7 @@ test('StateEmitter Happy Path Tests', async (t) => {
     assert.strictEqual(callCount, 2, 'Listener should not be called for country change');
   });
 
-  await t.test('exclude with wildcard subscription', async (t) => {
+  describe('exclude with wildcard subscription', () => {
     const state = new StateEmitter({
       user: { name: 'Alice', age: 30 },
       settings: { theme: 'dark', notifications: true }

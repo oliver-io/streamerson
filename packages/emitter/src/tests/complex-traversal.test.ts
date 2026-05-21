@@ -1,9 +1,9 @@
-import test from 'node:test';
+import { describe, test } from "bun:test";
 import assert from 'node:assert/strict';
 import { StateEmitter } from '../emitter';
 
-test('Complex Traversal Cases', async (t) => {
-  await t.test('handles expected deep dictionary diffing', async () => {
+describe('Complex Traversal Cases', () => {
+  test('handles expected deep dictionary diffing', async () => {
     const state = new StateEmitter<{
       record: Record<string, Record<string, string>>,
       newKey?: string
@@ -40,7 +40,7 @@ test('Complex Traversal Cases', async (t) => {
     assert.strictEqual(notified, true, 'Subscriber should be notified');
   });
 
-  await t.test('emits for wildcard record subscription', async () => {
+  test('emits for wildcard record subscription', async () => {
     const state = new StateEmitter<{
       record: Record<string, Record<string, string>>,
       newKey?: string
@@ -77,7 +77,7 @@ test('Complex Traversal Cases', async (t) => {
     assert.strictEqual(notified, 4, 'Subscriber should be notified four times');
   });
 
-  await t.test('emits for index record subscription', async () => {
+  test('emits for index record subscription', async () => {
     const state = new StateEmitter<{
       record: Record<string, Record<string, string>>,
       newKey?: string
@@ -115,7 +115,7 @@ test('Complex Traversal Cases', async (t) => {
   });
 
 
-  await t.test('emits for deep index record subscription', async () => {
+  test('emits for deep index record subscription', async () => {
     const state = new StateEmitter<{
       record: Record<string, Record<string, string>>,
       newKey?: string
@@ -156,7 +156,7 @@ test('Complex Traversal Cases', async (t) => {
   });
 
 
-  await t.test('emits for array element wildcard subscription', async () => {
+  test('emits for array element wildcard subscription', async () => {
     const state = new StateEmitter<{
       record: Array<Record<string, string>>,
       newKey?: string
@@ -193,7 +193,7 @@ test('Complex Traversal Cases', async (t) => {
     assert.strictEqual(notified, 2, 'Subscriber should be notified twice');
   });
 
-  await t.test('emits for deep array element index subscription', async () => {
+  test('emits for deep array element index subscription', async () => {
     const state = new StateEmitter<{
       record: Array<Record<string, string>>,
       newKey?: string

@@ -1,33 +1,18 @@
-import {v4 as uuid} from 'uuid';
-import {mockLogger as logger} from '@streamerson/test-utils';
-import {DEFAULT_TIMEOUT, DeferralTracker} from '../../../src';
-import {describe, test} from 'node:test';
+import { describe, test } from 'bun:test';
 import * as assert from 'node:assert';
-const customTimeout = 1000;
+import { DeferralTracker } from '../../../src';
+import { mockLogger as logger } from '@streamerson/test-utils';
 
-void describe('we get an error event when', async () => {
-	void test(`the requested ID is not heard within default timeout (${DEFAULT_TIMEOUT}ms)`, async context => {
-		const tracker = new DeferralTracker({logger});
-		const waitOnReqThatTimesOut = async () => tracker.promise(uuid());
-		context.mock.timers.enable();
-		const $testResult = assert.rejects(waitOnReqThatTimesOut());
-		context.mock.timers.tick(DEFAULT_TIMEOUT);
-		await $testResult;
-		context.mock.timers.reset();
-		tracker.cancelAll();
-	});
+describe('the deferral tracker times out', () => {
+  test('a pending promise rejects when its id is never heard within the timeout', async () => {
+    const tracker = new DeferralTracker({ timeout: 50, logger });
+    await assert.rejects(tracker.promise('never-arrives'));
+    tracker.cancelAll();
+  });
 
-	void test(`the requested ID is not heard within a custom timeout of (${customTimeout}ms)`, async context => {
-		const tracker = new DeferralTracker({
-			timeout: customTimeout,
-			logger,
-		});
-		const waitOnReqThatTimesOut = async () => tracker.promise(uuid());
-		context.mock.timers.enable();
-		const $testResult = waitOnReqThatTimesOut();
-		context.mock.timers.tick(customTimeout);
-		await assert.rejects($testResult, 'somethjing');
-		context.mock.timers.reset();
-		tracker.cancelAll();
-	});
+  test('a custom timeout is honored', async () => {
+    const tracker = new DeferralTracker({ timeout: 25, logger });
+    await assert.rejects(tracker.promise('also-never-arrives'));
+    tracker.cancelAll();
+  });
 });

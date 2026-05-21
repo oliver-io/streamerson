@@ -2,7 +2,6 @@
   "name": "@streamerson/consumer",
   "version": "0.0.40",
   "dependencies": {
-    "ioredis": "^5.0.4",
     "pino": "^7.11.0",
     "piscina": "^4.2.1",
     "tslib": "^2.3.0"
@@ -13,5 +12,8 @@
   },
   "type": "commonjs",
   "main": "./src/index",
-  "typings": "./src/index.d.ts"
+  "typings": "./src/index.d.ts",
+  "scripts": {
+    "build": "tsc -b tsconfig.lib.json"
+  }
 }

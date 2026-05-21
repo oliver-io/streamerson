@@ -2,16 +2,15 @@
   "name": "@streamerson/gateway-wss",
   "version": "0.0.1",
   "scripts": {
-    "release": "npm version && npm publish && git push --follow-tags"
+    "release": "npm version && npm publish && git push --follow-tags",
+    "build": "tsc -b tsconfig.lib.json"
   },
   "dependencies": {
     "fastify": "^4.23.2",
     "fastify-plugin": "^4.5.1",
-    "ioredis": "^5.0.4",
     "lru-cache": "^7.8.1",
     "pino": "^7.11.0",
     "tslib": "^2.3.0",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.31.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {

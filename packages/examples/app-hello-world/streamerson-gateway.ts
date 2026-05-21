@@ -1,7 +1,6 @@
 import fastify from 'fastify';
 import {CreateGatewayPlugin} from '@streamerson/gateway-fastify';
-import {Logger} from 'pino'
-import {Topic, StreamersonLogger} from "@streamerson/core";
+import {Topic} from "@streamerson/core";
 
 export enum Events {
     HELLO = 'hello'
@@ -9,7 +8,7 @@ export enum Events {
 
 export const streamTopic = new Topic('my-stream-topic');
 
-const apiServer = fastify<any, any, any, Exclude<StreamersonLogger, typeof console>>({
+const apiServer = fastify({
     logger: true
 });
 

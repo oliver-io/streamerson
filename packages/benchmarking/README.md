@@ -108,7 +108,7 @@ The table is presented with the following meanings:
 | read-100k-iterative  |      21936       |        22428        | ~ 2.2% :warning:          | n/a             | n/a                 | n/a               | n/a                   |
 | read-100k-bulk       |       323        |         356         | ~ 9.3% :warning:          | n/a             | n/a                 | n/a               | n/a                   |
 
-<!-- END-CODE: ./_reports/summary.md -->
+<!-- END-CODE: ./_reports/core_modules/summary.md -->
 
 [//]: # (</details>)
 

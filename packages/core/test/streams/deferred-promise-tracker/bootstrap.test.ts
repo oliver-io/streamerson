@@ -1,6 +1,6 @@
 import {DeferralTracker} from '../../../src/deferral/deferred-promise-tracker';
 import {mockLogger as logger, Logger} from '@streamerson/test-utils';
-import {describe, test} from 'node:test';
+import {describe, test} from "bun:test";
 import * as assertions from 'node:assert';
 
 void describe('when creating a deferred promise tracker', () => {

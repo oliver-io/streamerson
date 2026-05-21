@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import {exec, execSync} from 'child_process';
-import {green, yellow} from 'colors';
-import {glob} from 'glob';
+// Plain markers (the `colors` package's named exports don't resolve under Bun).
+const green = (s: string) => s;
+const yellow = (s: string) => s;
 import minimist from 'minimist';
 const commandLineArgs = minimist(process.argv.slice(2));
 const directoryDenyList = [".yalc", "dist/**/*", "tmp/**/*", "node_modules", "deps", '**/node_modules/**/*', "**/LICENSE.md"]
@@ -13,9 +14,27 @@ const supportedFileExtensions = [
     ".md",
 ];
 
+// Meta-docs are authored by hand and not part of the generated doc system.
+const metaDocs = new Set(['CLAUDE.md', 'PROJECT.md', 'MODERNIZE.md']);
+const denied = (f: string) =>
+  f.includes('node_modules') || f.startsWith('dist/') || f.includes('/dist/') ||
+  f.includes('.yalc') || f.includes('/deps/') || f.includes('benchmarking/deploy') ||
+  f.endsWith('LICENSE.md') || metaDocs.has(f);
+
+// Bun-native file discovery (the `glob` v7 dep doesn't return arrays under Bun).
+async function globFiles(...patterns: string[]): Promise<string[]> {
+  const seen = new Set<string>();
+  for (const pattern of patterns) {
+    for await (const file of new Bun.Glob(pattern).scan({ onlyFiles: true })) {
+      const rel = file.replaceAll('\\', '/');
+      if (!denied(rel)) seen.add(rel);
+    }
+  }
+  return [...seen];
+}
+
 async function getAllCodeFiles(dir?: string) {
-    const codeFiles:Array<string> = (await glob(dir ?? `packages/**/*.ts`, { ignore: directoryDenyList }));
-    return codeFiles;
+    return await globFiles(dir ?? 'packages/**/*.ts');
 }
 
 type AddContentArgs = {
@@ -37,46 +56,52 @@ export function tagWithType(content: string, file: string) {
 }
 
 export async function addEmbeddings(options: AddContentArgs) {
-  let i=0, j=0;
+  let embedded = 0;
 
   try {
-    let readme = (await fs.promises.readFile(options.absoluteFilePath)).toString();
-    const beginTags = readme.match(/<!-- BEGIN-CODE:(\s+)(.*)(\s)+-->/g);
-    const endTags = readme.match(/<!-- END-CODE:(\s+)(.*)(\s)+-->/g);
-    const tags = (beginTags?.length ?? 1);
-    if (tags && beginTags?.[0] && endTags?.[0]) {
-      for (; i < tags; i++, j++) {
-        const beginTag = beginTags?.[i];
-        const endTag = endTags?.[j];
-        if (!beginTag || !endTag) {
-          throw new Error('Tag Mismatch');
-        }
-        const fileReference = beginTag.replace('<!-- BEGIN-CODE:', '').replace('-->', '').trim();
-        const filePath = path.resolve(`${options.absoluteFilePath}/..`, fileReference);
-        const beginEmbedIndex = readme.indexOf(beginTag);
-        const endEmbedIndex = readme.indexOf(endTag);
-        const newContent = (await fs.promises.readFile(filePath)).toString();
-        const embeddedHref = `[**${
-          fileReference.substring(fileReference.lastIndexOf('/')+1, fileReference.length)
-        }**](${fileReference})`;
-        const firstHalf = readme.substring(0, beginEmbedIndex + beginTag.length);
-        const secondHalf = readme.substring(endEmbedIndex, readme.length);
-        readme = `${firstHalf}\n${embeddedHref}\n${tagWithType(newContent, filePath)}\n${secondHalf}`;
-      }
-    }
+    const readme = (await fs.promises.readFile(options.absoluteFilePath)).toString();
+    const dir = path.resolve(`${options.absoluteFilePath}/..`);
 
-    fs.writeFileSync(options.absoluteFilePath, readme);
+    // Each block is matched as a whole: the END marker is always rewritten to
+    // the BEGIN marker's path, so mismatched/stale pairs can't drift (the old
+    // implementation paired BEGIN/END by index without checking the path).
+    const blockRegex = /<!-- BEGIN-CODE:\s*(.*?)\s*-->[\s\S]*?<!-- END-CODE:.*?-->/g;
+
+    const updated = readme.replace(blockRegex, (_match, ref: string) => {
+      const fileReference = ref.trim();
+      const filePath = path.resolve(dir, fileReference);
+      const begin = `<!-- BEGIN-CODE: ${fileReference} -->`;
+      const end = `<!-- END-CODE: ${fileReference} -->`;
+      try {
+        const content = fs.readFileSync(filePath).toString();
+        const base = fileReference.substring(fileReference.lastIndexOf('/') + 1);
+        const href = `[**${base}**](${fileReference})`;
+        embedded++;
+        return `${begin}\n${href}\n${tagWithType(content, filePath)}\n${end}`;
+      } catch {
+        console.error(`${yellow('X')} Missing embed source in ${options.relativeFilePath}: ${fileReference}`);
+        // Normalize the markers but leave the body empty rather than dropping the block.
+        return `${begin}\n${end}`;
+      }
+    });
+
+    fs.writeFileSync(options.absoluteFilePath, updated);
   } catch(err) {
     console.error(err, `Failed embedding for file: ${options.relativeFilePath}`);
   }
 
   return {
     path,
-    embedded: i
+    embedded
   }
 }
 
 export async function addTableOfContents(options: AddContentArgs) {
+    // Only manage a TOC where the author opted in with doctoc markers — don't
+    // force one onto docs that don't have it.
+    if (!fs.readFileSync(options.absoluteFilePath, 'utf8').includes('<!-- START doctoc')) {
+        return false;
+    }
     return new Promise((resolve)=>{
         let buf = '';
         const child = exec(`doctoc ${options.absoluteFilePath} --github`);
@@ -114,13 +139,7 @@ export async function generateCodeDocs(options: AddContentArgs):Promise<string> 
 }
 
 export async function findAllMarkdown() {
-    try {
-        const testFiles:Array<string> = (await glob([`**/*.md`, '!LICENSE.md'], { ignore: directoryDenyList }));
-        return testFiles;
-    } catch(err) {
-        console.error(err);
-        throw new Error("Cannot find readme locations");
-    }
+    return await globFiles('*.md', 'docs/**/*.md', 'packages/**/*.md');
 }
 
 async function enrichFile(target: string) {
@@ -152,10 +171,7 @@ async function enrichFile(target: string) {
 }
 
 async function enrichArtilleryReports() {
-  const files = [
-    ...await glob('./packages/**/_reports/loadtest/*.json'),
-    ...await glob('./packages/**/_reports/gcp/*.json')
-  ];
+  const files = await globFiles('packages/**/_reports/loadtest/*.json', 'packages/**/_reports/gcp/*.json');
   let generated = 0;
   for (const file of files) {
     execSync(`artillery report ${file} --output ${file.replace('.json', '.html')}`);

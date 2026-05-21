@@ -1,5 +1,5 @@
 import { MappedStreamEvent, TopicOptions } from '@streamerson/core';
-import { EventMapRecord, StreamConsumer, StreamConsumerOptions } from '@streamerson/consumer';
+import { EventMapRecord, StreamConsumer, StreamConsumerOptions } from './base/stream-consumer';
 
 type ConsumerOptions<E extends EventMapRecord<any, any>> = StreamConsumerOptions<E>;
 type ConsumerGroupMemberSettings = {

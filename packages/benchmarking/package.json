@@ -3,10 +3,11 @@
   "version": "0.0.1",
   "module": "CommonJS",
   "scripts": {
-    "run-benchmark": "STREAMERSON_BENCHMARK_FILE_TARGET=benchmark tools/start-benchmark.sh tsx",
+    "run-benchmark": "STREAMERSON_BENCHMARK_FILE_TARGET=benchmark tools/start-benchmark.sh bun",
     "run-loadtest": "tools/start-loadtest.sh",
-    "build:summary": "tsx ./tools/summarizeResults --write",
-    "import:gcp": "cd ./deploy/gcp && GOOGLE_APPLICATION_CREDENTIALS=key.gcp.json ./import import google --regions=us-central1 --projects=streamerson-benchmarks --resources=*"
+    "build:summary": "bun ./tools/summarizeResults.ts --write",
+    "import:gcp": "cd ./deploy/gcp && GOOGLE_APPLICATION_CREDENTIALS=key.gcp.json ./import import google --regions=us-central1 --projects=streamerson-benchmarks --resources=*",
+    "build": "tsc -b tsconfig.lib.json"
   },
   "dependencies": {
     "dotenv": "^16.3.1",

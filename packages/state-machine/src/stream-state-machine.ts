@@ -159,7 +159,6 @@ export class StreamStateMachine<
   override get _handle_message() {
     return (async (streamMessage: MappedStreamEvent): Promise<MappedStreamEvent<any, any, any>> => {
       const handler = this.streamEvents[streamMessage.messageType];
-      console.info(`Handling state transformer event for message (${typeof streamMessage.payload}): `, streamMessage);
       const response = await handler(
         this.stateTransformers,
         streamMessage.payload as any,
@@ -170,7 +169,6 @@ export class StreamStateMachine<
         //   streamMessage.payload :
         //   JSON.parse(streamMessage.payload as unknown as string | undefined ?? 'null')
       );
-      console.info('Got response for handler: ', response);
       return {
         ...streamMessage,
         messageType: 'resp' as MessageType,

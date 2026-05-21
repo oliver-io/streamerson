@@ -1,3 +1,32 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [🔭 StateEmitter](#-stateemitter)
+  - [🌟 Features](#-features)
+  - [📦 Installation](#-installation)
+  - [🚀 Quick Start](#-quick-start)
+  - [🤔 Why?](#-why)
+  - [📘 Usage Guide](#-usage-guide)
+    - [Importing the Module](#importing-the-module)
+    - [Creating a StateEmitter](#creating-a-stateemitter)
+    - [Subscribing to Changes](#subscribing-to-changes)
+    - [Updating the State](#updating-the-state)
+    - [Deleting State Properties](#deleting-state-properties)
+    - [Retrieving State Values](#retrieving-state-values)
+  - [🛠 API Reference](#-api-reference)
+    - [StateEmitter<T>](#stateemittert)
+      - [Constructor](#constructor)
+      - [Methods](#methods)
+      - [EventEmitter Methods](#eventemitter-methods)
+  - [🧪 Testing](#-testing)
+  - [🚧 TODO](#-todo)
+  - [🤝 Contributing](#-contributing)
+  - [🙏 Acknowledgements](#-acknowledgements)
+  - [📄 License](#-license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 🔭 StateEmitter
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
@@ -25,10 +54,10 @@ Install the package via npm:
 npm install @streamerson/emitter
 ```
 
-Or using yarn:
+Or using Bun:
 
 ```bash
-yarn add @streamerson/emitter
+bun add @streamerson/emitter
 ```
 
 ## 🚀 Quick Start
@@ -53,14 +82,6 @@ state.update('{ "user": { "name": "Bob" } }');
 // Update the state via object
 state.update({ user: { name: 'Charlie' } });
 ```
-
-# 🔭 StateEmitter
-
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![TypeScript](https://img.shields.io/badge/TypeScript-4.5%2B-blue)
-
-A TypeScript library that provides a state management system with event-based subscriptions to changes at any nested path within the state object, using [`eventemitter3`](https://github.com/primus/eventemitter3).
 
 ## 🤔 Why?
 
@@ -266,8 +287,8 @@ npm run test
 Or, if you prefer to run specific test files:
 
 ```bash
-tsx --test ./tests/emitter.happy.test.ts
-tsx --test ./tests/emitter.sad.test.ts
+bun test ./src/tests/emitter.happy.test.ts
+bun test ./src/tests/emitter.sad.test.ts
 ```
 
 ## 🚧 TODO

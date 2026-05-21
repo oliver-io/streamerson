@@ -1,6 +1,6 @@
 import {StreamMessageFlowModes} from '@streamerson/core';
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import {test} from 'node:test';
+import { test } from "bun:test";
 import {ConsumerGroupConfigurator} from "../src/group";
 
 test('a consumer group can be created', async () => {
@@ -21,7 +21,7 @@ test('a consumer group can be created', async () => {
         idleTimeout: 0
     });
 
-    await consumerGroup.connect();
+    await consumerGroup.connectAndListen();
     await consumerGroup.create();
     await consumerGroup.disconnect();
 });

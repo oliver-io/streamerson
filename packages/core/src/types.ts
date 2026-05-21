@@ -1,6 +1,5 @@
-import {type Logger} from 'pino';
 import {type Readable, type Writable} from 'stream';
-import {type RedisClientType as RedisClient} from 'redis';
+import {type RedisClient} from 'bun';
 import {type StreamingDataSource} from './datasource/streamable';
 
 // For clarity in signatures:
@@ -120,14 +119,18 @@ export type StreamConfiguration = {
 	redisConfiguration?: any;
 };
 
-export type StreamersonLogger = {
-	info: Logger['info'],
-	debug: Logger['debug'],
-	error: Logger['error'],
-	warn: Logger['warn'],
-	child: Logger['child'],
-	level: Logger['level']
-} | (typeof console);
+type StreamersonLogFn = (...args: any[]) => void;
+type StructuredLogger = {
+	info: StreamersonLogFn,
+	debug: StreamersonLogFn,
+	error: StreamersonLogFn,
+	warn: StreamersonLogFn,
+	child: (...args: any[]) => StructuredLogger,
+	level: string,
+};
+// Accepts pino, fastify's logger (pino under the hood), and console — only the
+// logging surface our modules actually use, loosely typed so any of them fits.
+export type StreamersonLogger = StructuredLogger | (typeof console);
 
 export type KeyOptions = {
 	key: string;
@@ -163,6 +166,12 @@ export type DataSourceOptions = Partial<{
 	host: string;
 	logger: StreamersonLogger;
 	controllable: boolean;
+	/**
+	 * Opt-in native stream-trimming backstop. When set (> 0), XADD writes use
+	 * `MAXLEN ~ <maxLen>`. Off by default: the intended retention strategy is
+	 * reverse-streamers that drain to SQL, not native trimming.
+	 */
+	maxLen: number;
 }>;
 
 export type ConnectableDataSource = {

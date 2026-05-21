@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "esnext",
+    "target": "es2022",
+    "moduleResolution": "node",
+    "types": ["node", "bun"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "consumers/groups/consumer-group-readable.ts",
+    "consumers/single-bidi/consumer-with-framework.example.ts",
+    "consumers/single-bidi/consumer-without-framework.example.ts",
+    "core-modules/readable-stream/readable-stream.example.ts",
+    "app-hello-world/streamerson-gateway.ts",
+    "app-hello-world/worker.ts",
+    "app-websockets/streamerson-gateway.ts",
+    "app-websockets/worker.ts"
+  ]
+}

@@ -40,10 +40,8 @@ export function CreateGatewayPlugin(options: {
 
   async function getStreamAwaiter(inStream: string, outStream: string) {
     const binding = `${inStream}:${outStream}`;
-    console.log(`Checking bindings for ${binding}... (${Object.keys(inOutRecord)})`);
     let existingAwaiter = inOutRecord[binding];
     if (!existingAwaiter) {
-      console.log('Binding does not exist yet....');
       const [readChannel, writeChannel] = [
         new StreamingDataSource({
           logger: options.logger as any,
@@ -74,8 +72,6 @@ export function CreateGatewayPlugin(options: {
       });
       inOutRecord[binding] = existingAwaiter;
       streamStateTrackers.push(existingAwaiter);
-    } else {
-      console.log('Binding already exists...');
     }
 
     return existingAwaiter;
@@ -88,7 +84,6 @@ export function CreateGatewayPlugin(options: {
     for (const route of Array.isArray(routes) ? routes : [routes]) {
 
       if (!route) {
-        console.error('Ignoring route');
         continue;
       }
 
@@ -102,30 +97,12 @@ export function CreateGatewayPlugin(options: {
       fastify.route({
         ...defaultedRoute,
         handler: async (request, reply) => {
-          try {
-            console.log(`Dispatching to streamAwaiter.... source id: ${request.sourceId}`);
-            const response = await streamStateTracker.dispatch(
-              JSON.stringify(request.body ?? {}),
-              route.messageType as MessageType,
-              request.sourceId
-            );
-            reply.send(response);
-            return;
-          } catch (err) {
-            console.warn(
-              {
-                tracker: streamStateTracker,
-                message: {
-                  body: JSON.stringify(request.body ?? {}),
-                  messageType: route.messageType as MessageType,
-                  sourceId: request.sourceId
-                }
-              },
-              'Freakin debug.....',
-              err
-            );
-            throw err;
-          }
+          const response = await streamStateTracker.dispatch(
+            JSON.stringify(request.body ?? {}),
+            route.messageType as MessageType,
+            request.sourceId
+          );
+          reply.send(response);
         }
       });
       fastify.log.info(`... Sending incoming messages to ${messageStream}`);
@@ -133,8 +110,7 @@ export function CreateGatewayPlugin(options: {
     }
 
     for (const stateTracker of streamStateTrackers) {
-      console.log('Reading response stream....');
-      stateTracker.readResponseStream().catch(err => {
+      stateTracker.readResponseStream().catch((err: unknown) => {
         throw err;
       });
     }

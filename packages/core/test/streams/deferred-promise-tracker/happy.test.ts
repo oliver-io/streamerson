@@ -1,7 +1,7 @@
 import {mockLogger as logger} from '@streamerson/test-utils';
 import {DEFAULT_TIMEOUT, DeferralTracker, ids, MappedStreamEvent, type NullablePrimitive} from '../../../src';
 import {MessageType} from '../../../src/types';
-import {describe, test} from 'node:test';
+import {describe, test} from "bun:test";
 import * as assert from 'node:assert';
 
 type MinimalEventInterface = {
@@ -37,7 +37,7 @@ void describe('we get a response when', async () => {
     //     // tracker.cancelAll();
     // });
 
-    void test('there are other promises pending', async (context) => {
+    void test('there are other promises pending', async () => {
         const tracker = new DeferralTracker({logger});
         const specialTestId = ids.guuid();
         const testEvent: { messageId: string; someOtherStuff: string } = {
@@ -59,8 +59,7 @@ void describe('we get a response when', async () => {
         tracker.emit('response', testEvent);
         const response = await $pending;
         assert.deepEqual(response, testEvent);
-        tracker.cancelAll();
-        context.mock.timers.reset();
+        tracker.cancelAll();
     });
 
     // void test('we read out-of-order pending promises', async () => {

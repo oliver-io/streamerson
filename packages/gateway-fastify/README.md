@@ -13,6 +13,7 @@ That said, this package might be of interest to anyone that simply wants to acce
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [Installation](#installation)
 - [Usage](#usage)
   - [More Documentation](#more-documentation)
@@ -21,7 +22,7 @@ That said, this package might be of interest to anyone that simply wants to acce
 
 # Installation
 
-- yarn: `yarn add @streamerson/gateway-fastify`
+- yarn: `bun add @streamerson/gateway-fastify`
 - npm: `npm install @streamerson/gateway-fastify`
 
 # Usage
@@ -33,8 +34,7 @@ Create a Fastify Gateway proxying REST transactions to a Redis stream:
 ```typescript
 import fastify from 'fastify';
 import {CreateGatewayPlugin} from '@streamerson/gateway-fastify';
-import {Logger} from 'pino'
-import {Topic, StreamersonLogger} from "@streamerson/core";
+import {Topic} from "@streamerson/core";
 
 export enum Events {
     HELLO = 'hello'
@@ -42,7 +42,7 @@ export enum Events {
 
 export const streamTopic = new Topic('my-stream-topic');
 
-const apiServer = fastify<any, any, any, Exclude<StreamersonLogger, typeof console>>({
+const apiServer = fastify({
     logger: true
 });
 

@@ -5,10 +5,9 @@
   "author": "oliver-io <oliver.l.carrillo@gmail.com>",
   "license": "LAMC",
   "scripts": {
-    "release": "yarn version && yarn publish && git push --follow-tags"
+    "build": "tsc -b tsconfig.lib.json"
   },
   "dependencies": {
-    "ioredis": "^5.0.4",
     "pino": "^7.11.0",
     "tslib": "^2.3.0",
     "uuid": "^8.3.2"

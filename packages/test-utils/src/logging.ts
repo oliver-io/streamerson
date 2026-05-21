@@ -1,14 +1,16 @@
 import { Logger } from 'pino';
-const { mock } = require('node:test');
-const getMock = ((obj: any)=>obj as ReturnType<typeof mock.fn>)
+
+// A framework-agnostic no-op logger for tests (satisfies StreamersonLogger).
+const noop = (..._args: any[]) => { /* swallow */ };
 
 export const mockLogger = {
-    info: mock.fn(),
-    trace: mock.fn(),
-    debug: mock.fn(),
-    warn: mock.fn(),
-    error: mock.fn(),
-    child: mock.fn()
+  info: noop,
+  trace: noop,
+  debug: noop,
+  warn: noop,
+  error: noop,
+  child: () => mockLogger,
+  level: 'debug',
 };
 
-export type { Logger }
+export type { Logger };

@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/core/tsconfig.lib.json" },
+    { "path": "packages/emitter/tsconfig.lib.json" },
+    { "path": "packages/test-utils/tsconfig.lib.json" },
+    { "path": "packages/consumer/tsconfig.lib.json" },
+    { "path": "packages/gateway-fastify/tsconfig.lib.json" },
+    { "path": "packages/gateway-wss/tsconfig.lib.json" },
+    { "path": "packages/state-machine/tsconfig.lib.json" }
+  ]
+}

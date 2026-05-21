@@ -166,7 +166,7 @@ async function run() {
   await runAllBenchmarks();
 
   if (args.report) {
-    execSync('yarn build:summary', {
+    execSync('bun run build:summary', {
       cwd: path.resolve('./packages/benchmarking'), stdio: 'inherit'
     });
   }

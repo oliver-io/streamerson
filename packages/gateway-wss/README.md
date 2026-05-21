@@ -9,6 +9,7 @@ This package provides an out-of-the-box solution for proxying traffic between us
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
 - [Installation](#installation)
 - [Usage](#usage)
 - [More Documentation](#more-documentation)
@@ -17,7 +18,7 @@ This package provides an out-of-the-box solution for proxying traffic between us
 
 # Installation
 
-- yarn: `yarn add @streamerson/gateway-wss`
+- yarn: `bun add @streamerson/gateway-wss`
 - npm: `npm install @streamerson/gateway-wss`
 
 # Usage

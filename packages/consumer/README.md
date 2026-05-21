@@ -8,6 +8,7 @@ This package is a part of the larger [@streamerson](../../README.md) monorepo, w
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
   - [A Foreword on Naming and Purpose](#a-foreword-on-naming-and-purpose)
   - [Installation](#installation)
   - [Example](#example)
@@ -39,7 +40,7 @@ The reason this package is called `@streamerson/consumer` rather than `@streamer
 
 ## Installation
 
-- `yarn install @streamerson/consumer`
+- `bun add @streamerson/consumer`
 
 ## Example
 
@@ -64,7 +65,7 @@ consumer.registerStreamEvent<{ name: string }>('hello', async (e) => {
 
 await consumer.connectAndListen();
 ```
-<!-- END-CODE: ../examples/consumers/groups/consumer-group-readable.ts -->
+<!-- END-CODE: ../examples/consumers/single-bidi/consumer-with-framework.example.ts -->
 
 # Consumer-Producers
 
@@ -156,6 +157,61 @@ You'll notice the code in the dropdown above is kind of grossly low-level (it is
     <summary>Drop Down to see High-Level "@streamerson/consumer" Example Code</summary>
 
 <!-- BEGIN-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
+[**consumer-without-framework.example.ts**](../examples/consumers/single-bidi/consumer-without-framework.example.ts)
+```typescript
+import {MappedStreamEvent, StreamingDataSource, Topic} from '@streamerson/core';
+import {Transform} from 'stream';
+
+const streamTopic = new Topic('my-stream-topic');
+
+const channels = {
+    read: new StreamingDataSource(),
+    write: new StreamingDataSource()
+}
+
+await Promise.all([
+    channels.read.connect(),
+    channels.write.connect()
+]);
+
+const [readableStream, writableStream] = [
+    channels.read.getReadStream({
+        stream: streamTopic.consumerKey()
+    }),
+    channels.write.getWriteStream({
+        stream: streamTopic.producerKey()
+    }),
+];
+
+const transform = new Transform({
+    objectMode: true,
+    transform: function (e: MappedStreamEvent, _, cb) {
+        switch(e.messageType as string) {
+            case 'hello':
+                this.push(({
+                    ...e,
+                    payload: {
+                        hello: 'world!  I just saw a message: \r\n\r\n' + JSON.stringify(e.payload, null, 2)
+                    }
+                } as MappedStreamEvent));
+                cb();
+                break;
+            default:
+                this.push(({
+                    ...e,
+                    payload: {
+                        error: 'Unknown message type',
+                        statusCode: 400
+                    }
+                } as MappedStreamEvent));
+                cb();
+                break;
+        }
+    }
+});
+
+readableStream.pipe(transform).pipe(writableStream);
+```
 <!-- END-CODE: ../examples/consumers/single-bidi/consumer-without-framework.example.ts -->
 
 </details>
@@ -165,6 +221,23 @@ Hopefully this seems cleaner, less concerned with low-level details, and easier 
 # API
 <!-- BEGIN-CODE: ../consumer/src/_API.md -->
 [**_API.md**](../consumer/src/_API.md)
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [:factory: StreamConsumer](#factory-streamconsumer)
+  - [Methods](#methods)
+    - [:gear: bindStreamEvents](#gear-bindstreamevents)
+    - [:gear: setOutgoingChannel](#gear-setoutgoingchannel)
+    - [:gear: registerStreamEvent](#gear-registerstreamevent)
+    - [:gear: deregisterStreamEvent](#gear-deregisterstreamevent)
+    - [:gear: addStream](#gear-addstream)
+    - [:gear: hasStream](#gear-hasstream)
+    - [:gear: removeStream](#gear-removestream)
+    - [:gear: cacheComposite](#gear-cachecomposite)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## :factory: StreamConsumer
 

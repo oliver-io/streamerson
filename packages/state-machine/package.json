@@ -3,10 +3,16 @@
   "version": "0.0.16",
   "public": true,
   "scripts": {
-    "release": "npm version && npm publish && git push --follow-tags"
+    "release": "npm version && npm publish && git push --follow-tags",
+    "build": "tsc -b tsconfig.lib.json"
   },
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@streamerson/consumer": "^0.0.40",
+    "@streamerson/core": "^0.0.66",
+    "lru-cache": "^7.18.3",
+    "pino": "^7.11.0",
+    "redis": "^4.7.0"
   },
   "type": "commonjs",
   "main": "./src/index.js",

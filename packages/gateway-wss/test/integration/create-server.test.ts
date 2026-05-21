@@ -1,5 +1,5 @@
 import { WebSocketServer } from '../../src'
-import test from 'node:test';
+import { test } from "bun:test";
 import * as assert from 'node:assert';
 
 test('we can create a websocket server', async ()=>{
