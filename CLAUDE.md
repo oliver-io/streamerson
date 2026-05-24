@@ -56,7 +56,7 @@ benchmarking, test-utils ── tooling/support
 | Package | Role |
 |---|---|
 | `packages/core` | Base SDK. Wraps **node-redis** behind a datasource; `Topic`/key generation; streams exposed as `Readable`/`Writable`/`AsyncIterable`/`EventEmitter`; the request/response correlation utilities (`streamAwaiter`, `DeferralTracker`). Start here. |
-| `packages/consumer` | The consumer/producer layer: `StreamConsumer` (bind a handler to a message type), plus consumer-**group** support (`ConsumerGroupMember`, `Configurator`) and a Piscina worker-thread **cluster**. (This package absorbed the former `consumer-group` package.) |
+| `packages/consumer` | The consumer/producer layer: `StreamConsumer` (bind a handler to a message type), plus consumer-**group** support (`ConsumerGroupMember`, `Configurator`) and a Bun `Worker`-thread **cluster** (`ConsumerGroupCluster`: fixed member `count`, runtime `scale()`, restart-on-crash). (This package absorbed the former `consumer-group` package.) |
 | `packages/emitter` | `@streamerson/emitter` — `StateEmitter`, a standalone observable-state library: subscribe to changes at any deep (lodash) path of a state object. Independent of the streaming layers; extracted from the game dogfooding. |
 | `packages/gateway-fastify` | Fastify plugin: REST request ⇄ stream correlation. |
 | `packages/gateway-wss` | `Bun.serve` WebSocket server: WebSocket ⇄ stream adapter (routes responses to the right socket by source token; no native addon). |
@@ -87,6 +87,8 @@ bun install              # install workspace deps
 bun run start:redis      # local Redis via docker compose; stop:redis / restart:redis
 bun run build            # type-check all packages (tsc --noEmit; excludes WIP state-machine)
 bun test                 # run tests (bun:test)
+bun run test:coverage    # core tests with a coverage report (text)
+bun run test:coverage:reader  # 100% line-coverage GATE for the stream reader (streamable.ts); non-zero on a gap
 bun run docgen           # regenerate README embedded code blocks
 bun run benchmark        # dockerized benchmarks
 bun run loadtest         # dockerized artillery load tests
