@@ -36,7 +36,7 @@ Because Bun's WS server is uWebSockets compiled in, the current `wssapi.ts` mode
 ### 1.4 Slim the toolchain
 - [ ] Drop `tsx` and `ts-node` (Bun runs TS directly); update `tools/*.ts` entry points and the `emitter` test script.
 - [ ] Wire real test targets and migrate to `bun test` (or confirm `node:test` runs under Bun). Closes PROJECT.md Gap K.
-- [ ] **RISK — `piscina` on Bun.** Confirm the consumer cluster's worker pool works under Bun; if not, move to Bun `Worker`. (Folds into the cluster-lifecycle decision, PROJECT.md Gap I.)
+- [x] **`piscina` → Bun `Worker`.** Done. Spiked Piscina under Bun (it *does* run), but its request/response task-pool model fits long-lived listeners poorly (the root of Gap I). Replaced with native Bun `Worker` (block-for-life): `ConsumerGroupCluster` now spawns a fixed member `count`, supports runtime `scale()`, restart-on-crash, and graceful drain; `piscina` dropped from `@streamerson/consumer`. This also resolved the cluster-lifecycle decision (PROJECT.md Gap I).
 - [ ] Sanity-check the remaining runtime deps under Bun: `fastify`, `pino`, `lodash.get`, `eventemitter3` (expected fine).
 
 **Step 1 done when:** `bun install` + build + `bun test` are green; `gateway-wss` has no native addon; the runtime/PM is Bun with exactly one package manager; examples run under Bun. (The core Redis-client swap is *not* a gate — it ships only if the 1.2 spike passes; otherwise the streaming datasource stays on node-redis under Bun.)
