@@ -1,35 +1,18 @@
-import {ConsumerGroupMember, MemberParams} from '@streamerson/consumer';
+import { ConsumerGroupMember, runClusterMember } from '@streamerson/consumer';
 import pino from 'pino';
 
-// This function gets picked up by Piscina:
-export default async function run(params: MemberParams) {
-  console.log('Starting stream cluster member !!!! ...');
-  console.log('Cluster details: ', {
-    conn: params.connectionSettings,
-    memb: params.memberSettings
-  })
-  const groupMember = new ConsumerGroupMember({
-    ...params.connectionSettings,
-    eventMap: {
-      resp: async ()=>{
-        console.log('What the FUCK wat wat wat');
-        return { ok: true }
-      }
+// Bun Worker entry for a cluster member. The cluster coordinator spawns this
+// file as a worker and drives its lifecycle; `runClusterMember` owns connect/
+// drain, so the factory only constructs the member and registers handlers.
+runClusterMember((params) => {
+  return new ConsumerGroupMember(
+    {
+      ...params.connectionSettings,
+      eventMap: {
+        resp: async () => ({ ok: true }),
+      },
+      logger: pino({ level: 'debug' }) as any,
     },
-    consumerGroupInstanceConfig: {
-      groupId: 'wat',
-      groupMemberId: params.memberSettings.groupMemberId,
-    },
-    logger: pino({
-      level: 'debug'
-    }) as any,
-  }, params.memberSettings);
-  groupMember.registerStreamEvent('resp', async () => {
-    console.log('TEST EVENT');
-    return {
-      ok: "wat"
-    }
-  });
-  await groupMember.connectAndListen();
-  console.log('WAT WAT WAT WAT \r\n')
-}
+    params.memberSettings,
+  );
+});
