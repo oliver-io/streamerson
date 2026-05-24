@@ -45,6 +45,14 @@ export type StreamConsumerOptions<EventMap extends EventMapRecord<Record<string,
     groupId: string,
     groupMemberId: string;
   };
+  /** XREADGROUP BLOCK cadence, ms (consumer-group member loop). Default 100. */
+  blockTimeout?: number;
+  /** Messages pulled per read (consumer-group member loop). Default 1. */
+  prefetch?: number;
+  /** Abandonment grace / reclaim idle threshold, ms (consumer-group member). `0` disables reclaim. */
+  processingTimeout?: number;
+  /** Opt-in retry (consumer-group member): at-least-once, idempotent handlers required. */
+  retry?: { maxAttempts: number };
   eventMap?: EventMap;
 }
 
@@ -138,12 +146,6 @@ export class StreamConsumer<
         }
       }
     }
-  }
-
-  setOutgoingChannel(channel: StreamingDataSource | null) {
-    this.bidirectional = true;
-    this.outgoingChannel = channel ?? undefined;
-    this.bindStreamEvents(this.topic);
   }
 
   /**
@@ -252,20 +254,18 @@ export class StreamConsumer<
     const logger = this.logger;
 
     const incomingPipe = this.incomingStream.pipe(new Transform({
-      transform: function(object, _, callback) {
-        try {
-          if (object) {
-            setState(object).then((message) => {
-              this.push(message);
-              callback();
-            }).catch(err => {
-              logger.error(err, 'Cannot transform state in stream');
-            });
-          }
-        } catch (err) {
-          this.push('Generic Error Response cijkdcjidkfj');
+      transform(object, _, callback) {
+        if (!object) return callback();
+        setState(object).then((message) => {
+          this.push(message);
           callback();
-        }
+        }).catch((err) => {
+          // Never wedge the pipeline (CG-G2): log and advance. The single-consumer
+          // path has no ack to corrupt; the group member's bounded loop owns the
+          // at-most-once / recoverable-failure contract (REQUEST_STREAM_RECEIPT.md §5).
+          logger.error(err, 'Stream handler failed; skipping message');
+          callback();
+        });
       },
       objectMode: true
     }));
