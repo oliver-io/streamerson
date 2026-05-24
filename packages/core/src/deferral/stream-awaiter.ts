@@ -43,36 +43,43 @@ export class StreamAwaiter<T extends MappedStreamEvent> implements streamAwaiter
     }
 
     const id = ids.guuid();
-    let $expectedResponse = (
-      // this.promiseQueue ?
-      //   this.promiseQueue.add(() => (this.stateTracker.promise(id))) :
-      this.stateTracker.promise(id)
-    ) as Promise<T> | null;
+    const $expectedResponse = this.stateTracker.promise(id) as Promise<T>;
 
-    await this.writeChannel.writeToStream({
-      outgoingStream: target,
-      incomingStream: this.incomingStream,
-      messageType: messageType,
-      messageId: id,
-      message,
-      sourceId: messageSourceId ?? '',
-      shard
-    });
-
-
-    const deferredResponse = await $expectedResponse;
-    // Todo: consider using a weakmap here to avoid memory leaks, but for now:
-    $expectedResponse = null;
-    this.stateTracker.delete(id);
-    return deferredResponse!.payload;
+    // Remove the tracker entry (and its armed timeout) on EVERY outcome — success, a
+    // dispatch timeout, or a writeToStream failure. Deleting only on success leaks the
+    // promise-map entry on every rejection (a gateway under timeout load grows unbounded).
+    try {
+      await this.writeChannel.writeToStream({
+        outgoingStream: target,
+        incomingStream: this.incomingStream,
+        messageType: messageType,
+        messageId: id,
+        message,
+        sourceId: messageSourceId ?? '',
+        shard
+      });
+      const deferredResponse = await $expectedResponse;
+      return deferredResponse!.payload;
+    } finally {
+      this.stateTracker.delete(id);
+    }
   }
 
-  async readResponseStream(shard?: string) {
-    for await (const event of this.readChannel.getReadStream({
+  /**
+   * Begin routing responses on the incoming stream into the deferral tracker. Returns a
+   * disposer that stops the reader and detaches its `keyEvents` listeners (it otherwise
+   * runs until process exit — F8). Uses the same flowing `.on('data')` routing as the
+   * `streamAwaiter` factory: correlation is by `messageId`, so read ordering is moot.
+   * The disposer aborts `readChannel` (CANCEL — the only mechanism that stops an idle
+   * read loop), so it assumes the awaiter owns that channel's read side.
+   */
+  async readResponseStream(shard?: string): Promise<() => void> {
+    const stream = this.readChannel.getReadStream({
       stream: shardDecorator({ key: this.incomingStream, shard })
-    })) {
-      this.stateTracker.emit('response', event);
-    }
+    });
+    const onData = (event: T) => { this.stateTracker.emit('response', event); };
+    stream.on('data', onData);
+    return () => { stream.off('data', onData); void this.readChannel.abort(); };
   }
 }
 
@@ -99,38 +106,42 @@ export const streamAwaiter = <T extends MappedStreamEvent>(
       }
 
       const id = ids.guuid();
-      let $expectedResponse = (stateTracker.promise<T>(id) as ReturnType<typeof stateTracker.promise<T>> | null);
-      await writeChannel.writeToStream({
-        outgoingStream: target,
-        incomingStream,
-        messageType,
-        messageId: id,
-        message,
-        sourceId: messageSourceId ?? '',
-        shard
-      });
-      const deferredResponse = await $expectedResponse;
-      // Todo: consider using a weakmap here to avoid memory leaks, but for now:
-      $expectedResponse = null;
-      stateTracker.delete(id);
-      return deferredResponse!.payload;
+      const $expectedResponse = stateTracker.promise<T>(id);
+
+      // Remove the tracker entry (and its armed timeout) on EVERY outcome — success, a
+      // dispatch timeout, or a writeToStream failure. Deleting only on success leaks the
+      // promise-map entry on every rejection (a gateway under timeout load grows unbounded).
+      try {
+        await writeChannel.writeToStream({
+          outgoingStream: target,
+          incomingStream,
+          messageType,
+          messageId: id,
+          message,
+          sourceId: messageSourceId ?? '',
+          shard
+        });
+        const deferredResponse = await $expectedResponse;
+        return deferredResponse!.payload;
+      } finally {
+        stateTracker.delete(id);
+      }
     },
-    async readResponseStream(shard?: string) {
-      // If we aren't in ordered mode, I think something like this is more appropriate:
+    /**
+     * Begin routing responses into the deferral tracker. Returns a disposer that stops
+     * the reader and detaches its `keyEvents` listeners (it otherwise runs until process
+     * exit — F8). Callers that `await`/`.catch()` the returned promise still work; the
+     * resolved value is the disposer. The disposer aborts `readChannel` (CANCEL — the
+     * only mechanism that stops an idle read loop), so it assumes the awaiter owns that
+     * channel's read side (as the fastify gateway provisions it: one channel per awaiter).
+     */
+    async readResponseStream(shard?: string): Promise<() => void> {
       const stream = readChannel.getReadStream({
         stream: shardDecorator({ key: incomingStream, shard })
       });
-
-      stream.on('data', (e) => {
-        stateTracker.emit('response', e);
-      });
-
-      // // For ordered mode??
-      // for await (const event of readChannel.getReadStream({
-      //   stream: shardDecorator({key: incomingStream, shard}),
-      // })) {
-      //   stateTracker.emit('response', event);
-      // }
+      const onData = (e: T) => { stateTracker.emit('response', e); };
+      stream.on('data', onData);
+      return () => { stream.off('data', onData); void readChannel.abort(); };
     }
   };
 };
