@@ -169,6 +169,13 @@ export class DeferralTracker extends EventEmitter {
 	}
 
 	delete(id: string) {
+		// Clear the armed timeout before dropping the entry, so a cleanup on a non-timeout
+		// path (e.g. a write failure) can't leave a dangling timer that later fires and
+		// rejects an unobserved promise.
+		const entry = this.promises[id];
+		if (entry?.timeout) {
+			clearTimeout(entry.timeout);
+		}
 		delete this.promises[id];
 	}
 }
