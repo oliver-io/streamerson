@@ -49,3 +49,6 @@ Thumbs.db
 **/_reports/*.json
 
 **/*.GCP.json
+
+# test coverage output
+coverage/
