@@ -32,8 +32,8 @@ Consequences of that history, visible in the tree today:
 | Package | State | Summary |
 |---|---|---|
 | `core` | ✅ Functional, ⚠️ cruft | node-redis datasource, Topic/keys (now with `loopback()`), correlation. Works; carries debug logging and a stale protocol doc. |
-| `consumer` | ✅ Functional | `StreamConsumer` + consumer groups (group wiring fixed) + Piscina cluster. Single-node solid; cluster still experimental. |
-| `consumer` cluster | 🧪 Experimental | Piscina worker pool; lifecycle still undefined (Gap I). |
+| `consumer` | ✅ Functional | `StreamConsumer` + consumer groups (group wiring fixed) + Bun `Worker` cluster. Single-node solid; cluster lifecycle now defined (Gap I closed). |
+| `consumer` cluster | ✅ Functional | Bun `Worker` pool (block-for-life): fixed `count`, runtime `scale()`, restart-on-crash, graceful drain. Live-Redis test (`cluster.test`). |
 | `emitter` | ✅ Functional, published | Standalone `StateEmitter` (deep-path subscriptions). Independent of streaming. Most "finished" package. |
 | `gateway-fastify` | ⚠️ Functional single-node | Awaiter dedup fixed; debug `console.log` noise; no multi-instance routing (Gap E). |
 | `gateway-wss` | ✅ Functional single-node | Response stream now read via `topic.loopback()` (prior bug fixed); client routing by source token. |
@@ -47,6 +47,7 @@ Consequences of that history, visible in the tree today:
 - ✅ **Consumer-group read wiring** — `ConsumerGroupMember` now threads `consumerGroupInstanceConfig` into the consumer, so members actually read as a group and `process()` no longer throws.
 - ✅ **Gateway double-subscribe** — the Fastify plugin memoizes one awaiter per stream pair and starts the response reader once.
 - ✅ **gateway-wss wrong stream** — responses are read from `topic.loopback()` (the producer end) instead of the request stream.
+- ✅ **Cluster lifecycle (was Gap I)** — Piscina replaced with native Bun `Worker` (block-for-life). `ConsumerGroupCluster` now: owns an admin-only coordinator (separate from members), spawns a fixed member `count`, exposes runtime `scale(n)` for a control plane, restarts crashed members (bounded backoff) to maintain `count`, and drains gracefully on `stop()`. `count` replaces `min`/`max`; `processingTimeout` (per-handler budget) and `idleTimeout` (drain budget) are now wired. Covered by a live-Redis integration test (`cluster.test`). *(Open: re-binding `processingTimeout`/`idleTimeout` to reclaim `min-idle`/BLOCK cadence — CONSUMER_GROUP.md §7.6 — when the reclaim/delivery work lands.)*
 
 ## Known gaps & bugs (blunt)
 
@@ -88,17 +89,13 @@ The wire format moved from positional packing to **named stream fields** (node-r
 Yarn↔npm limbo (lockfile vs scripts). `DEFAULT_BLOCKING_TIMEOUT` is **100ms**, so `iterateStream` polls Redis ~10×/s per reader — low abort latency, but constant chatter; pick this deliberately. `consumer` still lists an `ioredis` dep though core uses node-redis.
 **Fix:** commit to one package manager; document/justify the poll interval; prune dead deps.
 
-### 🧪 I. Cluster lifecycle is undefined
-Piscina is a request/response task pool, but it hosts long-lived listeners: a worker's `connectAndListen()` resolves once the pipe is wired, so the task "completes" while the consumer runs detached. `min`/`processingTimeout`/`idleTimeout` are unused (only `max`), and the coordinator is itself a member with an empty `groupMemberId`.
-**Fix:** define worker lifetime (block-for-life vs detached pool), wire the scaling knobs, separate coordinator from worker. **Remediation:** none.
-
 ## Roadmap (suggested order)
 
 1. **Strip debug cruft (J)** and **wire test targets (K).** Cheap, and they restore credibility + a regression net before deeper changes.
 2. **Add stream trimming (B).** Existential for the intended workload.
 3. **Decide & plumb delivery semantics (C)** — at-most-once-and-say-so, or restore acked reads + recovery.
 4. **Design multi-instance response routing (E)** using `sourceId`/`destination` + `loopback()`; fix the timeout leak (D) along the way.
-5. **Resolve cluster lifecycle (I);** lift or document the `controllable` hack (G).
+5. Lift or document the `controllable` hack (G). *(Cluster lifecycle (I) is now closed — see "Fixed since".)*
 6. **Reconcile docs & dev loop (L, M)** and produce **end-to-end gateway benchmarks** to validate the overhead claim.
 
 ## Open decisions needed
@@ -106,7 +103,7 @@ Piscina is a request/response task pool, but it hosts long-lived listeners: a wo
 - **Production broker: Redis or DragonflyDB?** Drives the trimming, control-connection, and `controllable` calculus.
 - **Package manager: Yarn or npm?** Pick one; the split state is a footgun.
 - **Is `emitter` a permanent first-class package** or a vendored extraction from the game? Affects whether it gets its own release/test rigor.
-- **Cluster workers: detach-and-return, or block-for-life?** The load-bearing ambiguity in the Piscina design.
+- ~~**Cluster workers: detach-and-return, or block-for-life?**~~ **Decided: block-for-life** (native Bun `Worker`); see "Fixed since". Member count is fixed (`count`) and runtime-mutable via `scale()` for an external control plane — no demand-based autoscaling.
 - **Stream retention (decided):** the strategy is **reverse-streamers** — processors that drain a stream from the tail, optionally persisting to SQL before deletion (don't delete unflushed data). Native `MAXLEN` trim stays an opt-in, off-by-default backstop. Open sub-question: the reverse-streamer design itself (ordering, SQL schema, persistence guarantees).
 
 ## Updating this doc
