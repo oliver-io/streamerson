@@ -75,6 +75,18 @@ export class Topic {
     })
   }
 
+  /**
+   * Dead-letter stream for this topic (and shard). A plain stream (no group):
+   * terminally-failed and abandoned entries are recorded here with cause +
+   * provenance, drained to SQL by reverse-streamers. See REQUEST_STREAM_RECEIPT.md §4.
+   */
+  deadLetterKey(shard?: string): string {
+    return `${keyGenerator({
+      namespace: this.namespace,
+      key: shardDecorator({ key: this.topic, shard })
+    })}::DEAD_LETTER`;
+  }
+
   subtopic(topic: string) {
     return new Topic(typeof this.options === 'string' ? `${this.topic}(${topic})` : {
       ...this.options,
