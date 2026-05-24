@@ -62,6 +62,11 @@ export class RedisDataSource implements ConnectableDataSource {
     return this._control;
   }
 
+  /** True once `disconnect()` has begun — lets read loops exit instead of spinning. */
+  get isClosing(): boolean {
+    return this.closing;
+  }
+
   async debugPing() {
     return this.client.send('PING', []);
   }
