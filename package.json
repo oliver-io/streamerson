@@ -5,6 +5,8 @@
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
     "test": "bun test",
+    "test:coverage": "bun test packages/core/test --coverage",
+    "test:coverage:reader": "bun tools/coverage-gate.ts",
     "clean": "./tools/cleanup.sh",
     "postclean": "bun install && bun run build",
     "docgen": "bun ./tools/embed.ts -w --summary",
