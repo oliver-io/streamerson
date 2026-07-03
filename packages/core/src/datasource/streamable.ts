@@ -566,6 +566,17 @@ export class StreamingDataSource extends RedisDataSource
   }
 
   /**
+   * Current top entry id of a stream (last-generated), or `'0'` if empty/absent/unreachable.
+   * Seeds a loss-free "from now" reader cursor without the `'$'` arm-up gap (GW15): a reader
+   * that opens at this captured id catches everything written after it, including the arm-up
+   * window and (on a self-heal re-arm) the whole outage backlog. Tolerant — a not-yet-connected
+   * client yields `'0'` (see {@link lastGeneratedId}), so callers may seed eagerly.
+   */
+  async currentTopId(key: string, shard?: string): Promise<string> {
+    return this.lastGeneratedId(shardDecorator({ key, shard }));
+  }
+
+  /**
    * The read loop. Yields decoded events from the current stream set until cancelled.
    *
    * Dynamic stream-set semantics (STREAM_READER_DEFECTS.md F1): a runtime stream-set

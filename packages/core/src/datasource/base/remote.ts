@@ -91,6 +91,22 @@ export class RedisDataSource implements ConnectableDataSource {
     this._client = undefined;
   }
 
+  /**
+   * Re-establish the connection(s) after a NON-intentional drop (an outage), keeping the
+   * source open. Unlike {@link disconnect}, this does not latch `closing` — we intend to keep
+   * reading. Closes any stale handles, then reconnects fresh; `connect()` is the subclass
+   * override, so subclass setup (e.g. SCRIPT LOAD) re-runs. Throws if the reconnect fails,
+   * letting the caller's reconnect policy (backoff/give-up) drive the retry.
+   */
+  async reconnect() {
+    this.safeClose(this._control);
+    this._control = undefined;
+    this.safeClose(this._client);
+    this._client = undefined;
+    this.closing = false;
+    await this.connect();
+  }
+
   private safeClose(connection?: RedisClient) {
     try {
       const closed = connection?.close() as unknown;

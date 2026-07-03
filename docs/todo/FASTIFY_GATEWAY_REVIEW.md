@@ -48,16 +48,16 @@ about everything around it: request fidelity, failure surfaces, lifecycle, and c
 | **GW2** | Documented "fire-and-forget" mode does not exist | **High** (feature/doc gap) | verified | `stream-plugin.ts` handler; README |
 | **GW3** | All worker failures collapse to one opaque `500` "timed out" (and cost the full timeout) | **High** (observability/correctness) | verified | handler + consumer pipe + DeferralTracker |
 | **GW4** | No Redis auth/TLS/db config — only `host`/`port` are plumbed | **High** (deployment) | code | `getStreamAwaiter` + `DataSourceOptions` |
-| **GW5** | No `onClose` teardown — 4 Redis connections per topic leak on every `server.close()` | **High** (resource leak) | verified | plugin body (no hook) |
-| **GW6** | Per-route `timeout` is silently ignored (only plugin-level honored) — and the shipped example sets it | Medium (doc/behavior) | verified | `getStreamAwaiter` uses `options.timeout` |
+| **GW5** | No `onClose` teardown — 4 Redis connections per topic leak on every `server.close()` — **✅ FIXED** | **High** (resource leak) | verified | plugin body (no hook) |
+| **GW6** | Per-route `timeout` is silently ignored (only plugin-level honored) — and the shipped example sets it — **✅ FIXED** | Medium (doc/behavior) | verified | `getStreamAwaiter` uses `options.timeout` |
 | **GW7** | A handler returning void/undefined → response dropped → timeout (no empty 200/204) | Medium (REST semantics) | verified | `getWriteStream` null-guard |
 | **GW8** | `DeferralTracker` permanently leaks a `promises[id]` entry on every timeout — **✅ FIXED** | Medium (memory) | verified | `deferred-promise-tracker.ts` + `stream-awaiter.ts` |
-| **GW9** | Response-reader is fire-and-forget with no `'error'` handler; a Redis hiccup → unhandled stream error → crash | Medium (robustness) | code | `stream-plugin.ts` `readResponseStream().catch(throw)` |
+| **GW9** | Response-reader is fire-and-forget with no `'error'` handler; a Redis hiccup → unhandled stream error → crash — **✅ FIXED (self-healing reconnect + freeze)** | Medium (robustness) | code | `stream-plugin.ts` `readResponseStream().catch(throw)` |
 | **GW10** | `register({ prefix })` is ignored (fastify-plugin escapes encapsulation) | Low-Med (ergonomic) | verified | `fp(...)` wrapper |
 | **GW11** | `.inject()` (light-my-request) crashes under Bun → plugin can't be black-box tested the standard way | Low-Med (testability) | verified | Bun × light-my-request `response._header` |
 | **GW12** | Non-Fastify keys spread into `fastify.route(...)`; a user-supplied `handler` is silently overridden | Low (hygiene) | verified | `defaultedRoute` spread |
 | **GW13** | `request.sourceId` is decorated to `''` and never populated — vestigial | Low (dead code) | verified | `decorateRequest('sourceId','')` |
-| **GW14** | No validation that `messageType` is set per route; missing → guaranteed silent timeout | Low (DX) | code | handler casts `route.messageType as MessageType` |
+| **GW14** | No validation that `messageType` is set per route; missing → guaranteed silent timeout — **✅ FIXED** | Low (DX) | code | handler casts `route.messageType as MessageType` |
 | **GW15** | Startup `'$'` join race: a response in the reader's arm-up window is missed | Low (correctness, probabilistic) | code | `readResponseStream` default `'$'` (core F5) |
 
 ---
@@ -155,7 +155,7 @@ no AUTH).
   the plugin options (and ideally through core's `redisUrl()` for `rediss://`+AUTH). Small,
   high-value. Spec the option shape.
 
-### GW5 — No `onClose` teardown; connections leak on `server.close()` · High · [verified]
+### GW5 — No `onClose` teardown; connections leak on `server.close()` · ✅ FIXED
 
 The plugin opens two `StreamingDataSource`s per unique topic-binding (read + write), each
 `controllable: true` (client **+** control connection) = **4 Redis connections per topic**,
@@ -174,8 +174,17 @@ channel) is discarded.
 - **Proposed direction:** Register `onClose` to `disconnect()` every channel (track them, or
   have the awaiter expose a real `dispose()` that disconnects both channels). Couples to
   GW9 (own the read-error path) and the core `streamAwaiter` disposer shape.
+- **Resolution:** The plugin now captures every provisioned channel (`channels`) and each
+  response-reader disposer (`readerDisposers`) in its closure, and registers a single
+  `onClose` hook that calls the disposers (detach `.on('data')`/`.on('error')`) then
+  `disconnect()`s every channel (`Promise.allSettled`). `disconnect()` is the load-bearing
+  teardown (it `abort()`s the read loop and closes the data+control sockets); the disposers
+  are best-effort listener detach. Guard:
+  `packages/gateway-fastify/test/integration/connection-lifecycle.test.ts` — asserts
+  `connected_clients` rises by ≥4 on register/listen and returns to baseline after
+  `close()` (RED→GREEN).
 
-### GW6 — Per-route `timeout` silently ignored · Medium · [verified]
+### GW6 — Per-route `timeout` silently ignored · ✅ FIXED
 
 The awaiter's deferral timeout is taken from **plugin-level** `options.timeout`; the
 per-route `timeout` field (present on `StreamersonRouteOptions`) is only spread into
@@ -190,6 +199,11 @@ does nothing.
 - **Proposed direction:** Honor `route.timeout` by giving each route's dispatch its own
   effective timeout (per-call timeout on `dispatch`, or a per-route awaiter), or drop the
   field and fix the example. Decide which; spec it.
+- **Resolution:** Honored as an optional per-call timeout. `DeferralTracker.promise(id,
+  timeoutMs?)` takes a per-entry timeout (also used to re-arm on resume, GW9); the gateway
+  threads `route.timeout` into `dispatch(..., { timeout })`. Unset → the plugin default. The
+  shipped `app-hello-world` `timeout: 1000` is now load-bearing. Guard:
+  `self-heal.test.ts` "per-call timeout override (Q6)".
 
 ### GW7 — Void/undefined handler return → dropped → timeout · Medium · [verified]
 
@@ -208,7 +222,7 @@ null payload → dropped → the gateway never sees a response → timeout.
 
 Closed in **core**: both `dispatch` impls (the `StreamAwaiter` class + the `streamAwaiter` factory) wrap write+await in a `try { … } finally { stateTracker.delete(id) }`, and `DeferralTracker.delete` clears the armed timer — so the entry **and** its timer are released on every outcome (success, timeout, write failure). Guard: `packages/core/test/streams/deferred-stream-consumer/deferral-cleanup.test.ts` (green).
 
-### GW9 — Response reader has no error path; a Redis hiccup can crash the process · Medium · [code]
+### GW9 — Response reader has no error path; a Redis hiccup can crash the process · ✅ FIXED (self-healing)
 
 ```ts
 stateTracker.readResponseStream().catch((err: unknown) => { throw err; });
@@ -228,6 +242,27 @@ listener → an unhandled `'error'` event (process-fatal in Node/Bun semantics).
 - **Proposed direction:** Attach an `'error'` handler on the response stream that logs and
   triggers a reconnect/re-arm; replace the `.catch(throw)` with real handling. Couples to
   GW5's lifecycle work.
+- **Resolution (no-crash floor):** Core `streamAwaiter`/`StreamAwaiter.readResponseStream`
+  (both impls) now attach an `'error'` listener on the response `Readable` (logs via the
+  awaiter's logger), removed by the disposer — so a non-intentional read failure is consumed
+  instead of becoming a process-fatal unhandled `'error'`. The gateway's `.catch(throw)`
+  dead-code is replaced with logging. Guard:
+  `packages/core/test/streams/deferred-stream-consumer/response-reader-error.test.ts`
+  (asserts the listener is attached on arm and removed on dispose; the crash occurs IFF that
+  listener is absent — reproducing a real mid-read drop is nondeterministic, hence the
+  mechanism guard). The fix lives in **core**; verified with the reader coverage gate (100%)
+  and `tsc -b`.
+- **Resolved (self-healing):** the no-crash floor was extended to a full reconnect state
+  machine in the awaiter (the caller of the read primitive; the datasource only gained a thin
+  transport `reconnect()`). On a non-intentional read error it suspends in-flight deferral
+  timers ("freeze time"), reconnects with capped backoff, re-arms the reader from the retained
+  cursor (so the outage **backlog is flushed**, not skipped — coupled to GW15), then resumes.
+  Default is infinite reconnect with frozen in-flight requests; `reconnect.maxAttempts` opts
+  into giving up → pending fail → **503** at the gateway. A disconnecting client cancels its
+  own wait via an `AbortSignal`. Full concurrency model + race analysis:
+  [`../specs/GATEWAY_READER_SELF_HEAL.md`](../specs/GATEWAY_READER_SELF_HEAL.md). Guards:
+  `packages/core/test/streams/deferred-stream-consumer/self-heal.test.ts` (cursor-resume,
+  freeze, give-up→503, client-abort, dispose-during-heal — all green).
 
 ### GW10 — `register({ prefix })` is ignored · Low-Med · [verified]
 
@@ -281,12 +316,17 @@ dead weight carried over from the WSS gateway (where source-token routing matter
 - **Proposed direction:** Remove it, or populate it with something meaningful (request id)
   if downstream provenance is desired.
 
-### GW14 — No per-route `messageType` validation · Low · [code]
+### GW14 — No per-route `messageType` validation · ✅ FIXED
 
 `route.messageType as MessageType` is cast without a check; a route missing `messageType`
 dispatches `undefined`, which no worker handler matches → guaranteed silent timeout.
 
 - **Proposed direction:** Validate at registration; throw a clear configuration error.
+- **Resolution:** The plugin now throws at registration (before any channel is opened) for a
+  route missing `messageType`, naming the offending `method`/`url` and explaining the silent-
+  timeout consequence. Surfaces via Fastify `ready()`. Guard:
+  `packages/gateway-fastify/test/integration/route-validation.test.ts` (rejects on missing
+  type; a valid route still registers cleanly).
 
 ### GW15 — Startup `'$'` join race on the response stream · Low · [code]
 
@@ -317,14 +357,17 @@ read, so it's improbable but not impossible (notably for the very first request 
 
 ## Suggested triage order (for discussion)
 
-1. **GW5 + GW9** (lifecycle/robustness) — correctness/stability. (**GW8**, the core leak,
-   is **done** — it also benefited the WIP `state-machine` (the other `streamAwaiter`
-   consumer); the WSS gateway uses a separate correlation mechanism and is unaffected.)
-2. **GW4** (auth/TLS) — deployment blocker, small change.
-3. **GW3 + GW7** (error/no-content envelope) — one joint spec with the consumer package.
-4. **GW1** (request fidelity) — the defining REST limitation; needs a request-envelope spec.
-5. **GW2 / GW6** — close the doc↔code gaps (implement or retract; fix the example).
-6. **GW10–GW15** — hygiene/DX; cheap once the above are settled.
+1. ~~**GW5 + GW9**~~ — **DONE.** GW5 (onClose teardown); GW9 fully self-healing (reconnect +
+   freeze + cursor-resume), which also closed ~~**GW15**~~ (resumable cursor), ~~**GW6**~~
+   (per-route timeout — shared mechanism), ~~**GW14**~~ (register-time validation), and
+   ~~**GW8**~~ (the core leak). Core changes; WSS uses a separate correlation mechanism and
+   is unaffected. Spec: `../specs/GATEWAY_READER_SELF_HEAL.md`.
+2. **GW4** (auth/TLS) — deployment blocker; `getConnection` escape hatch (Q2 decided).
+3. **GW3 + GW7** (error/no-content envelope) — joint spec with the consumer package (parked
+   for an owner discussion).
+4. **GW1** (request fidelity) — the defining REST limitation; request-envelope spec (parked).
+5. **GW2** — fire-and-forget: implement the opt-in route mode (Q5 decided).
+6. **GW10–GW13** — hygiene/DX (GW10/GW13 parked for an owner walkthrough; GW12 approved).
 
 > None of these should be actioned without agreeing the spec first (CLAUDE.md). Several
 > (GW1, GW2, GW3, GW7) are interface-defining and deserve a short design note before code.

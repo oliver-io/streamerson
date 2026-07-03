@@ -10,6 +10,9 @@ type ResponseTracker<T = any> = {
 	resolve: (t: T)=>void;
 	reject: (e: Error | unknown)=>void;
 	timeout: NodeJS.Timeout | undefined;
+	// Effective timeout for THIS entry (default or a per-call override). Stored so a
+	// resume after a "freeze" (suspendTimeouts) re-arms each entry with its own value.
+	timeoutMs?: number;
 };
 
 export type DeferralTrackerOptions = {
@@ -38,6 +41,10 @@ export class DeferralTracker extends EventEmitter {
 	timeout: number;
 	promises: Record<string, ResponseTracker> = {};
 	logger: StreamersonLogger;
+	// "Frozen" state: while true (a response-reader outage), pending deferral timers are
+	// cleared and new ones are not armed — the wait is suspended, not failed. See
+	// suspendTimeouts/resumeTimeouts and docs/specs/GATEWAY_READER_SELF_HEAL.md §5.
+	suspended = false;
 	constructor(args: DeferralTrackerOptions = {}) {
 		super(args);
     this.promises = {}
@@ -126,6 +133,7 @@ export class DeferralTracker extends EventEmitter {
 
 	async promise<T extends DeferredEvent>(
 		id: string,
+		timeoutMs?: number,
 	): Promise<DeferredEvent<T>> {
 		/* OPTME: There is a tradeoff here regarding a certain quantity
         ** of hanging promises; the sheer number of possibly pending
@@ -157,15 +165,55 @@ export class DeferralTracker extends EventEmitter {
 			reject = rejecter;
 		});
 
+		const effective = timeoutMs ?? this.timeout;
 		this.promises[id] = {
 			self: promise,
 			resolve,
 			reject,
-			timeout: global.setTimeout(() => reject!(this.staticTimeoutError), this.timeout) as unknown as NodeJS.Timeout,
+			timeoutMs: effective,
+			// While suspended (a reader outage), do NOT arm — the wait is frozen until
+			// resumeTimeouts re-arms it on recovery (a dispatch timeout is meaningless when
+			// the stall is the infra, not the worker).
+			timeout: this.suspended ? undefined : this.armTimeout(reject, effective),
 		};
 
 
 		return this.promises[id].self as Promise<T>;
+	}
+
+	private armTimeout(reject: (e: Error | unknown) => void, ms: number): NodeJS.Timeout {
+		const err = ms === this.timeout ? this.staticTimeoutError : new Error(`Request timed out after ${ms / 1000} seconds`);
+		return global.setTimeout(() => reject(err), ms) as unknown as NodeJS.Timeout;
+	}
+
+	/**
+	 * "Freeze time" for all pending request deferrals — used when the response reader is in a
+	 * (transient) outage. Clears every armed timer WITHOUT rejecting, and stops `promise()`
+	 * from arming new timers while suspended. A frozen wait then ends only on a real response,
+	 * a cancel (client abort / give-up), or {@link resumeTimeouts} — never on a dispatch
+	 * timeout unrelated to the down reader. See docs/specs/GATEWAY_READER_SELF_HEAL.md §5.
+	 * Operates only on real deferrals; orphan pre-store entries (noop resolve) self-delete.
+	 */
+	suspendTimeouts() {
+		this.suspended = true;
+		for (const id in this.promises) {
+			const entry = this.promises[id];
+			if (entry.resolve !== noOpFunction && entry.timeout) {
+				clearTimeout(entry.timeout);
+				entry.timeout = undefined;
+			}
+		}
+	}
+
+	/** Thaw: re-arm every still-pending real deferral with a FRESH full timeout (grace from now). */
+	resumeTimeouts() {
+		this.suspended = false;
+		for (const id in this.promises) {
+			const entry = this.promises[id];
+			if (entry.resolve !== noOpFunction && !entry.timeout) {
+				entry.timeout = this.armTimeout(entry.reject, entry.timeoutMs ?? this.timeout);
+			}
+		}
 	}
 
 	delete(id: string) {
