@@ -122,9 +122,8 @@ export class ConsumerGroupMember<E extends EventMapRecord<any, any>> extends Str
       let events: MappedStreamEvent[];
       try {
         ({ events } = (await this.incomingChannel.blockingStreamBatchMap({
-          stream,
+          stream, // already shard-decorated (topic.consumerKey(shard)) — no `shard` (A8)
           last: '>',
-          shard: this.options.shard,
           consumerGroupInstanceConfig,
           blockingTimeout,
           requestedBatchSize

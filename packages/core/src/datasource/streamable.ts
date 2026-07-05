@@ -364,9 +364,18 @@ export class StreamingDataSource extends RedisDataSource
    * standalone group consumer.
    */
   getReadStream(options: { topic: Topic, shard?: string } | GetReadStreamOptions) {
-    this.addStreamId('topic' in options ? options.topic.consumerKey(options.shard) : options.stream);
+    // Topic form: the shard is folded into the topic segment exactly once by
+    // `consumerKey(shard)` — the canonical key. Do NOT also pass `shard` down, or
+    // `blockingStreamBatchMap` would decorate again (sharded-topic-keys pin, bug #3).
+    // Raw-stream form keeps the documented "undecorated key + shard" semantics.
+    if ('topic' in options) {
+      const stream = options.topic.consumerKey(options.shard);
+      this.addStreamId(stream);
+      return Readable.from(this.iterateStream({ stream }), { objectMode: true }) as Readable & { readableObjectMode: true };
+    }
+    this.addStreamId(options.stream);
     return Readable.from(
-      this.iterateStream('topic' in options ? { ...options, stream: options.topic.consumerKey() } : options),
+      this.iterateStream(options),
       { objectMode: true },
     ) as Readable & { readableObjectMode: true };
   }
@@ -392,6 +401,10 @@ export class StreamingDataSource extends RedisDataSource
             return callback();
           }
 
+          // Topic form: `consumerKey(shard)`/`producerKey(shard)` are the canonical,
+          // already-decorated keys — `shard` must not be passed to writeToStream too
+          // (double decoration; sharded-topic-keys pin, bug #3). Raw form passes the
+          // undecorated key + shard through unchanged.
           const incomingStreamName = 'topic' in options ? options.topic.consumerKey(options.shard) : options.stream;
           const outgoingStreamName = 'topic' in options ? options.topic.producerKey(options.shard) : options.responseChannel;
 
@@ -404,7 +417,7 @@ export class StreamingDataSource extends RedisDataSource
             messageId: chunk.messageId,
             message: JSON.stringify(chunk.payload),
             sourceId: chunk.messageSourceId ?? '',
-            shard: options.shard,
+            shard: 'topic' in options ? undefined : options.shard,
           }).then(() => callback()).catch((err) => callback(err as Error));
         } catch (err) {
           callback(err as Error);

@@ -93,9 +93,12 @@ export class StreamConsumer<
       controllable: true
     });
 
+    // `consumerStream` is already shard-decorated (topic.consumerKey(shard)); core's
+    // shardDecorator contract is "undecorated key + shard" OR "pre-decorated key, no
+    // shard" (cf. stream-awaiter.ts readResponseStream). Passing `shard` again would
+    // double-decorate and leave a sharded consumer reading a key nobody writes (A8).
     this.incomingStream = this.incomingChannel.getReadStream({
       stream: consumerStream,
-      shard: this.options.shard,
       consumerGroupInstanceConfig: this.options.consumerGroupInstanceConfig
     });
 
@@ -112,9 +115,9 @@ export class StreamConsumer<
       port: this.options.redisConfiguration?.port
     }) : undefined);
 
+    // `producerStream` is already shard-decorated — no `shard` here (see A8 note above).
     this.outgoingStream = this.outgoingStream ?? ((this.bidirectional && this.outgoingChannel) ? this.outgoingChannel.getWriteStream({
-      stream: producerStream,
-      shard: this.options.shard
+      stream: producerStream
     }) : undefined);
 
     for (const event in this.options.eventMap) {
@@ -239,6 +242,22 @@ export class StreamConsumer<
       this.incomingChannel.connect(),
       this.outgoingChannel ? this.outgoingChannel.connect() : Promise.resolve()
     ]);
+
+    // Pin the read cursor to the stream's current tip BEFORE resolving (the Q9/GW15
+    // pattern, cf. stream-awaiter.readResponseStream): the constructor's reader is
+    // armed with '$', which is resolved only at its FIRST XREAD — after this method
+    // returns — so a message written immediately after connectAndListen() resolves
+    // could land in the arm-up gap and be skipped forever (A9). The constructor's
+    // Readable has never been pulled (it is only piped below), so it holds no read
+    // loop or listeners of its own; replace it with one seeded at the captured tip
+    // and re-run the channel-event binding for the new instance.
+    const consumerStream = this.topic.consumerKey(this.options.shard);
+    this.incomingStream = this.incomingChannel.getReadStream({
+      stream: consumerStream,
+      last: await this.incomingChannel.currentTopId(consumerStream),
+      consumerGroupInstanceConfig: this.options.consumerGroupInstanceConfig
+    });
+    this.bindStreamEvents(this.topic);
 
     this.logger.info({
       incoming: this.topic.consumerKey(this.options.shard),

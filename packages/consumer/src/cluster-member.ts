@@ -1,5 +1,4 @@
 /// <reference types="bun" />
-import type { MappedStreamEvent } from '@streamerson/core';
 import type { ConsumerGroupMember } from './member';
 import type { EventMapRecord } from './base/stream-consumer';
 import type { ClusterCommand, MemberParams, MemberSignal } from './cluster-protocol';
@@ -15,7 +14,10 @@ export type MemberFactory = (
   params: MemberParams,
 ) => ConsumerGroupMember<EventMapRecord<any, any>> | Promise<ConsumerGroupMember<EventMapRecord<any, any>>>;
 
-type Handler = (e: MappedStreamEvent) => Promise<unknown>;
+// Variadic on purpose (D-2.13): a base consumer dispatches `(event)`, but a state
+// machine dispatches its canonical `(stateTransformers, payload, meta)` — the wrapper
+// below must be signature-preserving for both.
+type Handler = (...args: unknown[]) => Promise<unknown>;
 
 /**
  * Worker entry point for a `ConsumerGroupCluster` member. Call once at module
@@ -47,11 +49,13 @@ export function runClusterMember(build: MemberFactory): void {
     for (const key of Object.keys(handlers)) {
       const original = handlers[key];
       if (!original) continue;
-      handlers[key] = async (event: MappedStreamEvent) => {
+      // Signature-preserving pass-through (D-2.13): forward ALL arguments so a state
+      // machine's canonical (stateTransformers, payload, meta) survives the wrap.
+      handlers[key] = async (...args: unknown[]) => {
         let timer: ReturnType<typeof setTimeout> | undefined;
         try {
           return await Promise.race([
-            original(event),
+            original(...args),
             new Promise<never>((_, reject) => {
               timer = setTimeout(
                 () => reject(new Error(`handler '${key}' exceeded processingTimeout ${processingTimeout}ms`)),
