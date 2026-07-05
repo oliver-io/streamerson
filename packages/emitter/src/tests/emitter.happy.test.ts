@@ -184,7 +184,10 @@ describe('StateEmitter Happy Path Tests', () => {
     assert.strictEqual(state.get('newKey'), 'new value', 'New key should be added to the state');
   });
 
-  describe('exclude single path', () => {
+  // These three were `describe` blocks with no `test()` — their assertions ran at
+  // collection time, so a failure surfaced as an uncounted "unhandled error between
+  // tests". Converted to real tests; bodies unchanged.
+  test('exclude single path', () => {
     const state = new StateEmitter({ user: { name: 'Alice', age: 30 } });
     let callCount = 0;
 
@@ -199,7 +202,7 @@ describe('StateEmitter Happy Path Tests', () => {
     assert.strictEqual(callCount, 1, 'Listener should not be called for age change');
   });
 
-  describe('exclude multiple paths', () => {
+  test('exclude multiple paths', () => {
     const state = new StateEmitter({
       user: { name: 'Alice', age: 30, address: { city: 'New York', country: 'USA' } }
     });
@@ -222,7 +225,7 @@ describe('StateEmitter Happy Path Tests', () => {
     assert.strictEqual(callCount, 2, 'Listener should not be called for country change');
   });
 
-  describe('exclude with wildcard subscription', () => {
+  test('exclude with wildcard subscription', () => {
     const state = new StateEmitter({
       user: { name: 'Alice', age: 30 },
       settings: { theme: 'dark', notifications: true }

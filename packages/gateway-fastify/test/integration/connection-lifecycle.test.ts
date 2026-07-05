@@ -26,15 +26,19 @@ beforeAll(async () => {
 });
 afterAll(async () => { try { await admin.disconnect(); } catch { /* */ } });
 
-async function connectedClients(): Promise<number> {
-  const info = String(await admin.client.send('INFO', ['clients']));
-  const m = info.match(/connected_clients:(\d+)/);
-  return m ? Number(m[1]) : NaN;
+// CLIENT LIST id-set (not the global `connected_clients` counter, which any parallel
+// suite can move): we diff ids so only connections opened *by this test's server*
+// between the snapshots are counted, and then check those exact ids are released.
+async function clientIds(): Promise<Set<string>> {
+  const list = String(await admin.client.send('CLIENT', ['LIST']));
+  const ids = new Set<string>();
+  for (const m of list.matchAll(/(?:^|\n)id=(\d+)/g)) ids.add(m[1]);
+  return ids;
 }
 
 test('GW5: server.close() releases the per-topic Redis connections (no leak)', async () => {
   const topic = new Topic({ namespace: `gw5-${uniq()}`, topic: 'T' });
-  const baseline = await connectedClients();
+  const baseline = await clientIds();
 
   const server = Fastify({ logger: false });
   await server.register(CreateGatewayPlugin({
@@ -47,14 +51,18 @@ test('GW5: server.close() releases the per-topic Redis connections (no leak)', a
   await server.listen({ port: 0, host: '127.0.0.1' });
   await settle(150); // let the async response-reader arm
 
-  const afterListen = await connectedClients();
+  const afterListen = await clientIds();
+  const opened = [...afterListen].filter((id) => !baseline.has(id));
   // One binding = read + write channel, each controllable (data + control) = 4 conns.
-  expect(afterListen - baseline).toBeGreaterThanOrEqual(4);
+  // (Parallel suites can only inflate this GTE, never deflate it.)
+  expect(opened.length).toBeGreaterThanOrEqual(4);
 
   await server.close();
   await settle(150);
 
-  const afterClose = await connectedClients();
-  // RED today: the 4 are NOT released (afterClose ≈ baseline + 4). GREEN: released.
-  expect(afterClose - baseline).toBeLessThan(4);
+  const afterClose = await clientIds();
+  const survivors = opened.filter((id) => afterClose.has(id));
+  // The connections this server opened must be released; other suites' clients
+  // (absent from `opened`) can't affect this.
+  expect(survivors.length).toBeLessThan(4);
 }, 20000);

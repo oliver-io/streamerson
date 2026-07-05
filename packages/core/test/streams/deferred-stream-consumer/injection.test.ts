@@ -1,3 +1,11 @@
+/**
+ * LEGACY MOCK TEST — fully mocked (spied datasource methods, no Redis) despite living
+ * beside the deferred-stream-consumer integration coverage. Superseded by the real
+ * integration suites under `test/streams/` that exercise the awaiter/correlation path
+ * against a live Redis. Kept in place — not renamed/deleted — so git history and prior
+ * discussion stay cheap to follow. Do not extend; add new coverage to the real
+ * integration files instead.
+ */
 import {mockLogger} from '@streamerson/test-utils';
 import * as uuid from 'uuid';
 import {ids, streamAwaiter, StreamingDataSource} from '../../../src';

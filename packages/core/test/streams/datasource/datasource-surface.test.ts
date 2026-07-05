@@ -96,7 +96,9 @@ describe('StreamingDataSource — consumer-group lifecycle', () => {
     const stream = topic.consumerKey();
     await ds.createConsumerGroup({ stream, groupId: 'g', cursor: '0' });
     expect(await ds.createConsumerGroup({ stream, groupId: 'g', cursor: '0' })).toBe('BUSYGROUP');
-    expect(typeof await ds.createGroupMember({ stream, groupId: 'g', groupMemberId: 'm1' })).not.toBe('undefined');
+    // XGROUP CREATECONSUMER returns 1 when the consumer was created, 0 if it already existed.
+    expect(await ds.createGroupMember({ stream, groupId: 'g', groupMemberId: 'm1' })).toBe(1);
+    expect(await ds.createGroupMember({ stream, groupId: 'g', groupMemberId: 'm1' })).toBe(0);
 
     // A non-BUSYGROUP failure (string key → WRONGTYPE) must propagate, not be swallowed.
     const strKey = `itest:cg-wrong:${uniq()}`;
@@ -173,16 +175,19 @@ describe('StreamingDataSource — atomic terminal transitions + claim/pending', 
     const pel = await ds.readGroupEntries(stream, group, 'mA', '0', 200);
     expect(pel.some((x) => x.messageId === 'mid-1')).toBe(true);
 
-    // pendingDetails scoped to one consumer.
+    // pendingDetails scoped to one consumer. Delivery count is numeric: one '>'
+    // delivery plus one '0' PEL re-read (which bumps the count) → 2.
     const detailsA = await ds.pendingDetails(stream, group, 100, 'mA');
     expect(detailsA.length).toBe(1);
     expect(detailsA[0].consumer).toBe('mA');
+    expect(detailsA[0].deliveryCount).toBe(2);
 
-    // claimStale moves the (idle ≥ 0ms) entry to mB.
+    // claimStale moves the (idle ≥ 0ms) entry to mB; XAUTOCLAIM bumps delivery count again → 3.
     const claimed = await ds.claimStale(stream, group, 'mB', 0);
     expect(claimed.entries.some((x) => x.messageId === 'mid-1')).toBe(true);
     const detailsB = await ds.pendingDetails(stream, group, 100, 'mB');
     expect(detailsB.length).toBe(1);
+    expect(detailsB[0].deliveryCount).toBe(3);
     void e;
     await ds.client.send('DEL', [stream]);
   });

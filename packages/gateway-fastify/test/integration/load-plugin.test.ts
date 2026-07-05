@@ -10,6 +10,10 @@ test('the gateway plugin loads and registers its routes', async () => {
     topic: new Topic('test'),
     routes: [{ url: '/wat', method: 'POST', messageType: 'test' }],
   }));
-  assert.notEqual(server, undefined);
+  await server.ready();
+  // Registration actually mounted the declared route (not just "didn't throw").
+  assert.equal(server.hasRoute({ method: 'POST', url: '/wat' }), true);
+  assert.equal(server.hasRoute({ method: 'GET', url: '/wat' }), false);
+  // And the armed readers don't wedge shutdown: close resolves cleanly.
   await server.close();
 });

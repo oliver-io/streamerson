@@ -40,12 +40,16 @@ test('an idle getReadStream consumer neither leaks nor strands keyEvents(update)
   // ~12 blocking cycles. Pre-fix this exceeds the 10-listener warning threshold.
   await sleep(1200);
   const peak = ds.keyEvents.listenerCount('update');
+  const peakCancel = ds.keyEvents.listenerCount('abort'); // KeyEvents.CANCEL = 'abort'
 
   await ds.abort();
   await Promise.race([consume, sleep(500)]);
   await sleep(50);
   const afterTeardown = ds.keyEvents.listenerCount('update');
+  const afterTeardownCancel = ds.keyEvents.listenerCount('abort');
 
   expect(peak).toBeLessThanOrEqual(2);   // one persistent listener, not one-per-cycle
+  expect(peakCancel).toBeLessThanOrEqual(2);
   expect(afterTeardown).toBe(0);          // cleaned up when iteration ended
+  expect(afterTeardownCancel).toBe(0);    // the CANCEL ('abort') listener must be removed too
 }, 15000);

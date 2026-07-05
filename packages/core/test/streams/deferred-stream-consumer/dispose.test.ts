@@ -16,6 +16,11 @@ const REDIS = {
 };
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const uniq = () => `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+/** Poll until `fn()` holds or `ms` elapses (event-driven wait, no fixed sleep). */
+async function until(fn: () => boolean, ms: number, step = 20): Promise<void> {
+  const deadline = Date.now() + ms;
+  while (!fn() && Date.now() < deadline) await sleep(step);
+}
 
 let readChannel: StreamingDataSource;
 let writeChannel: StreamingDataSource;
@@ -36,12 +41,14 @@ test('readResponseStream returns a disposer that tears the response reader down'
   const dispose = await awaiter.readResponseStream();
   expect(typeof dispose).toBe('function');
 
-  await sleep(120); // let the read loop attach its keyEvents listeners
+  // Wait (bounded) for the read loop to attach its keyEvents listeners.
+  await until(() => readChannel.keyEvents.listenerCount('update') > 0, 2000);
   const attached = readChannel.keyEvents.listenerCount('update');
   expect(attached).toBeGreaterThan(0);
 
   (dispose as () => void)();
-  await sleep(200); // let the destroyed generator run its finally (bounded by blockingTimeout)
+  // Wait (bounded by blockingTimeout) for the destroyed generator's finally to detach them.
+  await until(() => readChannel.keyEvents.listenerCount('update') === 0, 5000);
   expect(readChannel.keyEvents.listenerCount('update')).toBe(0);
 
   await readChannel.client.send('DEL', [key]).catch(() => {});

@@ -31,7 +31,7 @@ beforeAll(async () => {
 
 afterAll(() => rig.teardown());
 
-test('handler failure stays recoverable in the PEL and does not wedge the loop; success acks', async () => {
+test('handler failure is dead-lettered as terminal FAILED (PEL drains) and does not wedge the loop; success acks', async () => {
   member = new ConsumerGroupMember(
     {
       topic,

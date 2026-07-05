@@ -72,7 +72,8 @@ test('consumer-group round-trip: create, write, blocking group-read, decode, ack
   expect(got!.messageDestination).toBe(topic.producerKey());
   expect(got!.payload).toEqual({ hi: 'there' });
 
-  // XACK is callable end-to-end (returns a number; 0 under NOACK reads — Gap C).
+  // The group read is not NOACK (readAsGroup issues no NOACK flag), so the entry
+  // sits in the member's PEL until acked: XACK must report exactly 1 entry acked.
   const acked = await writer.markProcessedByGroup(topic, groupId, got!.streamMessageId!);
-  expect(typeof acked).toBe('number');
+  expect(acked).toBe(1);
 }, 15000);

@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@types/lodash.get": "^4.4.9",
+    "eventemitter3": "^5.0.1",
     "lodash.get": "^4.4.2"
   }
 }

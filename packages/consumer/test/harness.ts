@@ -57,6 +57,16 @@ export async function readDlq(admin: StreamingDataSource, topic: Topic): Promise
   });
 }
 
+/** XRANGE any stream key → field maps (e.g. the producer key, to audit raw responses). */
+export async function readEntries(admin: StreamingDataSource, key: string): Promise<Array<Record<string, string>>> {
+  const reply = await admin.client.send('XRANGE', [key, '-', '+']) as Array<[string, string[]]>;
+  return (reply ?? []).map(([, kv]) => {
+    const f: Record<string, string> = {};
+    for (let i = 0; i + 1 < kv.length; i += 2) f[kv[i]] = kv[i + 1];
+    return f;
+  });
+}
+
 /** Write a request onto the topic's consumer (request) stream. */
 export async function write(admin: StreamingDataSource, topic: Topic, messageType: string, messageId: string, payload: object): Promise<void> {
   await admin.writeToStream({

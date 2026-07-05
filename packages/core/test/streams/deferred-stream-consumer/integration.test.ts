@@ -1,3 +1,12 @@
+/**
+ * LEGACY MOCK TEST — misleadingly named: despite the `integration.test.ts` filename,
+ * this is fully mocked (spied `writeToStream`/`getReadStream`, no Redis). It is
+ * superseded by the real integration suites under `test/streams/` (e.g. the
+ * datasource round-trip and stream-awaiter integration tests, which run against a
+ * live Redis). Kept in place — not renamed/deleted — so git history and prior
+ * discussion stay cheap to follow. Do not extend; add new coverage to the real
+ * integration files instead.
+ */
 import { mockLogger as mockLogging } from '@streamerson/test-utils';
 import { MessageType } from '../../../src/types';
 import { Readable } from 'stream';
@@ -31,8 +40,9 @@ describe('when interceding as the stream indirectly', () => {
       })())) as any);
 
     const $dispatched = awaiter.dispatch('wat', MessageType.LOGIN);
-    void awaiter.readResponseStream();
+    const $reader = awaiter.readResponseStream(); // mocked one-shot stream: the loop ends when it drains
     assert.deepEqual(await $dispatched, { hello: 'world!' });
     awaiter.stateTracker.cancelAll();
+    await $reader; // don't leak the reader loop past the test
   });
 });
