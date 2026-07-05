@@ -72,7 +72,7 @@ export class StateCache<AState> {
     }
 
     async set(type: keyof AState, key: KeyOptions, value: string | number | null) {
-        // TODO: handle null case as delete
+        // null routes to the scalar delete inside the datasource (D-Delete).
         return await this.autoCache.set(
             key,
             value,

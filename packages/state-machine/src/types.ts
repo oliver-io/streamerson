@@ -31,7 +31,7 @@ export type StateConfiguration = {
     dataKey?: (propertyTarget: string, context?: { message?: MappedStreamEvent, user?: { id: string }}) => string,
     rent?: boolean,
     replicated?: boolean,
-    local?: boolean,
-    refresh?: boolean,
+    /** Per-key cache TTL in SECONDS (D13). Owner state with no ttl NEVER self-evicts;
+     * rent/replicated state with `ttl: t` re-fetches after t (600s default). */
     ttl?: number
 }
