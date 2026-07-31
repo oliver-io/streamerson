@@ -7,12 +7,12 @@
     "build": "tsc -b tsconfig.lib.json"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
-    "@streamerson/consumer": "^0.0.40",
-    "@streamerson/core": "^0.0.66",
-    "lru-cache": "^7.18.3",
-    "pino": "^7.11.0",
-    "redis": "^4.7.0"
+    "@streamerson/consumer": "workspace:*",
+    "@streamerson/core": "workspace:*",
+    "lru-cache": "^11.5.2",
+    "pino": "^10.3.1",
+    "redis": "^4.7.0",
+    "tslib": "^2.8.1"
   },
   "type": "commonjs",
   "main": "./src/index.js",

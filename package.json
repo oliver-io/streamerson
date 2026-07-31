@@ -10,6 +10,7 @@
     "clean": "./tools/cleanup.sh",
     "postclean": "bun install && bun run build",
     "docgen": "bun ./tools/embed.ts -w --summary",
+    "lint": "eslint .",
     "start:redis": "docker compose up -d",
     "stop:redis": "docker compose down",
     "restart:redis": "docker compose restart",
@@ -19,24 +20,18 @@
     "verify-examples": "tsc -p packages/examples/tsconfig.check.json"
   },
   "private": true,
-  "dependencies": {
-    "colors": "^1.4.0",
-    "redis": "^4.7.0",
-    "tsdoc-markdown": "^0.1.0",
-    "yalc": "^1.0.0-pre.53"
-  },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/bun": "^1.3.14",
-    "@types/node": "18.7.1",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
-    "@typescript-eslint/parser": "^5.60.1",
-    "doctoc": "^2.2.1",
-    "eslint": "~8.46.0",
-    "eslint-config-prettier": "8.1.0",
-    "pino-pretty": "^7.6.1",
-    "prettier": "^2.6.2",
-    "typescript": "~5.1.3",
-    "verdaccio": "^5.0.4"
+    "@types/node": "^26.1.2",
+    "doctoc": "^2.5.0",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.8.0",
+    "pino-pretty": "^13.1.3",
+    "prettier": "^3.9.6",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.65.0"
   },
   "workspaces": [
     "packages/*"

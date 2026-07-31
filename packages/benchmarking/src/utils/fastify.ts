@@ -23,6 +23,6 @@ export async function createServer(port: number, host: string, options: {
     });
   }
 
-  await app.listen(port, host);
+  await app.listen({ port, host });
   return app;
 }
