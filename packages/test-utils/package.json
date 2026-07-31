@@ -2,7 +2,8 @@
   "name": "@streamerson/test-utils",
   "version": "0.0.1",
   "dependencies": {
-    "tslib": "^2.3.0"
+    "pino": "^10.3.1",
+    "tslib": "^2.8.1"
   },
   "type": "commonjs",
   "main": "./src/index.js",

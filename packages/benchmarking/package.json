@@ -10,17 +10,20 @@
     "build": "tsc -b tsconfig.lib.json"
   },
   "dependencies": {
-    "dotenv": "^16.3.1",
-    "fastify": "^4.24.0",
+    "@streamerson/consumer": "workspace:*",
+    "@streamerson/core": "workspace:*",
+    "@streamerson/gateway-fastify": "workspace:*",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.11.0",
+    "glob": "^13.0.6",
     "markdown-table-ts": "^1.0.3",
     "minimist": "^1.2.8",
-    "pino": "^8.16.0",
-    "redis": "^4.6.12",
-    "tslib": "^2.3.0"
+    "pino": "^10.3.1",
+    "redis": "^6.2.0",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@types/node": "^20.6.4",
-    "@types/uuid": "^8.3.4",
-    "pino-pretty": "^7.6.1"
+    "@types/minimist": "^1.2.5",
+    "@types/node": "^26.1.2"
   }
 }

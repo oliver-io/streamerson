@@ -4,7 +4,7 @@
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
@@ -13,16 +13,15 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@streamerson/benchmarking": ["packages/benchmarking/src/index.ts"],
-      "@streamerson/consumer": ["packages/consumer/src/index.ts"],
-      "@streamerson/core": ["packages/core/src/index.ts"],
-      "@streamerson/examples": ["packages/examples/src/index.ts"],
-      "@streamerson/gateway-fastify": ["packages/gateway-fastify/src/index.ts"],
-      "@streamerson/gateway-wss": ["packages/gateway-wss/src/index.ts"],
-      "@streamerson/state-machine": ["packages/state-machine/src/index.ts"],
-      "@streamerson/test-utils": ["packages/test-utils/src/index.ts"]
+      "@streamerson/benchmarking": ["./packages/benchmarking/src/index.ts"],
+      "@streamerson/consumer": ["./packages/consumer/src/index.ts"],
+      "@streamerson/core": ["./packages/core/src/index.ts"],
+      "@streamerson/examples": ["./packages/examples/src/index.ts"],
+      "@streamerson/gateway-fastify": ["./packages/gateway-fastify/src/index.ts"],
+      "@streamerson/gateway-wss": ["./packages/gateway-wss/src/index.ts"],
+      "@streamerson/state-machine": ["./packages/state-machine/src/index.ts"],
+      "@streamerson/test-utils": ["./packages/test-utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

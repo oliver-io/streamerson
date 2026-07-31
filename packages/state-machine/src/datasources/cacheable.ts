@@ -1,6 +1,6 @@
-// lru-cache v7 is `export =` (CJS class); import-equals is the interop-free form
-// that both tsc (no esModuleInterop) and Bun construct correctly (audit A4/2.9).
-import LRUCache = require('lru-cache');
+// lru-cache v10+ ships a named `{ LRUCache }` export (both value and type);
+// the v7 `export =`/import-equals form no longer applies (audit A4/2.9).
+import { LRUCache } from 'lru-cache';
 import { createClient } from 'redis';
 import { DataSourceOptions, KeyOptions, SECONDS_TO_MS, shardDecorator, StreamersonLogger } from '@streamerson/core';
 import { StateConfiguration } from '../types';
@@ -48,11 +48,11 @@ export class CacheableDataSource {
     for (const c of [this.client, this.invalidationChannel, this.cachedChannel]) {
       c.on('error', (err: unknown) => this.logger?.error(err, 'Redis client error'));
     }
-    // lru-cache v7 rejects ttl-only options; ttlAutopurge preserves the expiry
+    // lru-cache v11 rejects ttl-only options; ttlAutopurge preserves the expiry
     // semantics without introducing a size bound (see BEHAVIOR_AUDIT 2.9). The 600s
     // is only the FALLBACK for rent/replicated read-through entries (D13): per-key
     // `StateConfiguration.ttl` overrides it, and owner entries are set with a
-    // per-entry ttl of 0 — never stale in v7 — so owner state never self-evicts.
+    // per-entry ttl of 0 — never stale in v11 — so owner state never self-evicts.
     this.cache = new LRUCache({ ttl: SECONDS_TO_MS(600), ttlAutopurge: true });
     this.beginCacheListener = this.beginCacheListener.bind(this);
   }
@@ -64,9 +64,9 @@ export class CacheableDataSource {
   }
 
   /** D13 per-key TTL for OWNER entries. `StateConfiguration.ttl` is in SECONDS.
-   *  No configured ttl → per-entry ttl 0, which lru-cache v7 treats as "never stale"
-   *  (isStale: `ttls[i] === 0` → false; verified against lru-cache 7.18.3), so owner
-   *  state never self-evicts. */
+   *  No configured ttl → per-entry ttl 0, which lru-cache v11 treats as "never stale"
+   *  (isStale: `ttls[i] === 0` → false; the D13 owner-never-evicts suite pins it), so
+   *  owner state never self-evicts. */
   private ownerEntryOptions(cfg?: StateConfiguration): { ttl: number } {
     return { ttl: cfg?.ttl ? SECONDS_TO_MS(cfg.ttl) : 0 };
   }
