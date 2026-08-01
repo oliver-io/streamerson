@@ -2,110 +2,108 @@
 
 Living **status & roadmap** for `@streamerson`. CLAUDE.md covers topology and how to drive the repo; this file covers **what actually works, what's broken, and what to do next.** It is intentionally blunt — working notes for finishing the framework.
 
-> **Last reviewed:** 2026-05-20, against branch `reintegration-release` @ `8df9e61` ("old changes"), the newest pushed code. This tip is an admitted WIP dump, not a clean release.
+> **Last reviewed:** 2026-07-31, against branch `main` @ `02038cc` (newest pushed). This tip folds in the large July integration push (`cc787e7`, the spec-pinned test suites + consumer/core correctness work) and the dependency modernization. Most of the gaps this doc used to track have since closed — see "Fixed since".
 
 ## How we got here (branch lineage)
 
-The framework was co-developed by dogfooding it against a real game (an RPG). Defects/refactors found during that integration drove most of the recent churn. Lineage, oldest → newest:
+The framework was co-developed by dogfooding it against a real game (an RPG). Defects/refactors found during that integration drove most of the churn. Lineage, oldest → newest:
 
 ```
 cluster-consumer (Nov'23, Piscina cluster on ioredis)
   └▶ cluster-consumer-linux (Jan'24, "nearly working clusters")
        └▶ cluster-consumer-linux-toreup (Jan'24, ioredis→node-redis, tore up cluster)
             └▶ game-reintegration (Sep'24, dogfooded against the game; merges main)
-                 └▶ reintegration-release (Sep'24 → 8df9e61, "release emitter", docs)  ← current
+                 └▶ reintegration-release (May'26, "release emitter", docs)
+                      └▶ main (Jul'26 → 02038cc)  ← current canonical
 ```
 
-Consequences of that history, visible in the tree today:
-- **core switched from `ioredis` to `node-redis`** (the switch stuck).
-- **`consumer-group` was folded into `consumer`** (group + member + config + cluster now live there).
-- **`emitter` was extracted** as a standalone, published state library (from the game's client state needs).
-- Package management is **mid-migration from Yarn to npm** (npm lockfile committed, scripts still say `yarn`).
+`main` is now the canonical branch (past `reintegration-release`, which lags). Consequences of the history, still visible:
+- **core is on `node-redis`'s successor** — it now runs on **Bun's native `RedisClient`** (raw `send()` for stream commands); `node-redis` survives only in `state-machine` (deliberately, for client-tracking invalidation) and `benchmarking`.
+- **`consumer-group` was folded into `consumer`** (group + member + config + cluster live there).
+- **`emitter` was extracted** as a standalone, published state library.
+- **Toolchain fully migrated to Bun** (runtime + PM + test runner + workspaces); the Yarn↔npm limbo is gone.
 
 ## TL;DR
 
-- **core** is the mature part and the streaming abstractions work for a **single-node** setup; the consumer-group path is wired correctly again.
-- The remaining blockers to production use are operational: **no stream trimming** (unbounded Redis growth), **at-most-once delivery that contradicts the docs**, **no multi-instance response routing**, and a layer of **shipped debug cruft + unwired tests** that makes the published packages feel unfinished.
+- **core** and **consumer** are the mature parts; the single-node and consumer-group paths work, are **acked (at-least-once) with PEL recovery + DLQ**, and are covered by spec-pinning integration suites against a live Redis.
+- **state-machine** graduated from WIP to a **tested** package (68 pass / 1 skip against live Redis).
+- The remaining blockers to production use are now a **shorter, sharper list**: the **reverse-streamer retention strategy** (the native trim backstop exists; the drain-to-SQL strategy does not), **no multi-instance response routing**, and a few **doc/config** loose ends. The "unwired tests / shipped debug cruft" era is over.
 
 ## Status by package
 
 | Package | State | Summary |
 |---|---|---|
-| `core` | ✅ Functional, ⚠️ cruft | node-redis datasource, Topic/keys (now with `loopback()`), correlation. Works; carries debug logging and a stale protocol doc. |
-| `consumer` | ✅ Functional | `StreamConsumer` + consumer groups (group wiring fixed) + Bun `Worker` cluster. Single-node solid; cluster lifecycle now defined (Gap I closed). |
-| `consumer` cluster | ✅ Functional | Bun `Worker` pool (block-for-life): fixed `count`, runtime `scale()`, restart-on-crash, graceful drain. Live-Redis test (`cluster.test`). |
-| `emitter` | ✅ Functional, published | Standalone `StateEmitter` (deep-path subscriptions). Independent of streaming. Most "finished" package. |
-| `gateway-fastify` | ⚠️ Functional single-node | Awaiter dedup fixed; debug `console.log` noise; no multi-instance routing (Gap E). |
-| `gateway-wss` | ✅ Functional single-node | Response stream now read via `topic.loopback()` (prior bug fixed); client routing by source token. |
-| `state-machine` | 🚧 WIP | Now builds; excluded from `test`. README is a copy-paste of the wss README. |
-| `examples` | ⚠️ Mixed | Real apps present; some imports/snippets may lag the `consumer-group`→`consumer` move. |
-| `benchmarking` | ✅ Tooling works | Core overhead numbers exist; **end-to-end gateway numbers still N/A.** |
+| `core` | ✅ Functional | Bun-`RedisClient` datasource, `Topic`/keys (`loopback()`, `deadLetterKey()`), correlation (`streamAwaiter`/`DeferralTracker`) with self-healing reconnect. Opt-in `MAXLEN ~` trim backstop. Debug cruft removed. 100% line-coverage gate on the stream reader. |
+| `consumer` | ✅ Functional | `StreamConsumer` + consumer groups (`ConsumerGroupCoordinator`/member) + Bun `Worker` cluster. Acked reads, atomic Lua terminal transitions, opt-in retry (self-PEL drain), reaper→DLQ sweep. Broad integration coverage. |
+| `consumer` cluster | ✅ Functional | Bun `Worker` pool (block-for-life): fixed `count`, runtime `scale()`, restart-on-crash, graceful drain. Live-Redis round-trip test. |
+| `emitter` | ✅ Functional, published | Standalone `StateEmitter` (deep-path subscriptions). Independent of streaming. |
+| `gateway-fastify` | ✅ Functional single-node | Awaiter dedup + `onClose` teardown + self-healing response reader + register-time `messageType` validation + per-route timeout. Reviewed first-principles (`docs/todo/FASTIFY_GATEWAY_REVIEW.md`); open items are interface-defining and spec-gated. No multi-instance routing (Gap E). |
+| `gateway-wss` | ✅ Functional single-node | `Bun.serve` WS (no native addon); responses read via `topic.loopback()`; client routing by source token. Integration suite (round-trip, routing edges, auth edges, shutdown, malformed frames). |
+| `state-machine` | ✅ Tested, 🚧 pre-release | Builds and tested (68 pass / 1 skip, live Redis): consistency matrix, invalidation/activation, recovery/hydration, ownership. Deliberately on **node-redis v4** for RESP client-tracking (Bun's client doesn't surface invalidation pushes; v6 regresses it — see below). Still excluded from the published release set. |
+| `examples` | ✅ Type-checked | `verify-examples` type-checks the embedded examples/apps clean. Runtime smoke-run against Redis not yet a gate. |
+| `benchmarking` | ⚠️ Tooling, type-debt | Core-overhead numbers exist; **end-to-end gateway numbers still N/A.** Carries pre-existing strict-null type errors and noisy `console.*` (unpublished tooling, out of the default build). |
 | `test-utils` | ✅ | Support lib. |
 
-## Fixed since the prior review (against old `cluster-consumer`)
+## Fixed since the prior review (May'26 → Jul'26)
 
-- ✅ **Consumer-group read wiring** — `ConsumerGroupMember` now threads `consumerGroupInstanceConfig` into the consumer, so members actually read as a group and `process()` no longer throws.
-- ✅ **Gateway double-subscribe** — the Fastify plugin memoizes one awaiter per stream pair and starts the response reader once.
-- ✅ **gateway-wss wrong stream** — responses are read from `topic.loopback()` (the producer end) instead of the request stream.
-- ✅ **Cluster lifecycle (was Gap I)** — Piscina replaced with native Bun `Worker` (block-for-life). `ConsumerGroupCluster` now: owns an admin-only coordinator (separate from members), spawns a fixed member `count`, exposes runtime `scale(n)` for a control plane, restarts crashed members (bounded backoff) to maintain `count`, and drains gracefully on `stop()`. `count` replaces `min`/`max`; `processingTimeout` (per-handler budget) and `idleTimeout` (drain budget) are now wired. Covered by a live-Redis integration test (`cluster.test`). *(Open: re-binding `processingTimeout`/`idleTimeout` to reclaim `min-idle`/BLOCK cadence — CONSUMER_GROUP.md §7.6 — when the reclaim/delivery work lands.)*
+- ✅ **Toolchain → Bun (MODERNIZE Step 1).** Runtime, package manager, test runner, workspaces all Bun; `tsx`/`ts-node` dropped; one lockfile (`bun.lock`). Closes Gap M's PM limbo.
+- ✅ **Tests wired + running (was Gap K).** `bun test` exercises broad integration suites (core datasource/correlation, consumer group/cluster/retry/DLQ, gateways, emitter, state-machine). Spec-pinning "RED" tests document remaining known defects on purpose.
+- ✅ **Delivery semantics → acked at-least-once (was Gap C).** The group read no longer uses `NOACK`; entries stay in the consumer PEL until `xAck` (`markProcessedByGroup`), with reaper→DLQ sweep and opt-in retry (self-PEL drain, poison→DLQ). Atomic Lua terminal transitions. *(READMEs claiming "once-only" should still be reconciled to "at-least-once with dedupe-at-worker" — doc task.)*
+- ✅ **Correlation timeout leak (was Gap D / GW8).** `dispatch` wraps write+await in `try/finally { delete(id) }` and `DeferralTracker.delete` clears the armed timer — the entry and its timer are released on every outcome.
+- ✅ **Gateway response-reader robustness (GW5/GW6/GW9/GW14/GW15).** `onClose` teardown (no connection leak), self-healing reconnect with freeze + cursor-resume, register-time `messageType` validation, honored per-route timeout. Spec: `docs/specs/GATEWAY_READER_SELF_HEAL.md`.
+- ✅ **`controllable` is now a real option (was Gap G).** `true/false` per datasource config; `abort()` is live (interrupts a blocking read via the control channel). No longer globally force-disabled.
+- ✅ **Debug cruft stripped (was Gap J).** `core`/`consumer`/`gateway-*` `src` no longer ship stray `console.*` (only the logger). *(Remnant: a few `console.error(err)` in `state-machine/cacheable.ts`; benchmarking tooling is still noisy but unpublished.)*
+- ✅ **Protocol field mismatch fixed (part of Gap L).** Reader and writer both use `messageProtocol` (the old `messagePayloadFormat`/`messageProtocol` split that dead-ended the JSON-parse branch is gone). *(Remaining L: `docs/PROTOCOL.md` still documents the old positional packing — doc task.)*
+- ✅ **Native trim backstop (part of Gap B).** `StreamingDataSource` writes `XADD … MAXLEN ~ <maxLen>` when `options.maxLen > 0` — opt-in, off by default. *(This is the backstop, not the retention strategy — see B below.)*
+- ✅ **Cluster lifecycle (was Gap I).** Piscina → native Bun `Worker` (block-for-life): admin-only coordinator, fixed member `count`, runtime `scale(n)`, restart-on-crash (bounded backoff), graceful drain. `processingTimeout`/`idleTimeout` wired.
+- ✅ **Dependency modernization.** Audit-driven purge of unused deps + upgrades to modern (fastify 5, pino 10, lru-cache 11, uuid 14, eslint 10 flat config, TypeScript 6.0.3); missing internal/runtime deps declared; `workspace:*` linking. Zero test regressions vs baseline.
 
 ## Known gaps & bugs (blunt)
 
-Severity: 🔴 blocks core promise · 🟠 serious · 🟡 cleanup. "Remediation" = whether the code already addresses it.
+Severity: 🔴 blocks core promise · 🟠 serious · 🟡 cleanup.
 
-### 🔴 B. No stream trimming → unbounded Redis growth
-`xAdd` uses `*` with no `MAXLEN`/`TRIM`; no `XTRIM` anywhere. Every request and response is appended forever → eventual Redis OOM for the intended workload.
-**Fix (decided):** add native `MAXLEN ~` trim on write as an **opt-in, off-by-default, length-configurable** backstop — *not* the retention strategy. The real plan is **reverse-streamers** that drain a stream from the tail and persist to SQL before deletion; non-persisting drainers may flip on this native-trim backstop. **Remediation:** none yet.
-
-### 🟠 C. At-most-once delivery, contradicting the docs
-The group read uses `NOACK: true` (at-most-once: a crash mid-process loses in-flight messages). The acknowledged-read variant is now **fully commented out**, and `markProcessedByGroup` (`xAck`) is gated on `acknowledgeProcessed` but is a no-op against NOACK reads. READMEs still claim "guaranteed once-only delivery."
-**Fix:** restore a non-NOACK read + `xAck` + PEL recovery, or commit to at-most-once and update the docs. Also: `markProcessedByGroup` checks `if (!ack)` on an un-awaited promise (always truthy) — the error path can't fire. **Remediation:** removed, not added.
+### 🔴 B. No retention strategy → unbounded Redis growth (backstop only)
+The opt-in native `MAXLEN ~` trim now exists, but it is a **lossy backstop**, not retention. Without a durable drain, every request/response is appended forever → eventual Redis OOM for the intended workload.
+**Plan (decided):** **reverse-streamers** — processors that drain a stream from the tail and persist to SQL before deletion (never delete unflushed data); non-persisting drainers may flip on the native-trim backstop. **Remediation:** backstop done; the reverse-streamer design itself is unbuilt (needs a spec — ordering, SQL schema, persistence guarantees).
 
 ### 🟠 E. No multi-instance response routing
-All gateway instances read the same shared producer/response stream; correlation is by message id, so non-owning instances receive and discard others' responses. `sourceId`/`messageDestination` exist in the protocol to enable per-instance routing, but `sourceId` is never set (`decorateRequest('sourceId', '')`) and workers always write to the fixed producer key.
-**Fix:** route responses to a per-source/per-instance stream using the protocol fields + `loopback()`. **Remediation:** anticipated by the protocol, not implemented.
+All gateway instances read the same shared producer/response stream; correlation is by message id, so non-owning instances receive and discard others' responses. The protocol carries `sourceId`/`messageDestination` to enable per-instance routing, but `sourceId` is still `decorateRequest('sourceId', '')` (never populated) and workers always write to the fixed producer key.
+**Fix:** route responses to a per-source/per-instance stream using the protocol fields + `loopback()`. **Remediation:** anticipated by the protocol, not implemented. *(Ties to GW13 — the vestigial `sourceId`.)*
 
-### 🟠 D. Correlation timeout entries leak
-`DeferralTracker.promise()`'s timeout rejects the pending promise but never deletes its map entry, and `dispatch` skips its `delete` when the await throws. Timed-out requests leak entries permanently (the response-before-deferral path self-cleans; the timeout path does not).
-**Fix:** delete on timeout. **Remediation:** partial.
+### 🟠 gateway-fastify review — interface-defining open items
+`docs/todo/FASTIFY_GATEWAY_REVIEW.md` catalogs the remaining findings. The robustness/lifecycle set (GW5/6/8/9/14/15) is fixed; **open and spec-gated:** request fidelity (**GW1** — only `request.body` is forwarded), fire-and-forget mode (**GW2**), the worker-error/no-content response envelope (**GW3/GW7**), Redis auth/TLS config (**GW4**), and hygiene (**GW10/GW12/GW13**). None should be coded before agreeing the spec (CLAUDE.md).
 
-### 🟠 J. Shipped debug cruft in published packages
-`core`/`consumer` ship with pervasive `console.*` logging (incl. profanity, e.g. in `DeferralTracker.promise` and `streamAwaiter`), large commented-out debug blocks (e.g. in `readAsGroup`), and a stray `}``` typo in `streamable`. These are in **published** packages (`@streamerson/consumer`, `@streamerson/emitter`, `private: false`).
-**Fix:** strip debug logging; route through the logger at debug level; lint to forbid `console.*` in `src`. **Remediation:** none. *(Fast, high-credibility win.)*
+### 🟡 L(residual). `docs/PROTOCOL.md` stale
+The wire format moved to **named stream fields**; `docs/PROTOCOL.md` still documents the old positional packing. The code-level field mismatch it warned about is already fixed. **Fix:** rewrite `PROTOCOL.md` against `core`.
 
-### 🟠 K. Tests exist but aren't wired
-Test files exist (core, consumer, gateways, emitter), but **no `project.json` defines a `test` target**, so `yarn test` (`nx run-many -t test`) exercises ~nothing. This is how regressions slip through (the old group-wiring break went unnoticed for ~2.5 years).
-**Fix:** add `test` targets per package; make the consumer-group/group tests run in CI; ensure Redis is available for integration tests. **Remediation:** none.
+### 🟡 J(residual). `state-machine` `console.error` remnants
+`cacheable.ts` still has a handful of `console.error(err)` before re-throw. **Fix:** route through the logger; add the `no-console`-in-`src` lint rule now that eslint is wired.
 
-### 🟡 G. `controllable` is globally force-disabled
-The base datasource hard-disables the control connection ("DragonflyDB does not support CLIENT INFO"), and `abort()` is now fully commented out — so blocking reads can't be interrupted via the control channel, and the control client is dead code for all backends. (Also the control `createClient` is mis-constructed — passes host as `url` — but it's never created.)
-**Fix:** make it backend-conditional, or commit to the Dragonfly constraint and document it. **Remediation:** present, but is itself the problem.
+### 🟡 N. `benchmarking` type-debt + missing e2e numbers
+`benchmarking` carries pre-existing strict-null type errors and is out of the default build; end-to-end gateway benchmark numbers are still N/A. **Fix:** clean the tooling's types; produce e2e gateway overhead numbers to validate the framework's core claim.
 
-### 🟡 L. Protocol drift / docs stale
-The wire format moved from positional packing to **named stream fields** (node-redis `xAdd` object form); `docs/PROTOCOL.md` still documents the positional scheme. Latent bug: `deserializeMessageObject` checks `messagePayloadFormat` but the writer sets `messageProtocol`, so its JSON-parse branch never runs (payload is re-parsed downstream, masking it).
-**Fix:** update `PROTOCOL.md`; reconcile the field name; fix the wss/state-machine copy-pasted READMEs.
-
-### 🟡 M. Build/dev-loop rough edges
-Yarn↔npm limbo (lockfile vs scripts). `DEFAULT_BLOCKING_TIMEOUT` is **100ms**, so `iterateStream` polls Redis ~10×/s per reader — low abort latency, but constant chatter; pick this deliberately. `consumer` still lists an `ioredis` dep though core uses node-redis.
-**Fix:** commit to one package manager; document/justify the poll interval; prune dead deps.
+### 🟡 M(residual). Poll cadence
+`DEFAULT_BLOCKING_TIMEOUT` is **100ms**, so a blocking reader re-issues its read ~10×/s — low abort latency, constant chatter. Deliberate, but document/justify it.
 
 ## Roadmap (suggested order)
 
-1. **Strip debug cruft (J)** and **wire test targets (K).** Cheap, and they restore credibility + a regression net before deeper changes.
-2. **Add stream trimming (B).** Existential for the intended workload.
-3. **Decide & plumb delivery semantics (C)** — at-most-once-and-say-so, or restore acked reads + recovery.
-4. **Design multi-instance response routing (E)** using `sourceId`/`destination` + `loopback()`; fix the timeout leak (D) along the way.
-5. Lift or document the `controllable` hack (G). *(Cluster lifecycle (I) is now closed — see "Fixed since".)*
-6. **Reconcile docs & dev loop (L, M)** and produce **end-to-end gateway benchmarks** to validate the overhead claim.
+1. **Reconcile docs to reality (L residual, C's README claims, `state-machine` README already done).** Cheap; the code is ahead of the prose now.
+2. **Design the reverse-streamer retention (B).** Existential for the intended workload; needs a spec first.
+3. **Design multi-instance response routing (E)** using `sourceId`/`destination` + `loopback()`; retires GW13.
+4. **Work the gateway-fastify interface items (GW1–GW4, GW2, GW3/GW7)** — each needs a short design note before code.
+5. **Produce end-to-end gateway benchmarks (N)** to validate the overhead claim; clean benchmarking's type-debt.
+6. Strip the `state-machine` `console.error` remnants (J residual) and add the `no-console` lint rule.
 
 ## Open decisions needed
 
-- **Production broker: Redis or DragonflyDB?** Drives the trimming, control-connection, and `controllable` calculus.
-- **Package manager: Yarn or npm?** Pick one; the split state is a footgun.
-- **Is `emitter` a permanent first-class package** or a vendored extraction from the game? Affects whether it gets its own release/test rigor.
-- ~~**Cluster workers: detach-and-return, or block-for-life?**~~ **Decided: block-for-life** (native Bun `Worker`); see "Fixed since". Member count is fixed (`count`) and runtime-mutable via `scale()` for an external control plane — no demand-based autoscaling.
-- **Stream retention (decided):** the strategy is **reverse-streamers** — processors that drain a stream from the tail, optionally persisting to SQL before deletion (don't delete unflushed data). Native `MAXLEN` trim stays an opt-in, off-by-default backstop. Open sub-question: the reverse-streamer design itself (ordering, SQL schema, persistence guarantees).
+- **Production broker: Redis or DragonflyDB?** Drives the trimming, control-connection, and client-tracking calculus (state-machine relies on RESP client tracking).
+- **`state-machine` on node-redis: stay on v4, or migrate to v6?** v6 regresses the client-tracking invalidation in the runtime context (reproduced; the suite is green on v4, which the code targets). A v6 migration is a separate spec-first task.
+- **Delivery-doc reconciliation:** the code is acked at-least-once; the "guaranteed once-only" README language needs to become "at-least-once + idempotent worker." Confirm the messaging.
+- **Reverse-streamer design (B):** ordering, SQL schema, persistence guarantees, and whether the native-`MAXLEN` backstop should ever default on for non-persisting drainers.
+- **`docgen` TSDoc scope:** keep generating/embedding `_API.md` (via `tsdoc-markdown`), or drop that step from the pipeline (MODERNIZE 2.1)?
+- **Is `emitter` a permanent first-class package** or a vendored extraction? Affects its release/test rigor.
+- ~~Package manager~~ **Decided: Bun.** ~~Cluster workers~~ **Decided: block-for-life** (native Bun `Worker`; fixed `count` + runtime `scale()`).
 
 ## Updating this doc
 
-Keep it current with reality, not aspiration. Reference files/symbols by name, not line numbers. When a gap closes, move it into the "Fixed since" section (or delete it), update the status table, and bump the review date + branch.
+Keep it current with reality, not aspiration. Reference files/symbols by name, not line numbers. When a gap closes, move it into "Fixed since" (or delete it), update the status table, and bump the review date + branch.
